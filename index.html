@@ -44,10 +44,12 @@
     @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
 
-    .animate-fade { animation: fadeIn 0.5s ease forwards; }
-    .animate-pulse { animation: pulse 2s infinite; }
-    .animate-float { animation: float 3s ease-in-out infinite; }    
+    .animate-fade { animation: fadeIn 0.5s ease forwards; }    .animate-pulse { animation: pulse 2s infinite; }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+    
     /* Glassmorphism Cards */
     .card {
       background: var(--glass);
@@ -94,9 +96,9 @@
       border: 2px solid var(--glass-border);
       border-radius: 12px;
       background: rgba(255,255,255,0.1);
-      color: white;
-      font-size: 1rem;
-      transition: var(--transition);      text-align: right;
+      color: white;      font-size: 1rem;
+      transition: var(--transition);
+      text-align: right;
     }
     .form-control:focus {
       outline: none;
@@ -143,15 +145,9 @@
       padding: 10px 15px;
       border-radius: 15px;
       max-width: 80%;
-      animation: fadeIn 0.3s ease;
-    }
-    .chat-message.own {       align-self: flex-end; 
-      background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-    }
-    .chat-message.other { 
-      align-self: flex-start; 
-      background: rgba(255,255,255,0.15); 
-    }
+      animation: fadeIn 0.3s ease;    }
+    .chat-message.own { align-self: flex-end; background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+    .chat-message.other { align-self: flex-start; background: rgba(255,255,255,0.15); }
     .chat-meta { font-size: 0.8rem; opacity: 0.8; margin-bottom: 3px; }
 
     /* Players List */
@@ -194,11 +190,11 @@
       font-weight: 500;
     }
     .badge-active { background: var(--success); color: white; }
-    .badge-muted { background: var(--warning); color: var(--dark); }    .badge-banned { background: var(--danger); color: white; }
+    .badge-muted { background: var(--warning); color: var(--dark); }
+    .badge-banned { background: var(--danger); color: white; }
 
     /* Modals */
-    .modal {
-      display: none;
+    .modal {      display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
@@ -243,11 +239,11 @@
       padding: 25px 20px;
       background: linear-gradient(135deg, rgba(108,92,231,0.3), rgba(0,206,201,0.2));
       border-bottom: 1px solid var(--glass-border);
-      margin-bottom: 20px;      animation: gradientBG 15s ease infinite;
+      margin-bottom: 20px;
+      animation: gradientBG 15s ease infinite;
       background-size: 200% 200%;
     }
-    .header h1 {
-      font-size: 2.2rem;
+    .header h1 {      font-size: 2.2rem;
       margin-bottom: 10px;
       background: linear-gradient(135deg, var(--secondary), var(--accent));
       -webkit-background-clip: text;
@@ -292,11 +288,11 @@
     }
     .nav-tab.vip-only {
       background: linear-gradient(135deg, #f39c12, #e74c3c);
-      animation: pulse 3s infinite;    }
+      animation: pulse 3s infinite;
+    }
 
     /* VIP Badge */
-    .vip-badge {
-      display: inline-block;
+    .vip-badge {      display: inline-block;
       padding: 3px 10px;
       background: linear-gradient(135deg, #f39c12, #e74c3c);
       border-radius: 20px;
@@ -341,10 +337,10 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.4);
       display: none;
     }
-    .notification.show { display: block; }    .notification.success { background: var(--success); }
+    .notification.show { display: block; }
+    .notification.success { background: var(--success); }
     .notification.error { background: var(--danger); }
     .notification.warning { background: var(--warning); color: var(--dark); }
-
     /* Scrollbar */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 10px; }
@@ -390,11 +386,11 @@
     .auth-divider span {
       background: linear-gradient(135deg, rgba(30,39,73,0.95), rgba(15,52,96,0.98));
       padding: 0 15px;
-      position: relative;      color: var(--secondary);
+      position: relative;
+      color: var(--secondary);
     }
 
-    /* Site Disabled Overlay */
-    .site-disabled {
+    /* Site Disabled Overlay */    .site-disabled {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
@@ -413,6 +409,366 @@
       margin-bottom: 20px;
       animation: pulse 2s infinite;
     }
+
+    /* ===== Game Section Styles ===== */
+    .game-container {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+      animation: fadeIn 0.5s ease;
+    }
+    @media (max-width: 900px) { .game-container { grid-template-columns: 1fr; } }
+
+    .game-board {
+      background: linear-gradient(135deg, rgba(30,39,73,0.95), rgba(15,52,96,0.98));
+      border-radius: 25px;
+      padding: 25px;
+      border: 2px solid var(--glass-border);
+      min-height: 500px;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--glass-border);
+      margin-bottom: 20px;
+    }
+
+    .game-title {
+      font-size: 1.5rem;
+      color: var(--accent);
+      display: flex;      align-items: center;
+      gap: 10px;
+    }
+
+    .game-timer {
+      background: linear-gradient(135deg, var(--danger), #e17055);
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      animation: pulse 1s infinite;
+    }
+    .game-timer.warning {
+      background: linear-gradient(135deg, var(--warning), #fdcb6e);
+      color: var(--dark);
+    }
+
+    .question-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      margin: 20px 0;
+      border: 2px solid var(--accent);
+      animation: float 0.5s ease;
+    }
+
+    .question-letter {
+      font-size: 4rem;
+      font-weight: bold;
+      color: var(--secondary);
+      text-shadow: 0 0 20px var(--accent);
+      margin: 10px 0;
+      animation: pulse 2s infinite;
+    }
+
+    .question-category {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      opacity: 0.95;
+    }
+
+    .answer-input {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.2rem;
+      text-align: center;
+      border: 3px solid var(--glass-border);
+      border-radius: 15px;
+      background: rgba(255,255,255,0.15);      color: white;
+      margin: 15px 0;
+      transition: var(--transition);
+    }
+    .answer-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(0,206,201,0.4);
+      outline: none;
+    }
+    .answer-input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .players-panel {
+      background: var(--glass);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid var(--glass-border);
+      height: fit-content;
+    }
+
+    .player-in-game {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      margin: 8px 0;
+      transition: var(--transition);
+    }
+    .player-in-game.active-turn {
+      background: linear-gradient(135deg, rgba(108,92,231,0.4), rgba(0,206,201,0.3));
+      border: 2px solid var(--accent);
+      transform: scale(1.02);
+    }
+
+    .player-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-left: 12px;
+    }
+
+    .player-score {
+      margin-right: auto;
+      font-weight: bold;
+      color: var(--accent);    }
+
+    .difficulty-selector {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    .difficulty-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 10px;
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+    }
+    .difficulty-btn:hover, .difficulty-btn.active {
+      border-color: var(--accent);
+      background: rgba(0,206,201,0.2);
+      transform: translateY(-2px);
+    }
+    .difficulty-btn.easy { border-bottom: 3px solid var(--success); }
+    .difficulty-btn.medium { border-bottom: 3px solid var(--warning); }
+    .difficulty-btn.hard { border-bottom: 3px solid var(--danger); }
+
+    .game-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn-game {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px;
+      border: none;
+      border-radius: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;    }
+    .btn-invite { background: linear-gradient(135deg, #00b894, #00cec9); color: white; }
+    .btn-start { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; }
+    .btn-leave { background: var(--danger); color: white; }
+    .btn-game:hover { transform: scale(1.02); box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+    .btn-game:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .notifications-panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 350px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 1500;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .notification-card {
+      background: linear-gradient(135deg, rgba(30,39,73,0.98), rgba(15,52,96,0.98));
+      border: 2px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 15px;
+      animation: slideInLeft 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .notification-title {
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;    }
+
+    .btn-notify {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-accept { background: var(--success); color: white; }
+    .btn-decline { background: var(--danger); color: white; }
+    .btn-notify:hover { transform: scale(1.05); }
+
+    .visitor-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      margin: 8px 0;
+      transition: var(--transition);
+      position: relative;
+    }
+    .visitor-item:hover { background: rgba(255,255,255,0.15); transform: translateX(5px); }
+
+    .game-invite-btn {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border: none;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: float 2s ease-in-out infinite;
+    }
+    .game-invite-btn:hover {
+      transform: scale(1.2) rotate(10deg);
+      box-shadow: 0 0 20px var(--accent);
+    }
+    .game-invite-btn.sent {
+      animation: none;
+      background: var(--success);
+      cursor: default;    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .result-card {
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(108,92,231,0.3), rgba(0,206,201,0.2));
+      border-radius: 15px;
+      border: 1px solid var(--glass-border);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .result-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 10px 0;
+    }
+
+    .result-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .winner-badge {
+      display: inline-block;
+      padding: 5px 20px;
+      background: linear-gradient(135deg, #f39c12, #e74c3c);
+      border-radius: 25px;
+      font-weight: bold;
+      margin: 10px 0;
+      animation: pulse 1.5s infinite;
+    }
+
+    .game-chat {
+      margin-top: 20px;
+      border-top: 1px solid var(--glass-border);
+      padding-top: 15px;
+    }
+    .game-chat .chat-container { max-height: 200px; }
+
+    .category-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;      display: block;
+    }
+
+    .answer-feedback {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease;
+    }
+    .answer-feedback.correct { background: rgba(0,184,148,0.3); color: var(--success); border: 1px solid var(--success); }
+    .answer-feedback.wrong { background: rgba(214,48,49,0.3); color: var(--danger); border: 1px solid var(--danger); }
+    .answer-feedback.timeout { background: rgba(253,203,110,0.3); color: var(--warning); border: 1px solid var(--warning); }
+
+    .waiting-animation { text-align: center; padding: 40px; }
+    .waiting-dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+
+    .btn-start-play {
+      background: linear-gradient(135deg, #00cec9, #00b894);
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 25px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: pulse 2s infinite;
+    }
+    .btn-start-play:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 20px rgba(0,206,201,0.5);
+    }
   </style>
 </head>
 <body>
@@ -420,11 +776,13 @@
   <!-- Notification Container -->
   <div id="notification" class="notification"></div>
 
+  <!-- Notifications Panel for Game Invites -->
+  <div id="notificationsPanel" class="notifications-panel" style="display:none;"></div>
+
   <!-- Site Disabled Overlay -->
   <div id="siteDisabled" class="site-disabled">
     <div class="card">
-      <h2>⚠️ الموقع معطل حالياً</h2>
-      <p id="maintenanceMsg">جاري الصيانة، يرجى العودة لاحقاً</p>
+      <h2>⚠️ الموقع معطل حالياً</h2>      <p id="maintenanceMsg">جاري الصيانة، يرجى العودة لاحقاً</p>
     </div>
   </div>
 
@@ -439,7 +797,8 @@
           <label>👤 اسم المستخدم</label>
           <input type="text" id="signupUsername" class="form-control" placeholder="أدخل اسم المستخدم" required>
         </div>
-        <div class="form-group">          <label>🔐 كلمة المرور</label>
+        <div class="form-group">
+          <label>🔐 كلمة المرور</label>
           <input type="password" id="signupPassword" class="form-control" placeholder="أدخل كلمة المرور" required>
         </div>
         <div class="form-group">
@@ -472,8 +831,7 @@
           🔓 دخول VIP
         </button>
         <button class="btn" style="background:rgba(255,255,255,0.1); margin-top:10px;" onclick="hideVIPLogin()">
-          ← العودة
-        </button>
+          ← العودة        </button>
       </div>
     </div>
   </div>
@@ -488,7 +846,8 @@
       <div id="vipIndicator" style="display:none;">
         <span class="vip-badge">👑 VIP</span>
         <span style="font-size:0.9rem; opacity:0.9">لوحة التحكم الإدارية</span>
-      </div>    </header>
+      </div>
+    </header>
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs">
@@ -498,6 +857,7 @@
       <button class="nav-tab" onclick="showSection('chat')">💬 الدردشة</button>
       <button class="nav-tab" onclick="showSection('stats')">📊 الإحصائيات</button>
       <button class="nav-tab" onclick="showSection('warnings')">⚠️ التحذيرات</button>
+      <button class="nav-tab" onclick="showSection('game')">🎮 اللعبة</button>
       
       <!-- VIP Only Tabs -->
       <button class="nav-tab vip-only" id="tabUserData" onclick="showSection('userData')" style="display:none;">📋 بيانات المستخدمين</button>
@@ -520,8 +880,7 @@
         <div class="form-group">
           <label>الاسم في اللعبة</label>
           <input type="text" id="myDisplayName" class="form-control" onchange="updateDisplayName(this.value)">
-        </div>
-        <button class="btn btn-danger" onclick="logout()">🚪 تسجيل الخروج</button>
+        </div>        <button class="btn btn-danger" onclick="logout()">🚪 تسجيل الخروج</button>
       </div>
     </div>
 
@@ -537,7 +896,11 @@
     <div id="visitors" class="section">
       <div class="card">
         <h3>🟢 المتصلون الآن (<span id="visitorsCount">0</span>)</h3>
-        <div id="visitorsList"></div>      </div>
+        <p style="opacity:0.8; font-size:0.9rem; margin-bottom:15px;">
+          🎮 اضغط على أيقونة اللعبة لإرسال دعوة للعب
+        </p>
+        <div id="visitorsList"></div>
+      </div>
     </div>
 
     <!-- Chat Section -->
@@ -566,8 +929,7 @@
             <div class="stat-label">❌ خسارة</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value" id="myRank">-</div>
-            <div class="stat-label">🏆 المرتبة</div>
+            <div class="stat-value" id="myRank">-</div>            <div class="stat-label">🏆 المرتبة</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="myLastOpponent">-</div>
@@ -586,7 +948,8 @@
               <th>فوز</th>
               <th>خسارة</th>
               <th>المرتبة</th>
-              <th>آخر خصم</th>            </tr>
+              <th>آخر خصم</th>
+            </tr>
           </thead>
           <tbody id="allStatsBody"></tbody>
         </table>
@@ -615,8 +978,7 @@
     <!-- VIP: User Data Section -->
     <div id="userData" class="section">
       <div class="card">
-        <h3>📋 بيانات جميع المستخدمين</h3>
-        <table class="warning-table">
+        <h3>📋 بيانات جميع المستخدمين</h3>        <table class="warning-table">
           <thead>
             <tr>
               <th>المعرف</th>
@@ -635,7 +997,8 @@
     <!-- VIP: Manage Players -->
     <div id="managePlayers" class="section">
       <div class="card">
-        <h3>🎮 إدارة اللاعبين</h3>        <div id="managePlayersList"></div>
+        <h3>🎮 إدارة اللاعبين</h3>
+        <div id="managePlayersList"></div>
       </div>
     </div>
 
@@ -664,8 +1027,7 @@
       </div>
     </div>
 
-    <!-- VIP: Site Control -->
-    <div id="siteControl" class="section">
+    <!-- VIP: Site Control -->    <div id="siteControl" class="section">
       <div class="card">
         <h3>⚙️ تحكم في حالة الموقع</h3>
         <div style="display:flex; align-items:center; gap:15px; margin:20px 0; flex-wrap:wrap;">
@@ -684,7 +1046,8 @@
     <div id="protection" class="section">
       <div class="card">
         <h3>🔐 نظام الحماية من التسلل</h3>
-        <p style="margin:15px 0; opacity:0.9;">          يعرض المحاولات المشبوهة للدخول من أجهزة أو متصفحات مختلفة عن البصمة الأصلية للمستخدم.
+        <p style="margin:15px 0; opacity:0.9;">
+          يعرض المحاولات المشبوهة للدخول من أجهزة أو متصفحات مختلفة عن البصمة الأصلية للمستخدم.
         </p>
         <table class="warning-table">
           <thead>
@@ -698,6 +1061,146 @@
           </thead>
           <tbody id="protectionBody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ===== Game Section ===== -->
+    <div id="game" class="section">
+      <!-- Game Lobby -->
+      <div id="gameLobby" style="display:block;">
+        <div class="card">
+          <h3>🎮 إنشاء غرفة لعب جديدة</h3>
+          
+          <div class="form-group">
+            <label>🎯 مستوى الصعوبة</label>
+            <div class="difficulty-selector">
+              <button class="difficulty-btn easy active" onclick="selectDifficulty('easy')">😊 سهل</button>
+              <button class="difficulty-btn medium" onclick="selectDifficulty('medium')">🤔 متوسط</button>
+              <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">🔥 صعب جداً</button>            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>👥 عدد اللاعبين (2-4)</label>
+            <select id="maxPlayers" class="form-control">
+              <option value="2">2 لاعبين</option>
+              <option value="3">3 لاعبين</option>
+              <option value="4">4 لاعبين</option>
+            </select>
+          </div>
+          
+          <button class="btn btn-primary" onclick="createGameRoom()">
+            🚀 إنشاء غرفة والبدء
+          </button>
+        </div>
+        
+        <!-- Join by Code -->
+        <div class="card" style="margin-top:20px;">
+          <h3>🔑 الانضمام لغرفة موجودة</h3>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="roomCodeInput" class="form-control" placeholder="أدخل كود الغرفة" maxlength="6">
+            <button class="btn btn-success" style="width:auto;" onclick="joinGameByCode()">انضمام</button>
+          </div>
+        </div>
+        
+        <!-- Active Rooms -->
+        <div class="card" style="margin-top:20px;">
+          <h3>🏠 الغرف النشطة (<span id="activeRoomsCount">0</span>)</h3>
+          <div id="activeRoomsList"></div>
+        </div>
+      </div>
+      
+      <!-- Game Playing View -->
+      <div id="gamePlaying" style="display:none;">
+        <div class="game-container">
+          <!-- Main Game Board -->
+          <div class="game-board">
+            <div class="game-header">
+              <div class="game-title">
+                <span id="gameRoomCode">ROOM: XXXXXX</span>
+                <span id="gameDifficulty" class="badge badge-active">سهل</span>
+              </div>
+              <div class="game-timer" id="gameTimer">⏱️ 10s</div>
+            </div>
+            
+            <!-- Current Round -->
+            <div id="gameRound">
+              <div class="waiting-animation">
+                <h3>⏳ جاري تحضير الجولة...</h3>                <p class="waiting-dots"></p>
+              </div>
+            </div>
+            
+            <!-- Question Template (Hidden by default) -->
+            <div id="questionTemplate" style="display:none;">
+              <div class="question-card">
+                <span class="category-icon" id="questionIcon">👤</span>
+                <div class="question-category" id="questionCategory">اسم شخص</div>
+                <div class="question-letter" id="questionLetter">أ</div>
+                <p style="opacity:0.8;">اكتب كلمة تبدأ بهذا الحرف</p>
+                
+                <input type="text" 
+                       class="answer-input" 
+                       id="answerInput" 
+                       placeholder="اكتب إجابتك هنا..." 
+                       maxlength="50"
+                       onkeypress="if(event.key==='Enter') submitAnswer()">
+                
+                <div id="answerFeedback"></div>
+              </div>
+            </div>
+            
+            <!-- Game Controls -->
+            <div class="game-controls">
+              <button class="btn-game btn-invite" id="btnInvitePlayers" onclick="invitePlayersFromVisitors()">
+                👥 دعوة لاعبين
+              </button>
+              <button class="btn-game btn-start" id="btnStartGame" onclick="startGame()" disabled>
+                🎯 START PLAY
+              </button>
+              <button class="btn-game btn-leave" onclick="leaveGameRoom()">
+                🚪 مغادرة
+              </button>
+            </div>
+            
+            <!-- In-Game Chat -->
+            <div class="game-chat">
+              <h4>💬 دردشة اللعبة</h4>
+              <div id="gameChatContainer" class="chat-container"></div>
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                <input type="text" 
+                       id="gameChatInput" 
+                       class="form-control" 
+                       placeholder="اكتب رسالة..." 
+                       onkeypress="if(event.key==='Enter') sendGameChat()">
+                <button class="btn btn-primary" style="width:auto;" onclick="sendGameChat()">➤</button>
+              </div>
+            </div>
+          </div>          
+          <!-- Players Sidebar -->
+          <div class="players-panel">
+            <h4 style="margin-bottom:15px;">👥 اللاعبون (<span id="playersInRoomCount">1</span>/<span id="maxPlayersDisplay">2</span>)</h4>
+            <div id="playersInRoomList"></div>
+            
+            <div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--glass-border);">
+              <h4>📊 النتائج الحية</h4>
+              <div id="liveScores"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Game Results View -->
+      <div id="gameResults" style="display:none;">
+        <div class="card" style="text-align:center;">
+          <h2>🏆 انتهت اللعبة!</h2>
+          <div id="winnerBadge"></div>
+          
+          <div class="results-grid" id="finalResults"></div>
+          
+          <div style="margin-top:25px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="playAgain()">🔄 لعب مرة أخرى</button>
+            <button class="btn" style="background:rgba(255,255,255,0.1);" onclick="showSection('game')">🏠 العودة للرئيسية</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -720,20 +1223,44 @@
     }
 
     // Current User State
-    let currentUser = null;
-    let isVIP = false;
+    let currentUser = null;    let isVIP = false;
     let deviceFingerprint = null;
     let chatSubscription = null;
     let visitorsSubscription = null;
     let statsSubscription = null;
     let warningsSubscription = null;
     let settingsSubscription = null;
+    let gameRoomSubscription = null;
+    let notificationSubscription = null;
+
+    // ===== Game Configuration =====
+    const CATEGORIES = [
+      { id: 'name', label: 'اسم شخص', icon: '👤', letters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي' },
+      { id: 'animal', label: 'اسم حيوان', icon: '🦁', letters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي' },
+      { id: 'object', label: 'اسم جماد', icon: '📦', letters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي' },
+      { id: 'country', label: 'اسم دولة', icon: '🌍', letters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي' },
+      { id: 'plant', label: 'اسم نبات', icon: '🌿', letters: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي' }
+    ];
+
+    const DIFFICULTY_SETTINGS = {
+      easy: { timeLimit: 15, hintChance: 0.3 },
+      medium: { timeLimit: 10, hintChance: 0.1 },
+      hard: { timeLimit: 7, hintChance: 0 }
+    };
+
+    // ===== Game State =====
+    let currentGameRoom = null;
+    let currentRound = null;
+    let gameTimer = null;
+    let selectedDifficulty = 'easy';
+    let pendingInvites = new Set();
 
     // Initialize App
     document.addEventListener('DOMContentLoaded', async () => {
       console.log('🚀 App initializing...');
       try {
-        await initFingerprint();        await checkSiteStatus();
+        await initFingerprint();
+        await checkSiteStatus();
         await checkSession();
         console.log('✅ App initialized');
       } catch (error) {
@@ -745,8 +1272,7 @@
     // Device Fingerprinting
     async function initFingerprint() {
       try {
-        const fp = await FingerprintJS.load();
-        const result = await fp.get();
+        const fp = await FingerprintJS.load();        const result = await fp.get();
         deviceFingerprint = result.visitorId;
         console.log('🔐 Device Fingerprint:', deviceFingerprint);
       } catch (err) {
@@ -782,7 +1308,8 @@
       } catch (err) {
         console.error('Error checking site status:', err);
         return true;
-      }    }
+      }
+    }
 
     // Check Existing Session
     async function checkSession() {
@@ -794,8 +1321,7 @@
           isVIP = true;
           currentUser = JSON.parse(saved);
           await afterLogin();
-        } else if (saved) {
-          currentUser = JSON.parse(saved);
+        } else if (saved) {          currentUser = JSON.parse(saved);
           if (db) {
             const { data, error } = await db.from('users')
               .select('*').eq('id', currentUser.id).maybeSingle();
@@ -831,7 +1357,8 @@
           return;
         }
 
-        if (!db) {          showNotification('❌ خطأ في الاتصال بقاعدة البيانات', 'error');
+        if (!db) {
+          showNotification('❌ خطأ في الاتصال بقاعدة البيانات', 'error');
           return;
         }
 
@@ -843,8 +1370,7 @@
         }
 
         // Create user
-        const { data, error } = await db.from('users').insert([{
-          username,
+        const { data, error } = await db.from('users').insert([{          username,
           password,
           display_name: displayName,
           device_fingerprint: deviceFingerprint,
@@ -880,21 +1406,20 @@
     // Show VIP Login
     function showVIPLogin() {
       console.log('Showing VIP login form');
-      document.getElementById('signupForm').style.display = 'none';      document.getElementById('vipLoginForm').style.display = 'block';
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('vipLoginForm').style.display = 'block';
     }
 
     function hideVIPLogin() {
       console.log('Hiding VIP login form');
       document.getElementById('signupForm').style.display = 'block';
       document.getElementById('vipLoginForm').style.display = 'none';
-      // Clear inputs
       document.getElementById('vipPassword').value = '';
       document.getElementById('vipCode').value = '';
     }
 
     // VIP Login Handler
-    async function handleVIPLogin() {
-      try {
+    async function handleVIPLogin() {      try {
         const inputPass = document.getElementById('vipPassword').value;
         const inputCode = document.getElementById('vipCode').value;
 
@@ -905,12 +1430,10 @@
           return;
         }
 
-        // Fetch VIP credentials from raw URL
         const response = await fetch(VIP_RAW_URL);
         const rawText = await response.text();
         console.log('Raw VIP data:', rawText);
         
-        // Parse format: 【S】ONX.COM【S】and【P】ONX【P】
         const sMatch = rawText.match(/【S】(.*?)【S】/);
         const pMatch = rawText.match(/【P】(.*?)【P】/);
         
@@ -920,7 +1443,6 @@
         console.log('Parsed VIP:', { validUser, validPass });
 
         if (inputPass === validPass && inputCode === validUser) {
-          // Create VIP session
           isVIP = true;
           currentUser = {
             id: 'vip_admin',
@@ -929,7 +1451,7 @@
             role: 'vip'
           };
           localStorage.setItem('harfGame_user', JSON.stringify(currentUser));
-          localStorage.setItem('harfGame_vip', 'true');          
+          localStorage.setItem('harfGame_vip', 'true');
           showNotification('👑 مرحباً بك في لوحة التحكم VIP! ✨', 'success');
           await afterLogin();
         } else {
@@ -946,9 +1468,7 @@
       console.log('After login setup');
       try {
         document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        // Update UI
+        document.getElementById('mainApp').style.display = 'block';        
         const displayName = currentUser.display_name || currentUser.username;
         document.getElementById('userDisplay').textContent = `👤 ${displayName}`;
         document.getElementById('myUsername').value = currentUser.username;
@@ -956,12 +1476,10 @@
         
         if (isVIP) {
           document.getElementById('vipIndicator').style.display = 'block';
-          // Show VIP tabs
           document.querySelectorAll('.vip-only').forEach(el => el.style.display = 'inline-block');
           document.getElementById('allStatsCard').style.display = 'block';
         }
         
-        // Load initial data
         await loadPlayers();
         await loadVisitors();
         await loadChat();
@@ -973,12 +1491,10 @@
           await loadProtectionLogs();
         }
         
-        // Setup Realtime Subscriptions
         setupRealtimeSubscriptions();
-        
-        // Update online status
         await updateOnlineStatus(true);
-      } catch (err) {        console.error('After login error:', err);
+      } catch (err) {
+        console.error('After login error:', err);
       }
     }
 
@@ -986,7 +1502,6 @@
     function setupRealtimeSubscriptions() {
       if (!db) return;
 
-      // Chat messages
       try {
         chatSubscription = db.channel('chat:public')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -994,22 +1509,18 @@
           })
           .subscribe();
 
-        // Visitors
         visitorsSubscription = db.channel('visitors:public')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'visitors' }, () => {
             loadVisitors();
           })
           .subscribe();
 
-        // Stats
         statsSubscription = db.channel('stats:public')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'stats' }, () => {
-            loadStats();
-            if (isVIP) loadUserData();
+            loadStats();            if (isVIP) loadUserData();
           })
           .subscribe();
 
-        // Warnings
         warningsSubscription = db.channel('warnings:public')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'warnings' }, () => {
             loadWarnings();
@@ -1017,7 +1528,6 @@
           })
           .subscribe();
 
-        // Site Settings
         settingsSubscription = db.channel('settings:public')
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'site_settings' }, async payload => {
             if (!payload.new.is_enabled && !isVIP) {
@@ -1028,7 +1538,7 @@
             }
           })
           .subscribe();
-        // Users
+
         db.channel('users:public')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
             loadPlayers();
@@ -1038,14 +1548,25 @@
             }
           })
           .subscribe();
+
+        // Game notifications
+        if (currentUser?.id) {
+          notificationSubscription = db.channel(`notifications:${currentUser.id}`)
+            .on('postgres_changes',
+              { event: 'INSERT', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${currentUser.id}` },
+              payload => {
+                handleNewNotification(payload.new);
+              }
+            )
+            .subscribe();
+        }
       } catch (err) {
         console.error('Subscription error:', err);
       }
     }
 
     // Update Online Status
-    async function updateOnlineStatus(online) {
-      if (!currentUser || currentUser.id === 'vip_admin' || !db) return;
+    async function updateOnlineStatus(online) {      if (!currentUser || currentUser.id === 'vip_admin' || !db) return;
       
       try {
         await db.from('visitors').upsert({
@@ -1076,7 +1597,8 @@
         container.innerHTML = '';
         
         (data || []).forEach(player => {
-          const statusClass = player.status === 'active' ? 'status-online' : 'status-offline';          const statusText = player.status === 'active' ? 'نشط' : player.status === 'muted' ? 'مكتوم' : 'محظور';
+          const statusClass = player.status === 'active' ? 'status-online' : 'status-offline';
+          const statusText = player.status === 'active' ? 'نشط' : player.status === 'muted' ? 'مكتوم' : 'محظور';
           
           container.innerHTML += `
             <div class="player-item">
@@ -1093,15 +1615,14 @@
         });
       } catch (err) {
         console.error('Load players error:', err);
-      }
-    }
+      }    }
 
     // Load Visitors
     async function loadVisitors() {
       if (!db) return;
       try {
         const { data, error } = await db.from('visitors')
-          .select('*, users(device_fingerprint)')
+          .select('*, users(device_fingerprint, status)')
           .eq('is_online', true)
           .order('last_activity', { ascending: false });
         
@@ -1112,28 +1633,38 @@
         container.innerHTML = '';
         
         (data || []).forEach(visitor => {
+          const isMe = visitor.user_id === currentUser?.id;
+          const canInvite = !isMe && visitor.users?.status === 'active' && !pendingInvites.has(visitor.user_id);
+          
           container.innerHTML += `
-            <div class="player-item">
+            <div class="visitor-item">
               <span>
                 <span class="status-dot status-online"></span>
-                ${visitor.username}
-                ${visitor.user_id === currentUser?.id ? ' <small style="color:var(--accent)">(أنت)</small>' : ''}
+                ${escapeHtml(visitor.username)}
+                ${isMe ? ' <small style="color:var(--accent)">(أنت)</small>' : ''}
               </span>
-              <small style="opacity:0.7">${new Date(visitor.last_activity).toLocaleTimeString('ar-EG')}</small>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <small style="opacity:0.7">${new Date(visitor.last_activity).toLocaleTimeString('ar-EG')}</small>
+                ${canInvite ? `
+                  <button class="game-invite-btn" title="دعوة للعب" onclick="sendDirectInvite('${visitor.user_id}', '${escapeHtml(visitor.username)}')">🎮</button>
+                ` : canInvite === false && pendingInvites.has(visitor.user_id) ? `
+                  <span style="color:var(--success); font-size:1.2rem;">✓</span>
+                ` : ''}
+              </div>
             </div>
           `;
         });
       } catch (err) {
         console.error('Load visitors error:', err);
-      }    }
+      }
+    }
 
     // Load Chat Messages
     async function loadChat() {
       if (!db) return;
       try {
         const { data, error } = await db.from('messages')
-          .select('*, users(status)')
-          .eq('is_deleted', false)
+          .select('*, users(status)')          .eq('is_deleted', false)
           .order('timestamp', { ascending: true })
           .limit(50);
         
@@ -1142,7 +1673,6 @@
         const container = document.getElementById('chatContainer');
         container.innerHTML = '';
         
-        // Check if muted
         if (currentUser?.status === 'muted' && currentUser?.id !== 'vip_admin') {
           container.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.8">🔇 أنت مكتوم حالياً، لا يمكنك إرسال رسائل</div>';
           document.getElementById('chatInput').disabled = true;
@@ -1174,7 +1704,8 @@
         <div>${escapeHtml(msg.message)}</div>
       `;
       container.appendChild(div);
-      container.scrollTop = container.scrollHeight;    }
+      container.scrollTop = container.scrollHeight;
+    }
 
     // Send Message
     async function sendMessage() {
@@ -1182,8 +1713,7 @@
         const input = document.getElementById('chatInput');
         const message = input.value.trim();
         
-        if (!message || !currentUser || !db) return;
-        if (currentUser.status === 'muted' && !isVIP) {
+        if (!message || !currentUser || !db) return;        if (currentUser.status === 'muted' && !isVIP) {
           showNotification('🔇 لا يمكنك إرسال رسائل وأنت مكتوم', 'warning');
           return;
         }
@@ -1223,7 +1753,8 @@
         }
         
         if (isVIP) {
-          const { data: allStats } = await db.from('stats').select('*').order('rank', { ascending: false });          const tbody = document.getElementById('allStatsBody');
+          const { data: allStats } = await db.from('stats').select('*').order('rank', { ascending: false });
+          const tbody = document.getElementById('allStatsBody');
           tbody.innerHTML = '';
           
           (allStats || []).forEach(stat => {
@@ -1231,8 +1762,7 @@
               <tr>
                 <td>${escapeHtml(stat.username)}</td>
                 <td style="color:var(--success)">${stat.wins}</td>
-                <td style="color:var(--danger)">${stat.losses}</td>
-                <td><strong>${stat.rank || '-'}</strong></td>
+                <td style="color:var(--danger)">${stat.losses}</td>                <td><strong>${stat.rank || '-'}</strong></td>
                 <td>${stat.last_opponent || '-'}</td>
               </tr>
             `;
@@ -1272,7 +1802,8 @@
           `;
         });
       } catch (err) {
-        console.error('Load warnings error:', err);      }
+        console.error('Load warnings error:', err);
+      }
     }
 
     // VIP: Load User Data
@@ -1280,8 +1811,7 @@
       if (!isVIP || !db) return;
       
       try {
-        const { data, error } = await db.from('users').select('*').order('created_at', { ascending: false });
-        if (error) { console.error('Load user data error:', error); return; }
+        const { data, error } = await db.from('users').select('*').order('created_at', { ascending: false });        if (error) { console.error('Load user data error:', error); return; }
         
         const tbody = document.getElementById('userDataBody');
         tbody.innerHTML = '';
@@ -1321,7 +1851,8 @@
             <div class="player-item">
               <span>
                 <strong>${escapeHtml(player.display_name || player.username)}</strong>
-                <small style="opacity:0.7; margin-right:8px;">(@${escapeHtml(player.username)})</small>              </span>
+                <small style="opacity:0.7; margin-right:8px;">(@${escapeHtml(player.username)})</small>
+              </span>
               <div>
                 <button class="btn btn-success" style="padding:5px 12px; font-size:0.85rem; width:auto;" onclick="editPlayerName('${player.id}')">✏️</button>
                 <button class="btn btn-danger" style="padding:5px 12px; font-size:0.85rem; width:auto;" onclick="quickBan('${player.id}', '${escapeHtml(player.username)}')">🚫</button>
@@ -1329,8 +1860,7 @@
             </div>
           `;
         });
-      } catch (err) {
-        console.error('Load manage players error:', err);
+      } catch (err) {        console.error('Load manage players error:', err);
       }
     }
 
@@ -1370,7 +1900,7 @@
         else if (action === 'unmuted' || action === 'unbanned') newStatus = 'active';
         
         await db.from('users').update({ status: newStatus }).eq('id', userId);
-                await db.from('warnings').insert({
+        await db.from('warnings').insert({
           user_id: userId,
           username: user.username,
           action: action,
@@ -1379,8 +1909,7 @@
         });
         
         showNotification(`✅ تم تطبيق الإجراء: ${action} على ${user.username}`, 'success');
-        loadWarnings();
-        loadPlayers();
+        loadWarnings();        loadPlayers();
         document.getElementById('modReason').value = '';
       } catch (err) {
         console.error('Apply moderation error:', err);
@@ -1396,7 +1925,7 @@
         const statusText = document.getElementById('siteStatusText');
         
         const { data: current } = await db.from('site_settings').select('is_enabled').eq('id', 1).maybeSingle();
-        const newStatus = !current.is_enabled;
+        const newStatus = !current?.is_enabled;
         
         await db.from('site_settings').update({
           is_enabled: newStatus,
@@ -1419,7 +1948,8 @@
         if (!msg) { showNotification('⚠️ اكتب رسالة أولاً', 'warning'); return; }
         if (!db) return;
         
-        await db.from('site_settings').update({          maintenance_message: msg,
+        await db.from('site_settings').update({
+          maintenance_message: msg,
           updated_at: new Date().toISOString()
         }).eq('id', 1);
         
@@ -1428,7 +1958,6 @@
         console.error('Update maintenance error:', err);
       }
     }
-
     // VIP: Load Protection Logs
     async function loadProtectionLogs() {
       if (!isVIP || !db) return;
@@ -1468,7 +1997,8 @@
         const { error } = await db.from('users')
           .update({ display_name: newName.trim() })
           .eq('id', currentUser.id);
-                if (error) {
+        
+        if (error) {
           showNotification('❌ فشل تحديث الاسم', 'error');
           return;
         }
@@ -1477,8 +2007,7 @@
         localStorage.setItem('harfGame_user', JSON.stringify(currentUser));
         document.getElementById('userDisplay').textContent = `👤 ${newName.trim()}`;
         showNotification('✅ تم تحديث الاسم بنجاح', 'success');
-        
-        await db.from('stats').update({ username: newName.trim() }).eq('user_id', currentUser.id);
+                await db.from('stats').update({ username: newName.trim() }).eq('user_id', currentUser.id);
         await db.from('visitors').update({ username: newName.trim() }).eq('user_id', currentUser.id);
       } catch (err) {
         console.error('Update display name error:', err);
@@ -1489,7 +2018,7 @@
     function logout() {
       updateOnlineStatus(false);
       
-      [chatSubscription, visitorsSubscription, statsSubscription, warningsSubscription, settingsSubscription]
+      [chatSubscription, visitorsSubscription, statsSubscription, warningsSubscription, settingsSubscription, gameRoomSubscription, notificationSubscription]
         .forEach(sub => sub?.unsubscribe());
       
       localStorage.removeItem('harfGame_user');
@@ -1497,6 +2026,9 @@
       
       currentUser = null;
       isVIP = false;
+      currentGameRoom = null;
+      currentRound = null;
+      if (gameTimer) clearInterval(gameTimer);
       
       document.getElementById('mainApp').style.display = 'none';
       document.getElementById('authScreen').style.display = 'flex';
@@ -1517,14 +2049,14 @@
         await db.from('stats').update({ username: newName.trim() }).eq('user_id', userId);
         
         showNotification('✅ تم تعديل الاسم', 'success');
-        loadUserData();        loadPlayers();
+        loadUserData();
+        loadPlayers();
       } catch (err) {
         console.error('Edit player error:', err);
       }
     }
 
-    // VIP: Quick Ban
-    async function quickBan(userId, username) {
+    // VIP: Quick Ban    async function quickBan(userId, username) {
       if (!confirm(`هل أنت متأكد من حظر المستخدم "${username}"؟`)) return;
       if (!db) return;
       
@@ -1556,29 +2088,820 @@
 
     // Section Navigation
     function showSection(sectionId) {
-      // Hide all sections
       document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
       
-      // Show selected
-      document.getElementById(sectionId).classList.add('active');
-      event.target.classList.add('active');
+      document.getElementById(sectionId)?.classList.add('active');
+      if (event?.target) event.target.classList.add('active');
       
-      // Load data for section if needed
       if (sectionId === 'players') loadPlayers();
-      else if (sectionId === 'visitors') loadVisitors();      else if (sectionId === 'chat') loadChat();
+      else if (sectionId === 'visitors') loadVisitors();
+      else if (sectionId === 'chat') loadChat();
       else if (sectionId === 'stats') loadStats();
       else if (sectionId === 'warnings') loadWarnings();
       else if (sectionId === 'userData' && isVIP) loadUserData();
       else if (sectionId === 'managePlayers' && isVIP) loadManagePlayers();
       else if (sectionId === 'moderation' && isVIP) updateModUserSelect();
       else if (sectionId === 'protection' && isVIP) loadProtectionLogs();
+      else if (sectionId === 'game') {
+        if (currentGameRoom) {
+          document.getElementById('gameLobby').style.display = 'none';          document.getElementById('gamePlaying').style.display = 'block';
+          document.getElementById('gameResults').style.display = 'none';
+          loadRoomPlayers(currentGameRoom.id);
+        } else {
+          document.getElementById('gameLobby').style.display = 'block';
+          document.getElementById('gamePlaying').style.display = 'none';
+          document.getElementById('gameResults').style.display = 'none';
+          loadActiveRooms();
+        }
+      }
+    }
+
+    // ===== GAME FUNCTIONS =====
+
+    function selectDifficulty(level) {
+      selectedDifficulty = level;
+      document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      showNotification(`✅ تم اختيار مستوى: ${level === 'easy' ? 'سهل' : level === 'medium' ? 'متوسط' : 'صعب جداً'}`, 'success');
+    }
+
+    function generateRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    async function createGameRoom() {
+      if (!currentUser || !db) {
+        showNotification('❌ يرجى تسجيل الدخول أولاً', 'error');
+        return;
+      }
+      
+      try {
+        const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
+        const roomCode = generateRoomCode();
+        
+        const { data: room, error } = await db.from('game_rooms').insert({
+          host_id: currentUser.id,
+          room_code: roomCode,
+          difficulty: selectedDifficulty,
+          max_players: maxPlayers,
+          status: 'waiting'
+        }).select().single();
+        
+        if (error) throw error;
+                await db.from('room_players').insert({
+          room_id: room.id,
+          user_id: currentUser.id,
+          username: currentUser.display_name || currentUser.username,
+          is_ready: true,
+          is_turn: false
+        });
+        
+        currentGameRoom = room;
+        await loadGameRoom(room.id);
+        
+        showSection('game');
+        document.getElementById('gameLobby').style.display = 'none';
+        document.getElementById('gamePlaying').style.display = 'block';
+        
+        showNotification(`✅ تم إنشاء الغرفة بنجاح! كود الغرفة: ${roomCode}`, 'success');
+        setupGameRealtime(room.id);
+        
+      } catch (err) {
+        console.error('Create room error:', err);
+        showNotification('❌ خطأ في إنشاء الغرفة: ' + err.message, 'error');
+      }
+    }
+
+    async function joinGameByCode(code) {
+      const roomCode = code || document.getElementById('roomCodeInput').value.trim().toUpperCase();
+      if (!roomCode || roomCode.length !== 6) {
+        showNotification('⚠️ يرجى إدخال كود غرفة صحيح (6 أحرف)', 'warning');
+        return;
+      }
+      
+      try {
+        const { data: room, error } = await db.from('game_rooms')
+          .select('*').eq('room_code', roomCode).maybeSingle();
+        
+        if (error || !room) {
+          showNotification('❌ الغرفة غير موجودة!', 'error');
+          return;
+        }
+        
+        if (room.status !== 'waiting') {
+          showNotification('⚠️ هذه الغرفة بدأت بالفعل!', 'warning');
+          return;
+        }
+        
+        const { data: existing } = await db.from('room_players')
+          .select('id').eq('room_id', room.id).eq('user_id', currentUser.id).maybeSingle();
+        
+        if (existing) {
+          await loadGameRoom(room.id);          return;
+        }
+        
+        await db.from('room_players').insert({
+          room_id: room.id,
+          user_id: currentUser.id,
+          username: currentUser.display_name || currentUser.username,
+          is_ready: true,
+          is_turn: false
+        });
+        
+        currentGameRoom = room;
+        await loadGameRoom(room.id);
+        
+        showSection('game');
+        document.getElementById('gameLobby').style.display = 'none';
+        document.getElementById('gamePlaying').style.display = 'block';
+        
+        showNotification(`✅ انضممت للغرفة: ${roomCode}`, 'success');
+        setupGameRealtime(room.id);
+        
+      } catch (err) {
+        console.error('Join room error:', err);
+        showNotification('❌ خطأ في الانضمام: ' + err.message, 'error');
+      }
+    }
+
+    async function loadGameRoom(roomId) {
+      if (!db) return;
+      
+      try {
+        const { data: room } = await db.from('game_rooms')
+          .select('*').eq('id', roomId).single();
+        
+        if (!room) return;
+        currentGameRoom = room;
+        
+        document.getElementById('gameRoomCode').textContent = `ROOM: ${room.room_code}`;
+        document.getElementById('gameDifficulty').textContent = 
+          room.difficulty === 'easy' ? '😊 سهل' : 
+          room.difficulty === 'medium' ? '🤔 متوسط' : '🔥 صعب جداً';
+        document.getElementById('maxPlayersDisplay').textContent = room.max_players;
+        
+        await loadRoomPlayers(roomId);
+        updateStartButton();
+        
+      } catch (err) {
+        console.error('Load room error:', err);
+      }
+    }
+    async function loadRoomPlayers(roomId) {
+      if (!db) return;
+      
+      try {
+        const { data: players } = await db.from('room_players')
+          .select('*').eq('room_id', roomId).order('joined_at');
+        
+        document.getElementById('playersInRoomCount').textContent = players?.length || 0;
+        
+        const container = document.getElementById('playersInRoomList');
+        const scoresContainer = document.getElementById('liveScores');
+        container.innerHTML = '';
+        scoresContainer.innerHTML = '';
+        
+        (players || []).forEach(player => {
+          const isTurn = player.is_turn;
+          const isMe = player.user_id === currentUser?.id;
+          
+          container.innerHTML += `
+            <div class="player-in-game ${isTurn ? 'active-turn' : ''}">
+              <div class="player-avatar">${(player.username || '?').charAt(0).toUpperCase()}</div>
+              <div style="flex:1;">
+                <strong>${escapeHtml(player.username)}</strong>
+                ${isMe ? '<small style="color:var(--accent); margin-right:8px;">(أنت)</small>' : ''}
+                ${isTurn ? '<small style="color:var(--warning);">🎯 دوره</small>' : ''}
+              </div>
+              <div class="player-score">${player.score} نقطة</div>
+            </div>
+          `;
+          
+          scoresContainer.innerHTML += `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--glass-border);">
+              <span>${escapeHtml(player.username)}${isMe ? ' (أنت)' : ''}</span>
+              <strong style="color:var(--accent)">${player.score}</strong>
+            </div>
+          `;
+        });
+        
+        updateStartButton();
+        
+      } catch (err) {
+        console.error('Load players error:', err);
+      }
+    }
+
+    function updateStartButton() {
+      const btn = document.getElementById('btnStartGame');
+      const playerCount = parseInt(document.getElementById('playersInRoomCount').textContent);
+            const isHost = currentGameRoom?.host_id === currentUser?.id;
+      const canStart = isHost && playerCount >= 2 && currentGameRoom?.status === 'waiting';
+      
+      btn.disabled = !canStart;
+      btn.innerHTML = canStart ? '🎯 START PLAY' : `⏳ انتظر ${2 - playerCount} لاعبين...`;
+    }
+
+    async function invitePlayersFromVisitors() {
+      if (!db || !currentGameRoom) return;
+      
+      try {
+        const { data: visitors } = await db.from('visitors')
+          .select('*, users(id, username, display_name, status)')
+          .eq('is_online', true)
+          .neq('user_id', currentUser.id);
+        
+        if (!visitors || visitors.length === 0) {
+          showNotification('⚠️ لا يوجد لاعبين متصلين لدعوتهم', 'warning');
+          return;
+        }
+        
+        showInviteModal(visitors.filter(v => v.users?.status === 'active'));
+        
+      } catch (err) {
+        console.error('Invite error:', err);
+      }
+    }
+
+    function showInviteModal(visitors) {
+      const modal = document.createElement('div');
+      modal.className = 'modal active';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>👥 دعوة لاعبين</h3>
+            <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+          </div>
+          <p style="margin-bottom:15px; opacity:0.9;">اختر اللاعبين لدعوتهم للغرفة: <strong>${currentGameRoom?.room_code}</strong></p>
+          <div style="max-height:300px; overflow-y:auto; margin-bottom:20px;">
+            ${visitors.map(v => `
+              <label style="display:flex; align-items:center; padding:10px; background:rgba(255,255,255,0.08); border-radius:10px; margin:5px 0; cursor:pointer;">
+                <input type="checkbox" value="${v.user_id}" style="margin-left:10px;">
+                <span>${escapeHtml(v.users?.display_name || v.users?.username || 'مستخدم')}</span>
+              </label>
+            `).join('') || '<p style="text-align:center; opacity:0.7;">لا يوجد لاعبين متاحين</p>'}
+          </div>
+          <button class="btn btn-primary" onclick="sendInvitesFromModal()">📤 إرسال الدعوات</button>
+        </div>
+      `;
+      document.body.appendChild(modal);    }
+
+    async function sendInvitesFromModal() {
+      const modal = document.querySelector('.modal.active');
+      const checkboxes = modal.querySelectorAll('input[type="checkbox"]:checked');
+      
+      if (checkboxes.length === 0) {
+        showNotification('⚠️ اختر لاعباً واحداً على الأقل', 'warning');
+        return;
+      }
+      
+      try {
+        for (const checkbox of checkboxes) {
+          const recipientId = checkbox.value;
+          
+          await db.from('notifications').insert({
+            recipient_id: recipientId,
+            sender_id: currentUser.id,
+            type: 'game_invite',
+            title: '🎮 دعوة للعب!',
+            message: `${currentUser.display_name || currentUser.username} يدعوك للعب لعبة الأحرف`,
+            data: {
+              room_id: currentGameRoom.id,
+              room_code: currentGameRoom.room_code,
+              sender_name: currentUser.display_name || currentUser.username,
+              difficulty: currentGameRoom.difficulty
+            }
+          });
+          
+          pendingInvites.add(recipientId);
+        }
+        
+        modal.remove();
+        showNotification(`✅ تم إرسال ${checkboxes.length} دعوة!`, 'success');
+        
+        document.getElementById('btnInvitePlayers').classList.add('sent');
+        document.getElementById('btnInvitePlayers').textContent = '✓ تم الإرسال';
+        
+      } catch (err) {
+        console.error('Send invites error:', err);
+        showNotification('❌ خطأ في إرسال الدعوات', 'error');
+      }
+    }
+
+    async function startGame() {
+      if (!currentGameRoom || currentGameRoom.host_id !== currentUser?.id) return;
+      
+      try {
+        await db.from('game_rooms').update({
+          status: 'playing',          started_at: new Date().toISOString()
+        }).eq('id', currentGameRoom.id);
+        
+        const { data: players } = await db.from('room_players')
+          .select('user_id').eq('room_id', currentGameRoom.id);
+        
+        const firstPlayerId = selectFirstPlayerSmart(players.map(p => p.user_id));
+        
+        await db.from('room_players')
+          .update({ is_turn: true })
+          .eq('room_id', currentGameRoom.id)
+          .eq('user_id', firstPlayerId);
+        
+        await generateNextRound();
+        
+        showNotification('🎮 بدأت اللعبة! حظاً موفقاً!', 'success');
+        
+      } catch (err) {
+        console.error('Start game error:', err);
+        showNotification('❌ خطأ في بدء اللعبة', 'error');
+      }
+    }
+
+    function selectFirstPlayerSmart(playerIds) {
+      const seed = currentGameRoom.room_code.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+      const random = (seed + Date.now()) % 100;
+      
+      const weights = playerIds.map((_, i) => 1 + (playerIds.length - i) * 0.1);
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      let threshold = random / 100 * totalWeight;
+      
+      for (let i = 0; i < playerIds.length; i++) {
+        threshold -= weights[i];
+        if (threshold <= 0) return playerIds[i];
+      }
+      
+      return playerIds[0];
+    }
+
+    async function generateNextRound() {
+      if (!currentGameRoom || !db) return;
+      
+      try {
+        const settings = DIFFICULTY_SETTINGS[currentGameRoom.difficulty];
+        const roundNumber = (await getCurrentRoundNumber()) + 1;
+        
+        const category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+        const letter = category.letters.charAt(Math.floor(Math.random() * category.letters.length));
+        
+        const { data: round, error } = await db.from('game_rounds').insert({          room_id: currentGameRoom.id,
+          round_number: roundNumber,
+          category: category.id,
+          letter: letter,
+          time_limit: settings.timeLimit,
+          answers: {},
+          correct_answers: {},
+          status: 'pending'
+        }).select().single();
+        
+        if (error) throw error;
+        
+        currentRound = round;
+        renderQuestion(category, letter, settings.timeLimit);
+        startRoundTimer(settings.timeLimit);
+        
+      } catch (err) {
+        console.error('Generate round error:', err);
+      }
+    }
+
+    async function getCurrentRoundNumber() {
+      if (!db || !currentGameRoom) return 0;
+      
+      const { data } = await db.from('game_rounds')
+        .select('id')
+        .eq('room_id', currentGameRoom.id)
+        .order('round_number', { ascending: false })
+        .limit(1);
+      
+      return data?.[0] ? 1 : 0;
+    }
+
+    function renderQuestion(category, letter, timeLimit) {
+      document.getElementById('questionTemplate').style.display = 'block';
+      document.getElementById('questionIcon').textContent = category.icon;
+      document.getElementById('questionCategory').textContent = category.label;
+      document.getElementById('questionLetter').textContent = letter;
+      document.getElementById('answerInput').value = '';
+      document.getElementById('answerInput').disabled = false;
+      document.getElementById('answerInput').focus();
+      document.getElementById('answerFeedback').innerHTML = '';
+      
+      updateTimerDisplay(timeLimit);
+    }
+
+    function startRoundTimer(seconds) {
+      let remaining = seconds;
+      
+      if (gameTimer) clearInterval(gameTimer);      
+      gameTimer = setInterval(() => {
+        remaining--;
+        updateTimerDisplay(remaining);
+        
+        const timerEl = document.getElementById('gameTimer');
+        if (remaining <= 3) {
+          timerEl.classList.add('warning');
+        }
+        
+        if (remaining <= 0) {
+          clearInterval(gameTimer);
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(seconds) {
+      const el = document.getElementById('gameTimer');
+      el.textContent = `⏱️ ${seconds}s`;
+      el.className = `game-timer${seconds <= 3 ? ' warning' : ''}`;
+    }
+
+    async function submitAnswer() {
+      const input = document.getElementById('answerInput');
+      const answer = input.value.trim();
+      
+      if (!answer || !currentRound || !currentUser) return;
+      
+      input.disabled = true;
+      if (gameTimer) clearInterval(gameTimer);
+      
+      try {
+        const { data: round } = await db.from('game_rounds')
+          .select('answers').eq('id', currentRound.id).single();
+        
+        const answers = round.answers || {};
+        answers[currentUser.id] = answer;
+        
+        await db.from('game_rounds').update({ answers }).eq('id', currentRound.id);
+        
+        const isCorrect = answer.length >= 2;
+        showAnswerFeedback(isCorrect ? 'correct' : 'wrong', answer);
+        
+        if (isCorrect) {
+          await db.from('room_players')
+            .update({ score: db.raw('score + 1') })
+            .eq('room_id', currentGameRoom.id)
+            .eq('user_id', currentUser.id);
+        }        
+        setTimeout(() => moveToNextPlayer(), 2000);
+        
+      } catch (err) {
+        console.error('Submit answer error:', err);
+        showAnswerFeedback('wrong', 'خطأ في الإرسال');
+        setTimeout(() => moveToNextPlayer(), 2000);
+      }
+    }
+
+    async function handleTimeOut() {
+      if (!currentRound || !currentUser) return;
+      
+      try {
+        await db.from('game_rounds')
+          .update({ status: 'timed_out' })
+          .eq('id', currentRound.id);
+        
+        showAnswerFeedback('timeout', '⏰ انتهى الوقت!');
+        
+        setTimeout(() => moveToNextPlayer(), 2000);
+        
+      } catch (err) {
+        console.error('Timeout error:', err);
+        setTimeout(() => moveToNextPlayer(), 2000);
+      }
+    }
+
+    function showAnswerFeedback(type, message) {
+      const feedback = document.getElementById('answerFeedback');
+      feedback.className = `answer-feedback ${type}`;
+      feedback.textContent = type === 'correct' ? '✅ إجابة صحيحة! +1 نقطة' : 
+                             type === 'wrong' ? '❌ إجابة غير مقبولة' : 
+                             `⏰ ${message}`;
+    }
+
+    async function moveToNextPlayer() {
+      if (!currentGameRoom || !db) return;
+      
+      try {
+        const { data: currentPlayer } = await db.from('room_players')
+          .select('user_id').eq('room_id', currentGameRoom.id).eq('is_turn', true).single();
+        
+        if (!currentPlayer) return;
+        
+        const { data: players } = await db.from('room_players')
+          .select('user_id').eq('room_id', currentGameRoom.id).order('joined_at');
+        
+        if (!players || players.length < 2) return;
+                const currentIndex = players.findIndex(p => p.user_id === currentPlayer.user_id);
+        const nextIndex = (currentIndex + 1) % players.length;
+        const nextPlayerId = players[nextIndex].user_id;
+        
+        await db.from('room_players')
+          .update({ is_turn: false })
+          .eq('room_id', currentGameRoom.id);
+        
+        await db.from('room_players')
+          .update({ is_turn: true })
+          .eq('room_id', currentGameRoom.id)
+          .eq('user_id', nextPlayerId);
+        
+        if (nextPlayerId === players[0].user_id) {
+          await generateNextRound();
+        }
+        
+        await loadRoomPlayers(currentGameRoom.id);
+        
+      } catch (err) {
+        console.error('Next player error:', err);
+      }
+    }
+
+    async function leaveGameRoom() {
+      if (!currentGameRoom || !currentUser) return;
+      
+      try {
+        await db.from('room_players')
+          .delete()
+          .eq('room_id', currentGameRoom.id)
+          .eq('user_id', currentUser.id);
+        
+        if (currentGameRoom.host_id === currentUser.id) {
+          await db.from('game_rooms')
+            .update({ status: 'finished', ended_at: new Date().toISOString() })
+            .eq('id', currentGameRoom.id);
+        }
+        
+        if (gameTimer) clearInterval(gameTimer);
+        currentGameRoom = null;
+        currentRound = null;
+        
+        document.getElementById('gamePlaying').style.display = 'none';
+        document.getElementById('gameLobby').style.display = 'block';
+        
+        showNotification('🚪 غادرت الغرفة', 'success');
+        
+      } catch (err) {
+        console.error('Leave room error:', err);      }
+    }
+
+    async function sendGameChat() {
+      const input = document.getElementById('gameChatInput');
+      const message = input.value.trim();
+      
+      if (!message || !currentGameRoom || !currentUser || !db) return;
+      
+      try {
+        await db.from('messages').insert({
+          user_id: currentUser.id,
+          username: currentUser.display_name || currentUser.username,
+          message: message
+        });
+        
+        input.value = '';
+      } catch (err) {
+        console.error('Game chat error:', err);
+      }
+    }
+
+    function setupGameRealtime(roomId) {
+      if (!db) return;
+      
+      gameRoomSubscription = db.channel(`room:${roomId}`)
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${roomId}` },
+          async payload => {
+            if (payload.new.status === 'finished') {
+              await showGameResults();
+            }
+          }
+        )
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` },
+          async () => {
+            await loadRoomPlayers(roomId);
+          }
+        )
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'game_rounds', filter: `room_id=eq.${roomId}` },
+          async payload => {
+            if (payload.new.id === currentRound?.id && payload.new.status !== 'pending') {
+              setTimeout(() => moveToNextPlayer(), 1500);
+            }
+          }
+        )
+        .subscribe();
+    }
+    function handleNewNotification(notification) {
+      if (notification.type === 'game_invite') {
+        showGameInviteNotification(notification);
+      }
+    }
+
+    function showGameInviteNotification(notification) {
+      const panel = document.getElementById('notificationsPanel');
+      panel.style.display = 'flex';
+      
+      const notifCard = document.createElement('div');
+      notifCard.className = 'notification-card';
+      notifCard.id = `notif-${notification.id}`;
+      notifCard.innerHTML = `
+        <div class="notification-header">
+          <div class="notification-title">🎮 ${escapeHtml(notification.title)}</div>
+          <small style="opacity:0.7">${new Date(notification.created_at).toLocaleTimeString('ar-EG')}</small>
+        </div>
+        <p style="margin:10px 0;">${escapeHtml(notification.message)}</p>
+        <p style="font-size:0.9rem; opacity:0.9;">
+          <strong>غرفة:</strong> ${notification.data?.room_code} • 
+          <strong>الصعوبة:</strong> ${notification.data?.difficulty === 'easy' ? 'سهل' : notification.data?.difficulty === 'medium' ? 'متوسط' : 'صعب'}
+        </p>
+        <div class="notification-actions">
+          <button class="btn-notify btn-accept" onclick="acceptGameInvite('${notification.id}', '${notification.data?.room_id}')">
+            🎯 START PLAY
+          </button>
+          <button class="btn-notify btn-decline" onclick="declineGameInvite('${notification.id}')">❌ رفض</button>
+        </div>
+      `;
+      
+      panel.appendChild(notifCard);
+      
+      setTimeout(() => {
+        if (notifCard.parentNode) notifCard.remove();
+      }, 30000);
+    }
+
+    async function acceptGameInvite(notificationId, roomId) {
+      try {
+        await db.from('notifications').update({ is_read: true }).eq('id', notificationId);
+        
+        const card = document.getElementById(`notif-${notificationId}`);
+        if (card) card.remove();
+        
+        if (roomId) {
+          const { data: room } = await db.from('game_rooms').select('room_code').eq('id', roomId).single();
+          if (room) {
+            document.getElementById('roomCodeInput').value = room.room_code;            await joinGameByCode(room.room_code);
+          }
+        }
+        
+        showNotification('✅ انضممت للعبة! استعد للبدء...', 'success');
+        
+      } catch (err) {
+        console.error('Accept invite error:', err);
+        showNotification('❌ خطأ في الانضمام', 'error');
+      }
+    }
+
+    async function declineGameInvite(notificationId) {
+      try {
+        await db.from('notifications').update({ is_read: true }).eq('id', notificationId);
+        
+        const card = document.getElementById(`notif-${notificationId}`);
+        if (card) card.remove();
+        
+        showNotification('❌ تم رفض الدعوة', 'warning');
+        
+      } catch (err) {
+        console.error('Decline invite error:', err);
+      }
+    }
+
+    async function showGameResults() {
+      if (!currentGameRoom || !db) return;
+      
+      try {
+        const { data: players } = await db.from('room_players')
+          .select('*, users(display_name)').eq('room_id', currentGameRoom.id).order('score', { ascending: false });
+        
+        document.getElementById('gamePlaying').style.display = 'none';
+        document.getElementById('gameResults').style.display = 'block';
+        
+        const winner = players?.[0];
+        document.getElementById('winnerBadge').innerHTML = winner ? 
+          `<div class="winner-badge">🏆 الفائز: ${escapeHtml(winner.users?.display_name || winner.username)}</div>` : '';
+        
+        const resultsContainer = document.getElementById('finalResults');
+        resultsContainer.innerHTML = '';
+        
+        players?.forEach((player, index) => {
+          const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🎮';
+          resultsContainer.innerHTML += `
+            <div class="result-card">
+              <div style="font-size:1.5rem;">${medal}</div>
+              <div style="font-weight:600; margin:5px 0;">${escapeHtml(player.users?.display_name || player.username)}</div>
+              <div class="result-value">${player.score}</div>              <div class="result-label">نقطة</div>
+            </div>
+          `;
+          
+          if (db) {
+            db.from('game_stats').insert({
+              room_id: currentGameRoom.id,
+              player_id: player.user_id,
+              final_score: player.score,
+              rank: index + 1,
+              duration_seconds: Math.floor((new Date() - new Date(currentGameRoom.started_at)) / 1000)
+            });
+          }
+        });
+        
+        await loadStats();
+        
+      } catch (err) {
+        console.error('Show results error:', err);
+      }
+    }
+
+    function playAgain() {
+      document.getElementById('gameResults').style.display = 'none';
+      document.getElementById('gameLobby').style.display = 'block';
+      
+      if (gameTimer) clearInterval(gameTimer);
+      currentGameRoom = null;
+      currentRound = null;
+      
+      showNotification('🔄 جاهز للعب مرة أخرى!', 'success');
+    }
+
+    async function sendDirectInvite(userId, username) {
+      if (!db || !currentUser) return;
+      
+      if (!currentGameRoom) {
+        showNotification('⚠️ أنشئ غرفة أولاً ثم ادعُ اللاعبين', 'warning');
+        return;
+      }
+      
+      try {
+        await db.from('notifications').insert({
+          recipient_id: userId,
+          sender_id: currentUser.id,
+          type: 'game_invite',
+          title: '🎮 دعوة للعب!',
+          message: `${currentUser.display_name || currentUser.username} يدعوك للعب لعبة الأحرف`,
+          data: {
+            room_id: currentGameRoom.id,            room_code: currentGameRoom.room_code,
+            sender_name: currentUser.display_name || currentUser.username,
+            difficulty: currentGameRoom.difficulty
+          }
+        });
+        
+        pendingInvites.add(userId);
+        loadVisitors();
+        
+        showNotification(`✅ تم إرسال دعوة لـ ${username}`, 'success');
+        
+      } catch (err) {
+        console.error('Direct invite error:', err);
+        showNotification('❌ خطأ في إرسال الدعوة', 'error');
+      }
+    }
+
+    async function loadActiveRooms() {
+      if (!db) return;
+      
+      try {
+        const { data: rooms } = await db.from('game_rooms')
+          .select('*, room_players(count)')
+          .eq('status', 'waiting')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        document.getElementById('activeRoomsCount').textContent = rooms?.length || 0;
+        const container = document.getElementById('activeRoomsList');
+        container.innerHTML = '';
+        
+        if (!rooms || rooms.length === 0) {
+          container.innerHTML = '<p style="text-align:center; opacity:0.7; padding:20px;">لا توجد غرف نشطة حالياً</p>';
+          return;
+        }
+        
+        rooms.forEach(room => {
+          const playerCount = room.room_players?.[0]?.count || 0;
+          const difficultyText = room.difficulty === 'easy' ? '😊 سهل' : room.difficulty === 'medium' ? '🤔 متوسط' : '🔥 صعب';
+          
+          container.innerHTML += `
+            <div class="player-item" style="cursor:pointer;" onclick="joinGameByCode('${room.room_code}')">
+              <div>
+                <strong>غرفة: ${room.room_code}</strong>
+                <div style="font-size:0.9rem; opacity:0.8; margin-top:5px;">
+                  <span class="badge badge-active">${difficultyText}</span>
+                  <span style="margin-right:10px;">👥 ${playerCount}/${room.max_players}</span>
+                </div>
+              </div>
+              <button class="btn btn-success" style="width:auto; padding:8px 16px; font-size:0.9rem;">انضمام</button>            </div>
+          `;
+        });
+        
+      } catch (err) {
+        console.error('Load rooms error:', err);
+      }
     }
 
     // Cleanup on Page Unload
     window.addEventListener('beforeunload', () => {
       updateOnlineStatus(false);
-      [chatSubscription, visitorsSubscription, statsSubscription, warningsSubscription, settingsSubscription]
+      [chatSubscription, visitorsSubscription, statsSubscription, warningsSubscription, settingsSubscription, gameRoomSubscription, notificationSubscription]
         .forEach(sub => sub?.unsubscribe());
     });
 
