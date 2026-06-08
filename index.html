@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <!-- منع التكبير والتصغير لضمان تجربة سطح مكتب ثابتة -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>معرض الفيديو الحصري</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;500;700;900&display=swap" rel="stylesheet">
@@ -15,7 +16,7 @@
             -moz-user-select: none !important;
             -ms-user-select: none !important;
             user-select: none !important;
-            -webkit-touch-callout: none !important; /* منع قائمة الحفظ في الآيفون/أندرويد */
+            -webkit-touch-callout: none !important;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -24,16 +25,16 @@
             background-color: #050505;
             color: #ffffff;
             overflow: hidden;
-            height: 100vh;
             width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-            touch-action: none; /* منع التكبير والسحب */
+            touch-action: none;
         }
 
-        /* --- شاشة الدخول (مطلوبة لتفعيل الصوت 100%) --- */
+        /* --- شاشة الدخول --- */
         #enter-screen {
             position: fixed;
             top: 0;
@@ -46,8 +47,8 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            transition: opacity 0.6s ease, visibility 0.6s ease;        }
+            align-items: center;            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
 
         .enter-btn {
             background: linear-gradient(135deg, #d4af37 0%, #f1c40f 100%);
@@ -65,27 +66,25 @@
 
         .enter-btn:active { transform: scale(0.95); }
 
-        /* --- خلفية الفيديو --- */
+        /* --- خلفية الفيديو (تم التعديل لملء الشاشة تماماً) --- */
         .video-background {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             z-index: -2;
             overflow: hidden;
         }
 
         .video-background video {
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover; /* السحر الذي يجعل الفيديو يملأ الشاشة بدون هوامش */
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            object-fit: cover;
             pointer-events: none;
         }
 
@@ -96,17 +95,17 @@
             width: 100%;
             height: 100%;
             background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%);
-            z-index: -1;        }
-
-        /* --- علامة مائية متحركة (حماية إضافية ضد تصوير الشاشة) --- */
+            z-index: -1;
+        }
+        /* --- علامة مائية متحركة --- */
         .watermark {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 3rem;
+            font-size: 4vw; /* حجم نسبي يتناسب مع عرض الشاشة */
             font-weight: 900;
-            color: rgba(255, 255, 255, 0.03); /* شفافة جداً لا تزعج العين لكن تظهر في التصوير */
+            color: rgba(255, 255, 255, 0.04);
             pointer-events: none;
             z-index: 1;
             white-space: nowrap;
@@ -126,9 +125,9 @@
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(212, 175, 55, 0.25);
             border-radius: 28px;
-            padding: 35px 30px;
-            width: 90%;
-            max-width: 550px;
+            padding: 30px 40px;
+            width: 80%;
+            max-width: 700px; /* عرض أكبر ليناسب وضع سطح المكتب */
             text-align: center;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
             animation: cardEntry 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -145,25 +144,26 @@
         /* --- رسالة التحذير التي تختفي بعد ثانية واحدة --- */
         .instant-warning {
             position: absolute;
-            top: 50%;            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 68, 68, 0.9);
+            top: 50%;
+            left: 50%;            transform: translate(-50%, -50%);
+            background: rgba(255, 68, 68, 0.95);
             color: white;
-            padding: 12px 25px;
+            padding: 15px 30px;
             border-radius: 12px;
             font-weight: 800;
-            font-size: 1rem;
+            font-size: 1.1rem;
             z-index: 10;
             width: 80%;
-            box-shadow: 0 10px 30px rgba(255, 68, 68, 0.3);
-            animation: warnAndVanish 1s forwards; /* تختفي تماماً بعد ثانية */
+            box-shadow: 0 10px 30px rgba(255, 68, 68, 0.4);
+            animation: warnAndVanish 1s forwards;
+            pointer-events: none;
         }
 
         @keyframes warnAndVanish {
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
             20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
             80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); pointer-events: none; }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         }
 
         .warning-badge {
@@ -181,7 +181,7 @@
         }
 
         h1 {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: 900;
             margin-bottom: 15px;
             background: linear-gradient(to right, #ffffff, #d4af37, #ffffff);
@@ -195,7 +195,7 @@
         @keyframes shine { to { background-position: 200% center; } }
 
         p.description {            color: rgba(255, 255, 255, 0.75);
-            font-size: 1rem;
+            font-size: 1.1rem;
             line-height: 1.7;
             margin-bottom: 25px;
         }
@@ -206,11 +206,13 @@
             padding: 15px 20px;
             text-align: right;
             border-radius: 10px;
+            display: inline-block;
+            width: 100%;
         }
 
         .security-rules h3 {
             color: #d4af37;
-            font-size: 0.95rem;
+            font-size: 1rem;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -220,7 +222,7 @@
         .security-rules ul {
             list-style: none;
             color: rgba(255, 255, 255, 0.6);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         .security-rules li {
@@ -238,19 +240,50 @@
             top: 5px;
         }
 
-        /* طبقة حماية شفافة */
         .protection-layer {
             position: absolute;
             top: 0;
-            left: 0;
-            width: 100%;            height: 100%;
+            left: 0;            width: 100%;
+            height: 100%;
             z-index: 4;
+        }
+
+        /* رسالة تظهر فقط إذا رفض المتصفح الدوران وتطلب من المستخدم تدوير الهاتف */
+        .rotate-hint {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 10000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #d4af37;
+            text-align: center;
+        }
+        
+        @media screen and (orientation: portrait) {
+            .rotate-hint {
+                display: flex;
+            }
         }
     </style>
 </head>
 <body oncontextmenu="return false;" oncopy="return false;" oncut="return false;" onpaste="return false;">
 
-    <!-- شاشة الدخول (مفتاح تشغيل الصوت) -->
+    <!-- شاشة طلب تدوير الهاتف (تظهر فقط إذا كان الهاتف عمودياً ولم يستجب للقفل التلقائي) -->
+    <div class="rotate-hint" id="rotateHint">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2" style="margin-bottom: 20px; animation: rotateIcon 2s infinite ease-in-out;">
+            <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
+        </svg>
+        <h2 style="font-size: 1.5rem; margin-bottom: 10px;">يرجى تدوير هاتفك</h2>
+        <p style="color: rgba(255,255,255,0.6);">هذه التجربة مصممة للعرض الأفقي فقط</p>
+    </div>
+
+    <!-- شاشة الدخول -->
     <div id="enter-screen">
         <div style="color: rgba(255,255,255,0.6); margin-bottom: 20px; font-size: 0.9rem;">محتوى محمي بصوت عالي الدقة</div>
         <button class="enter-btn" id="start-btn">دخول التجربة</button>
@@ -259,18 +292,14 @@
     <!-- خلفية الفيديو -->
     <div class="video-background">
         <video id="bgVideo" loop playsinline disablePictureInPicture>
-            <source src="FF.mp4" type="video/mp4">
-        </video>
+            <source src="FF.mp4" type="video/mp4">        </video>
     </div>
 
     <div class="overlay"></div>
-    
-    <!-- علامة مائية خفية للحماية من التصوير -->
     <div class="watermark">ممنوع التصوير أو النشر</div>
 
     <!-- البطاقة الزجاجية -->
     <div class="glass-card">
-        <!-- رسالة التحذير التي تختفي بعد ثانية واحدة -->
         <div class="instant-warning">⚠️ تحذير: المحتوى محمي ومراقب</div>
 
         <div class="warning-badge">نظام حماية نشط</div>
@@ -292,24 +321,33 @@
             </ul>
         </div>
     </div>
+
     <div class="protection-layer"></div>
 
     <script>
         const video = document.getElementById('bgVideo');
         const enterScreen = document.getElementById('enter-screen');
         const startBtn = document.getElementById('start-btn');
+        const rotateHint = document.getElementById('rotateHint');
 
-        // 1. تشغيل الفيديو مع الصوت عند الضغط على الزر
+        // 1. تشغيل الفيديو، الصوت، وإجبار الشاشة على الوضع الأفقي
         startBtn.addEventListener('click', () => {
-            video.muted = false; // التأكد من أن الصوت مفعل
-            video.volume = 1.0;  // أعلى مستوى للصوت
-            
-            video.play().then(() => {
-                // إخفاء شاشة الدخول بسلاسة
+            // محاولة قفل الشاشة في الوضع الأفقي (يعمل على أغلب هواتف أندرويد وكروم)
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function(error) {
+                    console.log("تعذر قفل الاتجاه تلقائياً، سيظهر طلب التدوير إذا لزم الأمر");
+                });
+            }
+
+            video.muted = false;
+            video.volume = 1.0;
+                        video.play().then(() => {
                 enterScreen.style.opacity = '0';
                 enterScreen.style.visibility = 'hidden';
                 setTimeout(() => {
                     enterScreen.style.display = 'none';
+                    // إخفاء رسالة التدوير بعد الدخول بنجاح
+                    rotateHint.style.display = 'none'; 
                 }, 600);
             }).catch(error => {
                 console.error("فشل تشغيل الصوت:", error);
@@ -318,7 +356,6 @@
         });
 
         // 2. الحماية القصوى من تصوير الشاشة (تشويش عند مغادرة المتصفح)
-        // هذا يمنع من يفتح المتصفح المخفي ثم يفتح تطبيق تصوير الشاشة
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 video.pause();
@@ -332,7 +369,7 @@
         // 3. منع زر PrintScreen في الكمبيوتر
         document.addEventListener('keyup', (e) => {
             if (e.key === 'PrintScreen') {
-                navigator.clipboard.writeText(''); // مسح الحافظة
+                navigator.clipboard.writeText('');
                 document.body.style.filter = 'blur(40px)';
                 setTimeout(() => { document.body.style.filter = 'none'; }, 2000);
                 alert('⛔ تصوير الشاشة محظور في هذا الموقع!');
@@ -341,7 +378,8 @@
 
         // 4. منع النقر بزر الماوس الأيمن
         document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();            return false;
+            e.preventDefault();
+            return false;
         });
 
         // 5. منع السحب والإفلات
@@ -352,8 +390,7 @@
         // 6. منع الضغط المطول (Long Press) في الهواتف بشكل قاطع
         document.addEventListener('touchstart', function(e) {
             if (e.target.tagName !== 'BUTTON') {
-                e.preventDefault();
-            }
+                e.preventDefault();            }
         }, { passive: false });
 
         // 7. تعطيل أي محاولة للتحكم في الفيديو
