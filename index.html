@@ -80,6 +80,7 @@
             position: relative;
             width: 150px;
             height: 150px;
+            text-align: center;
         }
 
         .loader-ring {
@@ -95,8 +96,8 @@
         .loader-ring:nth-child(2) {
             border-top-color: var(--accent);
             animation-delay: -0.5s;
-            width: 80%;
-            height: 80%;            top: 10%;
+            width: 80%;            height: 80%;
+            top: 10%;
             left: 10%;
         }
 
@@ -130,6 +131,35 @@
             50% { opacity: 1; }
         }
 
+        .loader-error {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 20px;
+            color: #ff6b6b;
+            font-size: 14px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .retry-btn {
+            margin-top: 15px;
+            padding: 10px 30px;            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
         /* Notification Dot */
         .notification-dot {
             position: fixed;
@@ -145,7 +175,8 @@
         }
 
         .notification-dot.active {
-            opacity: 1;            animation: notifyPulse 2s ease-in-out;
+            opacity: 1;
+            animation: notifyPulse 2s ease-in-out;
         }
 
         @keyframes notifyPulse {
@@ -163,8 +194,7 @@
         /* Header */
         .header {
             text-align: center;
-            margin-bottom: 50px;
-            position: relative;
+            margin-bottom: 50px;            position: relative;
         }
 
         .header::before {
@@ -194,6 +224,7 @@
             0%, 100% { filter: brightness(1); }
             50% { filter: brightness(1.3); }
         }
+
         .league-badge {
             display: inline-block;
             padding: 10px 30px;
@@ -212,8 +243,7 @@
             background: var(--glass);
             border: 1px solid var(--glass-border);
             border-radius: 30px;
-            padding: 50px;
-            margin-bottom: 40px;
+            padding: 50px;            margin-bottom: 40px;
             backdrop-filter: blur(20px);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 
                         inset 0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -243,7 +273,8 @@
 
         .teams-container {
             display: flex;
-            justify-content: space-between;            align-items: center;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 40px;
         }
 
@@ -262,7 +293,6 @@
             background: rgba(255, 255, 255, 0.05);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
         }
-
         .team-logo {
             width: 100px;
             height: 100px;
@@ -271,6 +301,7 @@
             border: 3px solid var(--primary);
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
             object-fit: cover;
+            background: rgba(255,255,255,0.1);
         }
 
         .team-name {
@@ -292,7 +323,8 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            line-height: 1;            margin-bottom: 15px;
+            line-height: 1;
+            margin-bottom: 15px;
             text-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
         }
 
@@ -309,8 +341,7 @@
             animation: timePulse 2s ease-in-out infinite;
         }
 
-        @keyframes timePulse {
-            0%, 100% { transform: scale(1); }
+        @keyframes timePulse {            0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
 
@@ -341,7 +372,8 @@
             border-radius: 20px;
             padding: 25px;
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;            position: relative;
+            transition: all 0.3s ease;
+            position: relative;
             overflow: hidden;
         }
 
@@ -358,8 +390,7 @@
         }
 
         .stat-card:hover::before {
-            transform: scaleX(1);
-        }
+            transform: scaleX(1);        }
 
         .stat-card:hover {
             transform: translateY(-5px);
@@ -391,6 +422,7 @@
             overflow: hidden;
             position: relative;
         }
+
         .stat-bar-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--primary), var(--accent));
@@ -408,7 +440,6 @@
             margin-bottom: 40px;
             backdrop-filter: blur(20px);
         }
-
         .section-title {
             font-size: 28px;
             font-weight: 700;
@@ -439,7 +470,8 @@
             position: relative;
             margin-bottom: 25px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.03);            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
             border-right: 4px solid transparent;
             transition: all 0.3s ease;
             animation: slideIn 0.5s ease;
@@ -456,8 +488,7 @@
             }
         }
 
-        .event-item:hover {
-            transform: translateX(-10px);
+        .event-item:hover {            transform: translateX(-10px);
             background: rgba(255, 255, 255, 0.05);
         }
 
@@ -488,6 +519,7 @@
             font-size: 24px;
             margin-left: 15px;
         }
+
         .event-details {
             display: flex;
             align-items: center;
@@ -505,8 +537,7 @@
         }
 
         /* Download Button */
-        .download-btn {
-            position: fixed;
+        .download-btn {            position: fixed;
             bottom: 40px;
             left: 40px;
             padding: 20px 40px;
@@ -537,7 +568,8 @@
 
         /* Weather Card */
         .weather-card {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 44, 191, 0.1));            border: 1px solid var(--glass-border);
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(123, 44, 191, 0.1));
+            border: 1px solid var(--glass-border);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 40px;
@@ -554,8 +586,7 @@
 
         .weather-icon {
             font-size: 40px;
-            margin-bottom: 10px;
-        }
+            margin-bottom: 10px;        }
 
         .weather-value {
             font-size: 24px;
@@ -586,7 +617,8 @@
         }
 
         .prediction-item {
-            flex: 1;            text-align: center;
+            flex: 1;
+            text-align: center;
         }
 
         .prediction-label {
@@ -603,8 +635,7 @@
             position: relative;
             display: flex;
             align-items: center;
-            justify-content: center;
-        }
+            justify-content: center;        }
 
         .prediction-bar-fill {
             position: absolute;
@@ -635,7 +666,8 @@
             }
 
             .score {
-                font-size: 48px;            }
+                font-size: 48px;
+            }
 
             .header h1 {
                 font-size: 32px;
@@ -652,8 +684,7 @@
 
         /* Crystal Effect */
         .crystal {
-            position: relative;
-            overflow: hidden;
+            position: relative;            overflow: hidden;
         }
 
         .crystal::after {
@@ -684,7 +715,8 @@
                 opacity: 0;
             }
             50% {
-                opacity: 1;            }
+                opacity: 1;
+            }
             100% {
                 transform: translateX(100%) translateY(100%) rotate(45deg);
                 opacity: 0;
@@ -701,12 +733,46 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(var(--primary), var(--accent));
-            border-radius: 5px;
+            background: linear-gradient(var(--primary), var(--accent));            border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(var(--accent), var(--primary));
+        }
+
+        /* Error Message Box */
+        .error-box {
+            background: rgba(255, 107, 107, 0.1);
+            border: 2px solid #ff6b6b;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px auto;
+            max-width: 600px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-box.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-box h3 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .error-box p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -716,8 +782,11 @@
         <div class="loader">
             <div class="loader-ring"></div>
             <div class="loader-ring"></div>
-            <div class="loader-ring"></div>
-            <div class="loader-text">LOADING</div>
+            <div class="loader-ring"></div>            <div class="loader-text">LOADING</div>
+            <div class="loader-error" id="loaderError" style="display: none;">
+                <div>⚠️ فشل تحميل البيانات</div>
+                <button class="retry-btn" onclick="retryLoad()">إعادة المحاولة</button>
+            </div>
         </div>
     </div>
 
@@ -727,13 +796,22 @@
     <!-- Background Animation -->
     <div class="bg-animation" id="bgAnimation"></div>
 
+    <!-- Error Box -->
+    <div class="error-box" id="errorBox">
+        <h3>⚠️ خطأ في الاتصال</h3>
+        <p>تعذر الاتصال بالخادم. جرب استخدام البيانات التجريبية أو أعد المحاولة لاحقاً.</p>
+        <button class="retry-btn" onclick="loadDemoData()">استخدام بيانات تجريبية</button>
+        <button class="retry-btn" onclick="retryLoad()" style="margin-right: 10px;">إعادة المحاولة</button>
+    </div>
+
     <!-- Main Content -->
-    <div class="container">
+    <div class="container" id="mainContent" style="display: none;">
         <!-- Header -->
         <div class="header">
             <h1>⚽ MATCH CENTER</h1>
             <div class="league-badge" id="leagueBadge">World Cup</div>
         </div>
+
         <!-- Match Card -->
         <div class="match-card crystal">
             <div class="match-content">
@@ -753,8 +831,7 @@
 
                     <div class="team">
                         <img src="" alt="Away Team" class="team-logo" id="awayLogo">
-                        <div class="team-name" id="awayTeam">Away</div>
-                    </div>
+                        <div class="team-name" id="awayTeam">Away</div>                    </div>
                 </div>
             </div>
         </div>
@@ -782,7 +859,8 @@
         <div class="stats-grid" id="statsGrid"></div>
 
         <!-- Predictions -->
-        <div class="predictions-card" id="predictionsCard" style="display: none;">            <div class="section-title">
+        <div class="predictions-card" id="predictionsCard" style="display: none;">
+            <div class="section-title">
                 <span>🔮</span>
                 <span>التوقعات</span>
             </div>
@@ -802,8 +880,7 @@
                     </div>
                 </div>
                 <div class="prediction-item">
-                    <div class="prediction-label" id="predAwayLabel">Away Win</div>
-                    <div class="prediction-bar-bg">
+                    <div class="prediction-label" id="predAwayLabel">Away Win</div>                    <div class="prediction-bar-bg">
                         <div class="prediction-bar-fill" id="predAwayBar" style="width: 0%"></div>
                         <div class="prediction-value" id="predAwayValue">0%</div>
                     </div>
@@ -822,7 +899,7 @@
     </div>
 
     <!-- Download Button -->
-    <button class="download-btn" onclick="downloadMatchData()">
+    <button class="download-btn" onclick="downloadMatchData()" id="downloadBtn" style="display: none;">
         <span>⬇️</span>
         <span>تنزيل التقرير</span>
     </button>
@@ -831,6 +908,86 @@
         // Global data storage
         let matchData = null;
         let lastEventCount = 0;
+        let isLoading = false;
+
+        // Demo data for testing
+        const demoData = {
+            "fixture": {
+                "home_team": {"name": "Portugal", "image_url": ""},
+                "away_team": {"name": "Congo DR", "image_url": ""},
+                "goals_home": 2,
+                "goals_away": 1,
+                "elapsed": 75,
+                "status": "2H",
+                "date": "17/06/2026",
+                "hour": "17:00",
+                "league": {"name": "World Cup"},
+                "round": "Group Stage"
+            },
+            "statistics": [
+                {
+                    "ball_possession": 65,
+                    "total_shots": 15,
+                    "shots_on_goal": 8,
+                    "shots_off_goal": 5,                    "blocked_shots": 2,
+                    "corner_kicks": 7,
+                    "fouls": 12,
+                    "yellow_cards": 2,
+                    "red_cards": 0,
+                    "offsides": 3,
+                    "goalkeeper_saves": 4,
+                    "total_passes": 542,
+                    "passes_accurate": 487
+                },
+                {
+                    "ball_possession": 35,
+                    "total_shots": 8,
+                    "shots_on_goal": 5,
+                    "shots_off_goal": 2,
+                    "blocked_shots": 1,
+                    "corner_kicks": 3,
+                    "fouls": 15,
+                    "yellow_cards": 3,
+                    "red_cards": 0,
+                    "offsides": 2,
+                    "goalkeeper_saves": 6,
+                    "total_passes": 298,
+                    "passes_accurate": 251
+                }
+            ],
+            "events": [
+                {
+                    "team": {"name": "Portugal"},
+                    "events": [
+                        {"time": 12, "type": "goal", "player": "C. Ronaldo", "assist": "B. Silva"},
+                        {"time": 25, "type": "card", "player": "J. Neves", "detail": "yellow card"},
+                        {"time": 58, "type": "goal", "player": "J. Felix", "assist": "C. Ronaldo"}
+                    ]
+                },
+                {
+                    "team": {"name": "Congo DR"},
+                    "events": [
+                        {"time": 34, "type": "goal", "player": "Y. Wissa", "assist": null},
+                        {"time": 45, "type": "card", "player": "C. Mbemba", "detail": "yellow card"},
+                        {"time": 62, "type": "subst", "player": "N. Mukau", "assist": "N. Sadiki"}
+                    ]
+                }
+            ],
+            "environment": {
+                "temperature": "28°C",
+                "humidity": "75%",
+                "wind": "5.2 m/s"
+            },
+            "predictions": [                {
+                    "1x2": {
+                        "home_probability": 0.55,
+                        "draw_probability": 0.25,
+                        "away_probability": 0.20
+                    }
+                }
+            ]
+        };
+
         // Create background particles
         function createParticles() {
             const container = document.getElementById('bgAnimation');
@@ -846,11 +1003,31 @@
             }
         }
 
+        // Hide loader
+        function hideLoader() {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('downloadBtn').style.display = 'flex';
+            }, 1000);
+        }
+
+        // Show error
+        function showError() {
+            document.getElementById('loaderError').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('errorBox').classList.add('show');
+            }, 2000);
+        }
+
         // Fetch match data
         async function fetchMatchData() {
+            if (isLoading) return;
+            isLoading = true;
+
             const headers = {
-                'authority': 'api.wescore.com',
-                'accept': 'application/json',
+                'authority': 'api.wescore.com',                'accept': 'application/json',
                 'accept-language': 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7',
                 'cache-control': 'max-age=0',
                 'origin': 'https://wescore.com',
@@ -865,22 +1042,54 @@
             };
 
             try {
+                console.log('Fetching data...');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
                 const response = await fetch(
                     'https://api.wescore.com/v4/fixtures/1103870/game?&league_id=0&User-IP=37.236.201.16&x-platform=web',
-                    { headers }
+                    { 
+                        headers,
+                        signal: controller.signal
+                    }
                 );
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('Data loaded:', data);
                 matchData = data;
                 updateUI(data);
-                
-                // Hide loader
-                setTimeout(() => {
-                    document.getElementById('loader').classList.add('hidden');
-                }, 1500);
+                hideLoader();
                 
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById('loader').classList.add('hidden');            }
+                showError();
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // Load demo data
+        function loadDemoData() {
+            console.log('Loading demo data...');            matchData = demoData;
+            document.getElementById('errorBox').classList.remove('show');
+            updateUI(demoData);
+            hideLoader();
+        }
+
+        // Retry load
+        function retryLoad() {
+            document.getElementById('loaderError').style.display = 'none';
+            document.getElementById('errorBox').classList.remove('show');
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('downloadBtn').style.display = 'none';
+            fetchMatchData();
         }
 
         // Update UI with data
@@ -916,7 +1125,6 @@
 
             // Update stats
             updateStats(stats, homeTeam, awayTeam);
-
             // Update events
             updateEvents(events);
 
@@ -929,7 +1137,8 @@
                 const awayProb = (pred.away_probability * 100).toFixed(1);
 
                 document.getElementById('predHomeLabel').textContent = `${homeTeam} فوز`;
-                document.getElementById('predAwayLabel').textContent = `${awayTeam} فوز`;                
+                document.getElementById('predAwayLabel').textContent = `${awayTeam} فوز`;
+                
                 setTimeout(() => {
                     document.getElementById('predHomeBar').style.width = `${homeProb}%`;
                     document.getElementById('predDrawBar').style.width = `${drawProb}%`;
@@ -965,7 +1174,6 @@
             if (stats.length >= 2) {
                 const homeStats = stats[0];
                 const awayStats = stats[1];
-
                 for (const [key, config] of Object.entries(statLabels)) {
                     const homeVal = homeStats[key] || 0;
                     const awayVal = awayStats[key] || 0;
@@ -978,7 +1186,8 @@
                         <div class="stat-label">
                             <span>${config.icon}</span>
                             <span>${config.label}</span>
-                        </div>                        <div class="stat-values">
+                        </div>
+                        <div class="stat-values">
                             <span style="color: var(--primary)">${homeVal}${config.unit}</span>
                             <span style="color: var(--accent)">${awayVal}${config.unit}</span>
                         </div>
@@ -1014,8 +1223,7 @@
             allEvents.sort((a, b) => a.time - b.time);
 
             // Check for new events
-            if (allEvents.length > lastEventCount) {
-                showNotification();
+            if (allEvents.length > lastEventCount) {                showNotification();
             }
             lastEventCount = allEvents.length;
 
@@ -1028,6 +1236,7 @@
                 subst: { icon: '🔄', class: 'substitution', color: '#00d4ff' },
                 corner: { icon: '🚩', class: 'corner', color: '#7b2cbf' }
             };
+
             allEvents.forEach(event => {
                 const config = eventIcons[event.type] || { icon: '📌', class: '', color: '#fff' };
                 const icon = typeof config.icon === 'function' ? config.icon(event) : config.icon;
@@ -1063,7 +1272,6 @@
                 timeline.appendChild(eventEl);
             });
         }
-
         // Show notification
         function showNotification() {
             const dot = document.getElementById('notificationDot');
@@ -1076,7 +1284,8 @@
             }, 3000);
         }
 
-        // Download match report        function downloadMatchData() {
+        // Download match report
+        function downloadMatchData() {
             if (!matchData) return;
 
             const fixture = matchData.fixture || {};
@@ -1112,8 +1321,7 @@ ${fixture.home_team?.name || 'Home'} ${fixture.goals_home || 0} - ${fixture.goal
                     corner_kicks: 'ركنيات',
                     fouls: 'أخطاء',
                     yellow_cards: 'بطاقات صفراء',
-                    red_cards: 'بطاقات حمراء',
-                    total_passes: 'إجمالي التمريرات',
+                    red_cards: 'بطاقات حمراء',                    total_passes: 'إجمالي التمريرات',
                     passes_accurate: 'تمريرات دقيقة'
                 };
 
@@ -1125,6 +1333,7 @@ ${fixture.home_team?.name || 'Home'} ${fixture.goals_home || 0} - ${fixture.goal
             }
 
             report += `\n\n═══════════════════════════════════════════════════\n📋 أحداث المباراة\n═══════════════════════════════════════════════════\n`;
+
             const allEvents = [];
             events.forEach(teamEvent => {
                 const teamName = teamEvent.team?.name || '';
@@ -1161,7 +1370,6 @@ ${fixture.home_team?.name || 'Home'} ${fixture.goals_home || 0} - ${fixture.goal
             }
 
             report += `\n\n═══════════════════════════════════════════════════\nتم إنشاء التقرير: ${new Date().toLocaleString('ar-EG')}\n═══════════════════════════════════════════════════\n`;
-
             // Download
             const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
@@ -1174,7 +1382,8 @@ ${fixture.home_team?.name || 'Home'} ${fixture.goals_home || 0} - ${fixture.goal
             URL.revokeObjectURL(url);
 
             // Show success animation
-            const btn = document.querySelector('.download-btn');            const originalText = btn.innerHTML;
+            const btn = document.querySelector('.download-btn');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<span>✅</span><span>تم التنزيل!</span>';
             btn.style.background = 'linear-gradient(135deg, #00ff88, #00d4ff)';
             
