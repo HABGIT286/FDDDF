@@ -3,1130 +3,575 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚽ لوحة المباراة المباشرة - Live Match</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<title>️ حساب غير لائق - TikTok Warning</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --primary: #00f0ff;
-    --secondary: #ff00aa;
-    --accent: #ffd700;
-    --success: #00ff88;
-    --danger: #ff3366;
-    --glass-bg: rgba(255, 255, 255, 0.06);
-    --glass-border: rgba(255, 255, 255, 0.15);
-    --text: #ffffff;
-    --text-dim: #a0aec0;
-  }
-
-  html, body {
-    font-family: 'Cairo', sans-serif;
-    background: #05060f;
-    color: var(--text);
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  
+  body {
+    background: #000;
     min-height: 100vh;
     overflow-x: hidden;
+    color: #fff;
     position: relative;
   }
 
-  /* ===== خلفية متحركة ===== */
-  body::before {
-    content: '';
+  /* خلفية متحركة */
+  .bg-animation {
     position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(0, 240, 255, 0.15), transparent 40%),
-      radial-gradient(circle at 80% 30%, rgba(255, 0, 170, 0.15), transparent 40%),
-      radial-gradient(circle at 50% 80%, rgba(255, 215, 0, 0.1), transparent 50%);
-    animation: bgShift 15s ease-in-out infinite;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at 20% 50%, #1a0000 0%, #000 50%, #000 100%);
     z-index: -2;
   }
 
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-    z-index: -1;
-    animation: gridMove 20s linear infinite;
-  }
-
-  @keyframes bgShift {
-    0%, 100% { filter: hue-rotate(0deg); }
-    50% { filter: hue-rotate(45deg); }
-  }
-
-  @keyframes gridMove {
-    0% { background-position: 0 0; }
-    100% { background-position: 50px 50px; }
-  }
-
-  /* ===== جسيمات عائمة ===== */
   .particles {
     position: fixed;
-    inset: 0;
-    pointer-events: none;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     z-index: -1;
+    overflow: hidden;
   }
+
   .particle {
     position: absolute;
-    width: 4px;
-    height: 4px;
-    background: var(--primary);
+    width: 4px; height: 4px;
+    background: #ff0040;
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--primary);
-    animation: float 10s infinite linear;
+    box-shadow: 0 0 10px #ff0040, 0 0 20px #ff0040;
+    animation: float 15s infinite linear;
   }
+
   @keyframes float {
-    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
     10% { opacity: 1; }
     90% { opacity: 1; }
-    100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+    100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
   }
-
-  /* ===== الحاوية ===== */
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 30px 20px;
-  }
-
-  /* ===== الهيدر ===== */
-  .header {
+  /* شريط التحذير العلوي */
+  .warning-bar {
+    background: repeating-linear-gradient(45deg, #ff0040, #ff0040 10px, #000 10px, #000 20px);
+    padding: 15px;
     text-align: center;
-    margin-bottom: 30px;    animation: fadeInDown 1s ease;
-  }
-  .header h1 {
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 900;
-    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gradientFlow 3s linear infinite;
-    letter-spacing: 1px;
-  }
-  .header .subtitle {
-    color: var(--text-dim);
-    margin-top: 8px;
-    font-size: 0.95rem;
-  }
-  .live-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--danger);
-    border-radius: 50%;
-    margin-left: 8px;
-    animation: pulse 1.5s infinite;
-    box-shadow: 0 0 15px var(--danger);
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.3); opacity: 0.6; }
-  }
-  @keyframes gradientFlow {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
-  }
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-30px); }
-    to { opacity: 1; transform: translateY(0); }
+    font-weight: bold;
+    font-size: 1.2rem;
+    animation: slide 20s linear infinite;
+    box-shadow: 0 0 30px #ff0040;
   }
 
-  /* ===== كارد زجاجي ===== */
-  .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.4),      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  .warning-bar span {
+    background: #000;
+    padding: 5px 20px;
+    color: #ff0040;
+    border: 2px solid #ff0040;
+    border-radius: 5px;
+    display: inline-block;
+  }
+
+  @keyframes slide {
+    0% { background-position: 0 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  /* الحاوية الرئيسية */
+  .container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+  }
+
+  /* عنوان الصفحة */
+  .main-title {
+    text-align: center;
+    font-size: 3rem;
+    color: #ff0040;
+    text-shadow: 0 0 20px #ff0040, 0 0 40px #ff0040, 0 0 60px #ff0040;
+    margin-bottom: 40px;
+    animation: pulse-title 2s infinite;
+    font-weight: 900;
+  }
+
+  @keyframes pulse-title {
+    0%, 100% { text-shadow: 0 0 20px #ff0040, 0 0 40px #ff0040; transform: scale(1); }
+    50% { text-shadow: 0 0 30px #ff0040, 0 0 60px #ff0040, 0 0 80px #ff0040; transform: scale(1.02); }
+  }
+
+  /* بطاقة الحساب */
+  .profile-card {    background: linear-gradient(145deg, #1a0000, #0a0000);
+    border: 2px solid #ff0040;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 0 50px rgba(255, 0, 64, 0.5), inset 0 0 30px rgba(255, 0, 64, 0.1);
     position: relative;
     overflow: hidden;
+    animation: card-glow 3s infinite;
   }
-  .glass::before {
+
+  @keyframes card-glow {
+    0%, 100% { box-shadow: 0 0 50px rgba(255, 0, 64, 0.5), inset 0 0 30px rgba(255, 0, 64, 0.1); }
+    50% { box-shadow: 0 0 80px rgba(255, 0, 64, 0.8), inset 0 0 50px rgba(255, 0, 64, 0.2); }
+  }
+
+  .profile-card::before {
     content: '';
     position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-    animation: shimmer 6s infinite;
-  }
-  @keyframes shimmer {
-    0% { left: -100%; }
-    100% { left: 200%; }
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 0, 64, 0.1), transparent);
+    animation: rotate 4s linear infinite;
   }
 
-  /* ===== كارد المباراة الرئيسي ===== */
-  .match-card {
-    padding: 40px 30px;
-    margin-bottom: 25px;
-    animation: fadeInUp 1s ease 0.2s both;
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+  @keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
-  .league-info {
-    text-align: center;
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--glass-border);
-  }
-  .league-name {
-    font-size: 1.1rem;
-    color: var(--accent);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-  }
-  .league-round {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin-top: 5px;
-  }
-
-  /* الفرق والنتيجة */
-  .teams-container {
-    display: grid;    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 20px;
-    margin: 30px 0;
-  }
-  .team {
-    text-align: center;
-    padding: 20px;
-    border-radius: 16px;
-    transition: all 0.4s ease;
-  }
-  .team:hover {
-    background: rgba(255, 255, 255, 0.04);
-    transform: translateY(-5px);
-  }
-  .team-logo {
-    width: 90px;
-    height: 90px;
-    margin: 0 auto 15px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.05);
+  .profile-header {
     display: flex;
     align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
     justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: var(--primary);
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
-    border: 2px solid var(--glass-border);
-    overflow: hidden;
-  }
-  .team-logo img {
-    width: 100%; height: 100%;
-    object-fit: contain;
-  }
-  .team-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 5px;
   }
 
-  .score-box {
-    text-align: center;
-    padding: 15px 25px;
-    background: linear-gradient(135deg, rgba(0,240,255,0.1), rgba(255,0,170,0.1));
-    border-radius: 20px;
-    border: 2px solid var(--glass-border);
-    min-width: 180px;
+  .avatar-container {
     position: relative;
-  }  .score {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3.5rem;
-    font-weight: 900;
-    background: linear-gradient(180deg, #fff, var(--primary));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
-    letter-spacing: 5px;
-    line-height: 1;
+    width: 150px; height: 150px;
   }
-  .match-status {
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: var(--text-dim);
-    font-weight: 600;
+
+  .avatar {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    border: 4px solid #ff0040;
+    object-fit: cover;    box-shadow: 0 0 30px #ff0040;
+    animation: avatar-pulse 2s infinite;
+    background: #000;
   }
-  .match-status.live {
-    color: var(--danger);
+
+  @keyframes avatar-pulse {
+    0%, 100% { box-shadow: 0 0 30px #ff0040; }
+    50% { box-shadow: 0 0 50px #ff0040, 0 0 70px #ff0040; }
+  }
+
+  .avatar-ring {
+    position: absolute;
+    top: -10px; left: -10px;
+    width: 170px; height: 170px;
+    border: 2px solid #ff0040;
+    border-radius: 50%;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .warning-badge {
+    position: absolute;
+    bottom: 0; right: 0;
+    background: #ff0040;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
     animation: blink 1s infinite;
+    box-shadow: 0 0 20px #ff0040;
   }
-  .match-status.finished {
-    color: var(--success);
-  }
+
   @keyframes blink {
+    0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
   }
-  .elapsed {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.3rem;
-    color: var(--accent);
-    font-weight: 700;
-    margin-top: 5px;
+
+  .profile-info {
+    flex: 1;
+    min-width: 250px;
   }
 
-  .match-meta {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--glass-border);
-    flex-wrap: wrap;
+  .profile-name {    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 0, 64, 0.5);
   }
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-dim);    font-size: 0.9rem;
-  }
-  .meta-item .icon {
+
+  .profile-username {
+    color: #ff0040;
     font-size: 1.2rem;
+    margin-bottom: 10px;
   }
 
-  /* ===== الشبكة الرئيسية ===== */
-  .main-grid {
+  .profile-id {
+    color: #888;
+    font-size: 0.9rem;
+    font-family: monospace;
+    background: rgba(255, 0, 64, 0.1);
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+    display: inline-block;
+  }
+
+  /* الإحصائيات */
+  .stats {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-    margin-bottom: 25px;
-  }
-  @media (max-width: 900px) {
-    .main-grid { grid-template-columns: 1fr; }
-    .teams-container { grid-template-columns: 1fr; gap: 10px; }
-    .score { font-size: 2.5rem; }
-    .team-logo { width: 70px; height: 70px; font-size: 2rem; }
-  }
-
-  .section-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  .section-title::before {
-    content: '';
-    width: 4px;
-    height: 22px;
-    background: linear-gradient(180deg, var(--primary), var(--secondary));
-    border-radius: 2px;
-    box-shadow: 0 0 10px var(--primary);
-  }
-
-  .glass-content {
-    padding: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
     position: relative;
     z-index: 1;
   }
 
-  /* ===== الإحصائيات ===== */
-  .stat-row {
-    margin-bottom: 18px;
-    animation: fadeInUp 0.5s ease both;  }
-  .stat-row:last-child { margin-bottom: 0; }
-  .stat-label {
+  .stat-box {
+    background: rgba(255, 0, 64, 0.1);
+    border: 1px solid #ff0040;
+    border-radius: 15px;
+    padding: 20px;
     text-align: center;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-    font-weight: 600;
-  }
-  .stat-values {
-    display: grid;
-    grid-template-columns: 50px 1fr 50px;
-    gap: 10px;
-    align-items: center;
-  }
-  .stat-val {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-  }
-  .stat-val.home { text-align: right; color: var(--primary); }
-  .stat-val.away { text-align: left; color: var(--secondary); }
-  .stat-bar-container {
-    display: flex;
-    height: 8px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    overflow: hidden;
-    direction: ltr;
-  }
-  .stat-bar {
-    height: 100%;
-    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-  }
-  .stat-bar.home {
-    background: linear-gradient(90deg, transparent, var(--primary));
-    box-shadow: 0 0 10px var(--primary);
-    margin-left: auto;
-  }
-  .stat-bar.away {
-    background: linear-gradient(90deg, var(--secondary), transparent);
-    box-shadow: 0 0 10px var(--secondary);
+    transition: all 0.3s;
+    cursor: pointer;
   }
 
-  /* ===== الأحداث ===== */
-  .events-list {
-    max-height: 500px;
-    overflow-y: auto;
-    padding-left: 5px;  }
-  .events-list::-webkit-scrollbar { width: 6px; }
-  .events-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
-  .events-list::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--primary), var(--secondary));
-    border-radius: 3px;
-  }
-
-  .event-item {
-    display: grid;
-    grid-template-columns: 60px 40px 1fr;
-    gap: 12px;
-    align-items: center;
-    padding: 12px 15px;
-    margin-bottom: 10px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    border-right: 3px solid var(--primary);
-    transition: all 0.3s ease;
-    animation: slideInRight 0.5s ease;
-  }
-  @keyframes slideInRight {
-    from { opacity: 0; transform: translateX(30px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-  .event-item:hover {
-    background: rgba(255,255,255,0.08);
-    transform: translateX(-5px);
-    box-shadow: 0 5px 20px rgba(0, 240, 255, 0.2);
-  }
-  .event-item.away-team {
-    border-right-color: var(--secondary);
-    border-right: none;
-    border-left: 3px solid var(--secondary);
-  }
-  .event-item.goal { border-right-color: var(--success); box-shadow: 0 0 20px rgba(0,255,136,0.2); }
-  .event-item.goal.away-team { border-left-color: var(--success); border-right-color: transparent; }
-  .event-item.card-yellow { border-right-color: var(--accent); }
-  .event-item.card-yellow.away-team { border-left-color: var(--accent); border-right-color: transparent; }
-  .event-item.card-red { border-right-color: var(--danger); }
-  .event-item.card-red.away-team { border-left-color: var(--danger); border-right-color: transparent; }
-
-  .event-time {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 700;
-    color: var(--accent);
-    font-size: 0.95rem;
-    text-align: center;
-  }
-  .event-icon {    font-size: 1.6rem;
-    text-align: center;
-    filter: drop-shadow(0 0 5px currentColor);
-  }
-  .event-details {
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  .event-player { font-weight: 700; color: var(--text); }
-  .event-assist { color: var(--text-dim); font-size: 0.8rem; }
-  .event-team-name {
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-
-  /* ===== الطقس والتوقعات ===== */
-  .weather-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-  }
-  .weather-item {
-    text-align: center;
-    padding: 20px 10px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 14px;
-    border: 1px solid var(--glass-border);
-    transition: all 0.3s ease;
-  }
-  .weather-item:hover {
+  .stat-box:hover {
     transform: translateY(-5px);
-    background: rgba(0, 240, 255, 0.08);
-    box-shadow: 0 10px 25px rgba(0, 240, 255, 0.2);
-  }
-  .weather-icon { font-size: 2rem; margin-bottom: 8px; }
-  .weather-label { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 5px; }
-  .weather-value {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--primary);
+    box-shadow: 0 10px 30px rgba(255, 0, 64, 0.5);
+    background: rgba(255, 0, 64, 0.2);
   }
 
-  .predictions-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
+  .stat-number {    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ff0040;
+    text-shadow: 0 0 10px #ff0040;
   }
-  .prediction-item {    text-align: center;
-    padding: 20px 10px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 14px;
-    border: 1px solid var(--glass-border);
-    transition: all 0.3s ease;
-  }
-  .prediction-item:hover { transform: translateY(-5px); }
-  .prediction-item.home:hover { box-shadow: 0 10px 25px rgba(0, 240, 255, 0.3); }
-  .prediction-item.draw:hover { box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3); }
-  .prediction-item.away:hover { box-shadow: 0 10px 25px rgba(255, 0, 170, 0.3); }
-  .prediction-label { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 10px; }
-  .prediction-value {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
-    font-weight: 900;
-  }
-  .prediction-item.home .prediction-value { color: var(--primary); }
-  .prediction-item.draw .prediction-value { color: var(--accent); }
-  .prediction-item.away .prediction-value { color: var(--secondary); }
 
-  /* ===== الإشعارات ===== */
-  .toast-container {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 9999;
+  .stat-label {
+    color: #ccc;
+    margin-top: 5px;
+    font-size: 0.9rem;
+  }
+
+  /* قسم المعلومات الإضافية */
+  .extra-info {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px dashed #ff0040;
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .extra-info h3 {
+    color: #ff0040;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 10px;
-    max-width: 350px;
-  }
-  .toast {
-    background: rgba(10, 15, 30, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 14px;
-    padding: 15px 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    animation: toastIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border-right: 4px solid var(--primary);
-  }
-  .toast.goal { border-right-color: var(--success); box-shadow: 0 0 30px rgba(0,255,136,0.4); }
-  .toast.card-yellow { border-right-color: var(--accent); }
-  .toast.card-red { border-right-color: var(--danger); box-shadow: 0 0 30px rgba(255,51,102,0.4); }
-  .toast.end { border-right-color: var(--secondary); }
-  .toast-icon { font-size: 2rem; filter: drop-shadow(0 0 10px currentColor); }
-  .toast-content { flex: 1; }
-  .toast-title { font-weight: 700; margin-bottom: 3px; }
-  .toast-message { font-size: 0.85rem; color: var(--text-dim); }
-
-  @keyframes toastIn {
-    from { transform: translateX(-120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-  .toast.out { animation: toastOut 0.4s ease forwards; }
-  @keyframes toastOut {
-    to { transform: translateX(-120%); opacity: 0; }
   }
 
-  /* ===== Loader ===== */
-  .loader-container {
+  .info-item {
+    background: rgba(255, 0, 64, 0.1);
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border-right: 4px solid #ff0040;
+    transition: all 0.3s;
+  }
+
+  .info-item:hover {
+    background: rgba(255, 0, 64, 0.2);
+    transform: translateX(-5px);
+  }
+
+  .info-label {
+    color: #ff0040;
+    font-weight: bold;
+    margin-bottom: 5px;  }
+
+  .info-value {
+    color: #fff;
+    font-size: 1.1rem;
+  }
+
+  /* أزرار التحذير */
+  .warning-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 30px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn {
+    padding: 15px 30px;
+    border: 2px solid #ff0040;
+    background: transparent;
+    color: #ff0040;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn:hover {
+    background: #ff0040;
+    color: #000;
+    box-shadow: 0 0 30px #ff0040;
+    transform: scale(1.05);
+  }
+
+  .btn-danger {
+    background: #ff0040;
+    color: #fff;
+    animation: danger-pulse 2s infinite;
+  }
+
+  @keyframes danger-pulse {
+    0%, 100% { box-shadow: 0 0 20px #ff0040; }
+    50% { box-shadow: 0 0 40px #ff0040, 0 0 60px #ff0040; }
+  }
+
+  /* شريط التحذير السفلي */  .bottom-warning {
     position: fixed;
-    inset: 0;
-    background: #05060f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9998;
-    flex-direction: column;
-    gap: 20px;
-    transition: opacity 0.5s;
-  }
-  .loader-container.hidden { opacity: 0; pointer-events: none; }
-  .loader {
-    width: 80px;
-    height: 80px;
-    border: 4px solid rgba(0, 240, 255, 0.1);
-    border-top-color: var(--primary);
-    border-right-color: var(--secondary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loader-text {
-    color: var(--primary);
-    font-weight: 600;
-    letter-spacing: 2px;
-  }
-
-  /* ===== تأثير الهدف ===== */
-  .goal-flash {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle, rgba(0,255,136,0.4), transparent 70%);
-    z-index: 9997;    pointer-events: none;
-    opacity: 0;
-  }
-  .goal-flash.active { animation: goalFlash 2s ease-out; }
-  @keyframes goalFlash {
-    0% { opacity: 0; }
-    20% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  .update-indicator {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    padding: 10px 18px;
-    border-radius: 30px;
-    border: 1px solid var(--glass-border);
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    border-top: 2px solid #ff0040;
+    padding: 15px;
+    text-align: center;
     z-index: 100;
+    backdrop-filter: blur(10px);
   }
-  .update-dot {
-    width: 8px; height: 8px;
-    background: var(--success);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-    box-shadow: 0 0 10px var(--success);
+
+  .bottom-warning span {
+    color: #ff0040;
+    font-weight: bold;
+    animation: flash 1s infinite;
+  }
+
+  @keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* تأثير الاهتزاز */
+  .shake {
+    animation: shake 0.5s;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* تنبيه منبثق */
+  .alert-popup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: #000;
+    border: 3px solid #ff0040;
+    border-radius: 20px;
+    padding: 40px;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 0 100px #ff0040;
+    transition: transform 0.3s;
+  }
+  .alert-popup.show {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .alert-popup h2 {
+    color: #ff0040;
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+
+  .alert-popup p {
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 999;
+    display: none;
+  }
+
+  .overlay.show { display: block; }
+
+  /* استجابة */
+  @media (max-width: 600px) {
+    .main-title { font-size: 2rem; }
+    .profile-name { font-size: 1.5rem; }
+    .stat-number { font-size: 2rem; }
+    .profile-card { padding: 20px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Loader -->
-<div class="loader-container" id="loader">
-  <div class="loader"></div>
-  <div class="loader-text">جاري تحميل المباراة...</div>
-</div>
-
-<!-- Goal Flash -->
-<div class="goal-flash" id="goalFlash"></div>
-
-<!-- Particles -->
+<div class="bg-animation"></div>
 <div class="particles" id="particles"></div>
 
-<!-- Toasts --><div class="toast-container" id="toastContainer"></div>
+<div class="warning-bar">
+  <span>⚠️ تحذير: حساب غير لائق - INAPPROPRIATE ACCOUNT ⚠️</span>
+</div>
 
 <div class="container">
-  <!-- Header -->
-  <div class="header">
-    <h1>⚽ لوحة المباراة المباشرة <span class="live-dot"></span></h1>
-    <div class="subtitle">بيانات لحظية من API Wescore</div>
-  </div>
+  <h1 class="main-title">⚠️ حساب محظور ⚠️</h1>
 
-  <!-- Match Card -->
-  <div class="glass match-card">
-    <div class="league-info">
-      <div class="league-name" id="leagueName">—</div>
-      <div class="league-round" id="leagueRound">—</div>
-    </div>
-
-    <div class="teams-container">
-      <div class="team">
-        <div class="team-logo" id="homeLogo">🏠</div>
-        <div class="team-name" id="homeName">—</div>
+  <div class="profile-card" id="profileCard">
+    <div class="profile-header">
+      <div class="avatar-container">        <img src="DD.jpg" alt="صورة شخصية" class="avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22><rect width=%22150%22 height=%22150%22 fill=%22%23000%22/><text x=%2275%22 y=%2280%22 font-size=%2260%22 fill=%22%23ff0040%22 text-anchor=%22middle%22>⚠️</text></svg>'">
+        <div class="avatar-ring"></div>
+        <div class="warning-badge">محظور</div>
       </div>
-
-      <div class="score-box">
-        <div class="score" id="score">0 - 0</div>
-        <div class="match-status" id="matchStatus">—</div>
-        <div class="elapsed" id="elapsed">—</div>
-      </div>
-
-      <div class="team">
-        <div class="team-logo" id="awayLogo">✈️</div>
-        <div class="team-name" id="awayName">—</div>
+      <div class="profile-info">
+        <h2 class="profile-name">ماهر الشمري</h2>
+        <p class="profile-username">@user3149204869241</p>
+        <span class="profile-id">ID: 6932549350837421061</span>
       </div>
     </div>
 
-    <div class="match-meta">
-      <div class="meta-item"><span class="icon">📅</span><span id="matchDate">—</span></div>
-      <div class="meta-item"><span class="icon">⏰</span><span id="matchTime">—</span></div>
-      <div class="meta-item"><span class="icon">🏟️</span><span id="stadium">—</span></div>
-    </div>
-  </div>
-
-  <!-- Stats & Events Grid -->
-  <div class="main-grid">
-    <!-- Stats -->
-    <div class="glass">
-      <div class="glass-content">
-        <div class="section-title">📊 الإحصائيات المباشرة</div>
-        <div id="statsContainer">
-          <div style="text-align:center; color:var(--text-dim); padding:40px;">جاري التحميل...</div>
-        </div>      </div>
-    </div>
-
-    <!-- Events -->
-    <div class="glass">
-      <div class="glass-content">
-        <div class="section-title">⚡ أحداث المباراة</div>
-        <div class="events-list" id="eventsList">
-          <div style="text-align:center; color:var(--text-dim); padding:40px;">جاري التحميل...</div>
-        </div>
+    <div class="stats">
+      <div class="stat-box" onclick="animateStat(this)">
+        <div class="stat-number" data-target="135">0</div>
+        <div class="stat-label">المتابعين</div>
       </div>
-    </div>
-  </div>
-
-  <!-- Weather & Predictions -->
-  <div class="main-grid">
-    <div class="glass">
-      <div class="glass-content">
-        <div class="section-title">🌤️ حالة الطقس</div>
-        <div class="weather-grid" id="weatherGrid">
-          <div style="text-align:center; color:var(--text-dim); padding:30px; grid-column: 1/-1;">لا توجد بيانات</div>
-        </div>
+      <div class="stat-box" onclick="animateStat(this)">
+        <div class="stat-number" data-target="425">0</div>
+        <div class="stat-label">المتابعات</div>
+      </div>
+      <div class="stat-box" onclick="animateStat(this)">
+        <div class="stat-number" data-target="0">0</div>
+        <div class="stat-label">المحتوى المحظور</div>
+      </div>
+      <div class="stat-box" onclick="animateStat(this)">
+        <div class="stat-number" data-target="100">0</div>
+        <div class="stat-label">مستوى الخطورة %</div>
       </div>
     </div>
 
-    <div class="glass">
-      <div class="glass-content">
-        <div class="section-title">🔮 توقعات النتيجة</div>
-        <div class="predictions-grid" id="predictionsGrid">
-          <div style="text-align:center; color:var(--text-dim); padding:30px; grid-column: 1/-1;">لا توجد بيانات</div>
-        </div>
+    <div class="extra-info">
+      <h3> معلومات إضافية</h3>
+      <div class="info-item">
+        <div class="info-label">⚠️ ملاحظة 1:</div>
+        <div class="info-value">قرام ياكله من ورة</div>
       </div>
+      <div class="info-item">
+        <div class="info-label">⚠️ ملاحظة 2:</div>
+        <div class="info-value">تم إهانته بنعال</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">💼 العمل:</div>
+        <div class="info-value">يطلع تبياته</div>
+      </div>
+    </div>
+
+    <div class="warning-buttons">
+      <button class="btn btn-danger" onclick="showAlert('تم الإبلاغ عن الحساب')">🚨 إبلاغ</button>
+      <button class="btn" onclick="showAlert('تم حظر الحساب')">🚫 حظر</button>
+      <button class="btn" onclick="showAlert('تم نسخ معلومات الحساب')"> نسخ المعلومات</button>      <button class="btn" onclick="document.getElementById('profileCard').classList.add('shake'); setTimeout(() => document.getElementById('profileCard').classList.remove('shake'), 500)">⚡ تحذير</button>
     </div>
   </div>
 </div>
 
-<!-- Update Indicator -->
-<div class="update-indicator">
-  <span class="update-dot"></span>
-  <span>تحديث تلقائي كل <span id="refreshRate">15</span> ثانية</span>
+<div class="bottom-warning">
+  <span>⚠️ هذا الحساب مخالف لسياسات المجتمع - THIS ACCOUNT VIOLATES COMMUNITY GUIDELINES ⚠️</span>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeAlert()"></div>
+<div class="alert-popup" id="alertPopup">
+  <h2 id="alertTitle">⚠️ تحذير</h2>
+  <p id="alertMessage">تم تنفيذ الإجراء</p>
+  <button class="btn" onclick="closeAlert()">إغلاق</button>
 </div>
 
 <script>
-  // ===== إعدادات =====
-  const API_URL = 'https://api.wescore.com/v4/fixtures/1103870/game?&league_id=0&User-IP=37.236.201.16&x-platform=web';
-  const CORS_PROXIES = [
-    'https://corsproxy.io/?',
-    'https://api.allorigins.win/raw?url=',
-    'https://api.codetabs.com/v1/proxy?quest='
-  ];  const REFRESH_INTERVAL = 15000;
-  let lastEvents = [];
-  let isFirstLoad = true;
-
-  // ===== جسيمات =====
+  // إنشاء الجزيئات المتحركة
   function createParticles() {
     const container = document.getElementById('particles');
-    for (let i = 0; i < 30; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.left = Math.random() * 100 + '%';
-      p.style.animationDelay = Math.random() * 10 + 's';
-      p.style.animationDuration = (8 + Math.random() * 8) + 's';
-      const colors = ['#00f0ff', '#ff00aa', '#ffd700', '#00ff88'];
-      p.style.background = colors[Math.floor(Math.random() * colors.length)];
-      p.style.boxShadow = `0 0 10px ${p.style.background}`;
-      container.appendChild(p);
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 15 + 's';
+      particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+      container.appendChild(particle);
     }
   }
-  createParticles();
 
-  // ===== Toast Notifications =====
-  function showToast(icon, title, message, type = '') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-      <div class="toast-icon">${icon}</div>
-      <div class="toast-content">
-        <div class="toast-title">${title}</div>
-        <div class="toast-message">${message}</div>
-      </div>
-    `;
-    container.appendChild(toast);
+  // تحريك الأرقام
+  function animateNumbers() {
+    const numbers = document.querySelectorAll('.stat-number');
+    numbers.forEach(num => {
+      const target = parseInt(num.getAttribute('data-target'));
+      const duration = 2000;
+      const step = target / (duration / 16);
+      let current = 0;
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        num.textContent = Math.floor(current);
+      }, 16);
+    });
+  }
+
+  // تحريك صندوق الإحصائيات  function animateStat(element) {
+    element.style.transform = 'scale(1.1)';
     setTimeout(() => {
-      toast.classList.add('out');
-      setTimeout(() => toast.remove(), 400);
-    }, 6000);
+      element.style.transform = 'translateY(-5px)';
+    }, 200);
   }
 
-  function goalFlashEffect() {
-    const flash = document.getElementById('goalFlash');
-    flash.classList.remove('active');
-    void flash.offsetWidth;
-    flash.classList.add('active');
+  // إظهار التنبيه
+  function showAlert(message) {
+    document.getElementById('alertMessage').textContent = message;
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('alertPopup').classList.add('show');
   }
 
-  // ===== جلب البيانات =====
-  async function fetchData() {
-    for (const proxy of CORS_PROXIES) {      try {
-        const response = await fetch(proxy + encodeURIComponent(API_URL), {
-          headers: {
-            'accept': 'application/json'
-          }
-        });
-        if (!response.ok) continue;
-        const data = await response.json();
-        return data;
-      } catch (e) {
-        console.warn('Proxy failed:', proxy, e);
-      }
-    }
-    // محاولة مباشرة
-    try {
-      const response = await fetch(API_URL);
-      return await response.json();
-    } catch (e) {
-      console.error('All fetch attempts failed', e);
-      return null;
-    }
+  function closeAlert() {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('alertPopup').classList.remove('show');
   }
 
-  // ===== عرض البيانات =====
-  function renderMatch(data) {
-    const fixture = data?.fixture || {};
-    const homeTeam = fixture.home_team?.name || 'Unknown';
-    const awayTeam = fixture.away_team?.name || 'Unknown';
-    const scoreHome = fixture.goals_home ?? 0;
-    const scoreAway = fixture.goals_away ?? 0;
-    const status = fixture.status || '';
-    const elapsed = fixture.elapsed || '';
-    const league = fixture.league?.name || '';
-    const round = fixture.round || '';
-    const date = fixture.date || '';
-    const hour = fixture.hour || '';
-    const stadium = fixture.venue || '—';
+  // تأثير الاهتزاز عند التحميل
+  window.addEventListener('load', () => {
+    createParticles();
+    setTimeout(animateNumbers, 500);
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 500);
+  });
 
-    document.getElementById('leagueName').textContent = `🏆 ${league}`;
-    document.getElementById('leagueRound').textContent = round;
-    document.getElementById('homeName').textContent = homeTeam;
-    document.getElementById('awayName').textContent = awayTeam;
-
-    // شعارات الفرق
-    const homeLogo = fixture.home_team?.logo;
-    const awayLogo = fixture.away_team?.logo;
-    document.getElementById('homeLogo').innerHTML = homeLogo
-      ? `<img src="${homeLogo}" alt="${homeTeam}" onerror="this.parentElement.innerHTML='🏠'">`
-      : '🏠';
-    document.getElementById('awayLogo').innerHTML = awayLogo      ? `<img src="${awayLogo}" alt="${awayTeam}" onerror="this.parentElement.innerHTML='✈️'">`
-      : '✈️';
-
-    // النتيجة مع تأثير
-    const oldScore = document.getElementById('score').textContent;
-    const newScore = `${scoreHome} - ${scoreAway}`;
-    if (oldScore !== newScore && !isFirstLoad) {
-      document.getElementById('score').style.animation = 'none';
-      void document.getElementById('score').offsetWidth;
-      document.getElementById('score').style.animation = 'pulse 0.6s ease';
-    }
-    document.getElementById('score').textContent = newScore;
-
-    // الحالة
-    const statusEl = document.getElementById('matchStatus');
-    const statusMap = {
-      'LIVE': '🔴 مباشر',
-      'NS': '⏳ لم تبدأ',
-      'HT': '⏸️ استراحة',
-      'FT': '✅ انتهت',
-      'AET': '✅ انتهت (وقت إضافي)',
-      'P': '✅ انتهت (ركلات)',
-      'PST': '⏸️ مؤجلة',
-      'CANC': '❌ ملغاة',
-      'SUSP': '⚠️ معلقة'
-    };
-    statusEl.textContent = statusMap[status] || status;
-    statusEl.className = 'match-status';
-    if (status === 'LIVE' || status === 'HT') statusEl.classList.add('live');
-    else if (['FT','AET','P'].includes(status)) statusEl.classList.add('finished');
-
-    document.getElementById('elapsed').textContent = elapsed ? `${elapsed}'` : '—';
-    document.getElementById('matchDate').textContent = date;
-    document.getElementById('matchTime').textContent = hour;
-    document.getElementById('stadium').textContent = stadium;
-
-    // الإحصائيات
-    renderStats(data.statistics || [], homeTeam, awayTeam);
-
-    // الأحداث
-    renderEvents(data.events || [], homeTeam, awayTeam);
-
-    // الطقس
-    renderWeather(data.environment || {});
-
-    // التوقعات
-    renderPredictions(data.predictions || [], homeTeam, awayTeam);
-
-    isFirstLoad = false;
-  }
-  function renderStats(stats, homeTeam, awayTeam) {
-    const container = document.getElementById('statsContainer');
-    if (!stats || stats.length < 2) {
-      container.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:30px;">لا توجد إحصائيات متاحة</div>';
-      return;
-    }
-
-    const homeStats = stats[0];
-    const awayStats = stats[1];
-
-    const statLabels = {
-      ball_possession: { label: '🔵 الاستحواذ', suffix: '%', isPercent: true },
-      total_shots: { label: '🎯 إجمالي التسديدات' },
-      shots_on_goal: { label: '⚡ تسديدات على المرمى' },
-      shots_off_goal: { label: '❌ تسديدات خارج المرمى' },
-      blocked_shots: { label: '🛡️ تسديدات محجوبة' },
-      corner_kicks: { label: '🚩 ركنيات' },
-      fouls: { label: '⚠️ أخطاء' },
-      yellow_cards: { label: '🟨 بطاقات صفراء' },
-      red_cards: { label: '🟥 بطاقات حمراء' },
-      offsides: { label: '📍 تسلل' },
-      goalkeeper_saves: { label: '🧤 تصديات الحارس' },
-      total_passes: { label: '📤 إجمالي التمريرات' },
-      passes_accurate: { label: '✅ تمريرات دقيقة' },
-      expected_goals: { label: '🎯 الأهداف المتوقعة (xG)' }
-    };
-
-    let html = '';
-    for (const [key, meta] of Object.entries(statLabels)) {
-      const homeVal = homeStats[key] ?? 0;
-      const awayVal = awayStats[key] ?? 0;
-      const total = parseFloat(homeVal) + parseFloat(awayVal);
-      const homePercent = total > 0 ? (parseFloat(homeVal) / total * 100) : 50;
-      const awayPercent = total > 0 ? (parseFloat(awayVal) / total * 100) : 50;
-
-      const displayHome = meta.isPercent ? `${homeVal}%` : homeVal;
-      const displayAway = meta.isPercent ? `${awayVal}%` : awayVal;
-
-      html += `
-        <div class="stat-row">
-          <div class="stat-label">${meta.label}</div>
-          <div class="stat-values">
-            <div class="stat-val home">${displayHome}</div>
-            <div class="stat-bar-container">
-              <div class="stat-bar home" style="width:${homePercent}%"></div>
-              <div class="stat-bar away" style="width:${awayPercent}%"></div>
-            </div>
-            <div class="stat-val away">${displayAway}</div>
-          </div>        </div>
-      `;
-    }
-    container.innerHTML = html;
-
-    // تفعيل الأنيميشن
-    setTimeout(() => {
-      document.querySelectorAll('.stat-bar').forEach(bar => {
-        bar.style.width = bar.style.width;
-      });
-    }, 100);
-  }
-
-  function renderEvents(events, homeTeam, awayTeam) {
-    const container = document.getElementById('eventsList');
-    const allEvents = [];
-
-    events.forEach(teamEvents => {
-      const teamName = teamEvents.team?.name || '';
-      (teamEvents.events || []).forEach(event => {
-        allEvents.push({
-          team: teamName,
-          time: event.time || 0,
-          extra: event.time_extra || 0,
-          type: event.type || '',
-          player: event.player || '',
-          assist: event.assist || '',
-          detail: event.detail || ''
-        });
-      });
-    });
-
-    allEvents.sort((a, b) => {
-      if (a.time !== b.time) return b.time - a.time;
-      return (b.extra || 0) - (a.extra || 0);
-    });
-
-    // كشف الأحداث الجديدة
-    if (!isFirstLoad) {
-      const currentIds = allEvents.map(e => `${e.time}-${e.type}-${e.player}-${e.team}`);
-      const lastIds = lastEvents.map(e => `${e.time}-${e.type}-${e.player}-${e.team}`);
-      const newEvents = allEvents.filter(e => {
-        const id = `${e.time}-${e.type}-${e.player}-${e.team}`;
-        return !lastIds.includes(id);
-      });
-
-      newEvents.forEach(event => {
-        triggerEventNotification(event);
-      });
-    }    lastEvents = allEvents;
-
-    if (allEvents.length === 0) {
-      container.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:40px;">لا توجد أحداث بعد</div>';
-      return;
-    }
-
-    let html = '';
-    allEvents.forEach(event => {
-      const timeStr = event.extra ? `${event.time}'+${event.extra}` : `${event.time}'`;
-      const isHome = event.team === homeTeam;
-      let icon = '📌', detail = event.type, typeClass = '';
-
-      if (event.type === 'Goal') {
-        icon = '⚽';
-        detail = `هدف! ${event.player}`;
-        if (event.assist) detail += `<div class="event-assist">صناعة: ${event.assist}</div>`;
-        typeClass = 'goal';
-      } else if (event.type === 'Card') {
-        const isYellow = event.detail?.toLowerCase().includes('yellow');
-        icon = isYellow ? '🟨' : '🟥';
-        detail = `${isYellow ? 'بطاقة صفراء' : 'بطاقة حمراء'} - ${event.player}`;
-        typeClass = isYellow ? 'card-yellow' : 'card-red';
-      } else if (event.type === 'subst') {
-        icon = '🔄';
-        detail = `تبديل: ${event.player}`;
-        if (event.assist) detail += ` ← ${event.assist}`;
-      } else if (event.type === 'Var') {
-        icon = '📺';
-        detail = `VAR: ${event.detail || event.player}`;
-      } else {
-        icon = '📌';
-        detail = `${event.type} - ${event.player || ''}`;
-      }
-
-      html += `
-        <div class="event-item ${isHome ? '' : 'away-team'} ${typeClass}">
-          <div class="event-time">${timeStr}</div>
-          <div class="event-icon">${icon}</div>
-          <div class="event-details">
-            <div>${detail}</div>
-            <div class="event-team-name">${event.team}</div>
-          </div>
-        </div>
-      `;
-    });
-    container.innerHTML = html;
-  }
-
-  function triggerEventNotification(event) {    if (event.type === 'Goal') {
-      goalFlashEffect();
-      showToast('⚽', '🎉 هـدف!', `${event.player} - ${event.team}`, 'goal');
-      // صوت اختياري
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.5);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-        osc.start(); osc.stop(ctx.currentTime + 0.5);
-      } catch(e) {}
-    } else if (event.type === 'Card') {
-      const isYellow = event.detail?.toLowerCase().includes('yellow');
-      showToast(isYellow ? '🟨' : '🟥',
-        isYellow ? 'بطاقة صفراء' : '🟥 بطاقة حمراء',
-        `${event.player} - ${event.team}`,
-        isYellow ? 'card-yellow' : 'card-red');
-    } else if (event.type === 'subst') {
-      showToast('🔄', 'تبديل', `${event.player} - ${event.team}`);
-    }
-  }
-
-  function renderWeather(env) {
-    const container = document.getElementById('weatherGrid');
-    if (!env || (!env.temperature && !env.humidity && !env.wind)) {
-      container.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:30px; grid-column: 1/-1;">لا توجد بيانات طقس</div>';
-      return;
-    }
-    container.innerHTML = `
-      <div class="weather-item">
-        <div class="weather-icon">🌡️</div>
-        <div class="weather-label">الحرارة</div>
-        <div class="weather-value">${env.temperature || '—'}°</div>
-      </div>
-      <div class="weather-item">
-        <div class="weather-icon">💧</div>
-        <div class="weather-label">الرطوبة</div>
-        <div class="weather-value">${env.humidity || '—'}%</div>
-      </div>
-      <div class="weather-item">
-        <div class="weather-icon">💨</div>
-        <div class="weather-label">الرياح</div>
-        <div class="weather-value">${env.wind || '—'}</div>
-      </div>
-    `;
-  }
-  function renderPredictions(predictions, homeTeam, awayTeam) {
-    const container = document.getElementById('predictionsGrid');
-    if (!predictions || predictions.length === 0) {
-      container.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:30px; grid-column: 1/-1;">لا توجد توقعات</div>';
-      return;
-    }
-    const pred = predictions[0];
-    const x12 = pred['1x2'] || pred.x12 || {};
-    const home = ((x12.home_probability || x12.home || 0) * 100).toFixed(1);
-    const draw = ((x12.draw_probability || x12.draw || 0) * 100).toFixed(1);
-    const away = ((x12.away_probability || x12.away || 0) * 100).toFixed(1);
-
-    container.innerHTML = `
-      <div class="prediction-item home">
-        <div class="prediction-label">فوز ${homeTeam}</div>
-        <div class="prediction-value">${home}%</div>
-      </div>
-      <div class="prediction-item draw">
-        <div class="prediction-label">تعادل</div>
-        <div class="prediction-value">${draw}%</div>
-      </div>
-      <div class="prediction-item away">
-        <div class="prediction-label">فوز ${awayTeam}</div>
-        <div class="prediction-value">${away}%</div>
-      </div>
-    `;
-  }
-
-  // ===== التشغيل =====
-  async function init() {
-    const data = await fetchData();
-    if (data) {
-      renderMatch(data);
-      document.getElementById('loader').classList.add('hidden');
-    } else {
-      document.getElementById('loader').innerHTML = `
-        <div style="text-align:center; color:var(--danger);">
-          <div style="font-size:3rem; margin-bottom:15px;">⚠️</div>
-          <div style="font-size:1.2rem; margin-bottom:10px;">فشل الاتصال بالـ API</div>
-          <div style="color:var(--text-dim); font-size:0.9rem;">بسبب قيود CORS - جرب تشغيل الموقع من سيرفر محلي</div>
-          <button onclick="location.reload()" style="margin-top:20px; padding:10px 25px; background:var(--primary); border:none; border-radius:10px; color:#000; font-weight:700; cursor:pointer;">إعادة المحاولة</button>
-        </div>
-      `;
-    }
-  }
-
-  init();
-  setInterval(async () => {
-    const data = await fetchData();    if (data) renderMatch(data);
-  }, REFRESH_INTERVAL);
+  // تأثير الماوس
+  document.addEventListener('mousemove', (e) => {
+    const card = document.getElementById('profileCard');
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.background = `radial-gradient(circle at ${x}px ${y}px, #2a0000, #0a0000)`;
+  });
 </script>
 
 </body>
