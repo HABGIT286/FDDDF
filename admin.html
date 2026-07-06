@@ -1536,7 +1536,31 @@
 
     <script>
         // ===== Configuration =====
-        const CORRECT_PIN = 'ONX44';
+        // ===== Configuration =====
+let CORRECT_PIN = null;
+
+// ===== التحقق من كلمة المرور من قاعدة البيانات =====
+async function loadAdminCredentials() {
+    try {
+        const { data, error } = await supabase
+            .from('admins')
+            .select('password')
+            .eq('username', 'admin')
+            .eq('is_active', true)
+            .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+            CORRECT_PIN = data.password;
+            console.log('✅ تم تحميل بيانات المسؤول');
+        }
+    } catch (error) {
+        console.error('❌ خطأ في تحميل بيانات المسؤول:', error);
+        // في حالة الخطأ، استخدم القيمة الافتراضية
+        CORRECT_PIN = 'ONX44';
+    }
+}
         
         // ⚠️ ضع هنا بيانات Supabase الخاصة بك
         const SUPABASE_URL = 'https://jnedawtieiqtmagjbhld.supabase.co';
@@ -1650,33 +1674,45 @@
             }
         }
 
-        function attemptLogin() {
-            const pin = Array.from(pinInputs).map(i => i.value).join('');
-            const errorEl = document.getElementById('loginError');
-            
-            if (pin === CORRECT_PIN) {
-                errorEl.textContent = '';
-                document.getElementById('loginScreen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('adminContainer').classList.add('active');
-                    initializeDashboard();
-                }, 500);
-            } else {
-                errorEl.textContent = '❌ رمز الدخول غير صحيح';
-                pinInputs.forEach(i => {
-                    i.value = '';
-                    i.classList.remove('filled');
-                });
-                pinInputs[0].focus();
-                
-                const box = document.querySelector('.login-box');
-                box.style.animation = 'none';
-                setTimeout(() => {
-                    box.style.animation = 'shake 0.5s';
-                }, 10);
-            }
-        }
+        async function attemptLogin() {
+    const pin = Array.from(pinInputs).map(i => i.value).join('');
+    const errorEl = document.getElementById('loginError');
+    
+    // تحميل بيانات المسؤول إذا لم تكن محملة
+    if (!CORRECT_PIN) {
+        await loadAdminCredentials();
+    }
+    
+    if (pin === CORRECT_PIN) {
+        errorEl.textContent = '';
+        
+        // تحديث last_login
+        await supabase
+            .from('admins')
+            .update({ last_login: new Date().toISOString() })
+            .eq('username', 'admin');
+        
+        document.getElementById('loginScreen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminContainer').classList.add('active');
+            initializeDashboard();
+        }, 500);
+    } else {
+        errorEl.textContent = '❌ رمز الدخول غير صحيح';
+        pinInputs.forEach(i => {
+            i.value = '';
+            i.classList.remove('filled');
+        });
+        pinInputs[0].focus();
+        
+        const box = document.querySelector('.login-box');
+        box.style.animation = 'none';
+        setTimeout(() => {
+            box.style.animation = 'shake 0.5s';
+        }, 10);
+    }
+}
 
         function logout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
