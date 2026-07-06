@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | ورشة المنتظر</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --secondary: #0099cc;
+            --accent: #ff6b6b;
+            --gold: #ffd700;
+            --dark: #0a0a0a;
+            --darker: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --active-color: #00ff88;
+            --inactive-color: #888888;
+            --break-color: #ffaa00;
+            --busy-color: #ff4757;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        body {
+            background: var(--dark);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== Login Screen ===== */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .login-screen::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0,212,255,0.15), transparent 70%);
+            border-radius: 50%;
+            animation: float-bg 8s ease-in-out infinite;
+        }
+
+        @keyframes float-bg {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .login-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 50px 40px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 100px rgba(0,212,255,0.15);
+            position: relative;
+            z-index: 1;
+            animation: loginSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes loginSlideIn {
+            from { opacity: 0; transform: translateY(50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            color: #fff;
+            box-shadow: 0 10px 40px rgba(0,212,255,0.4);
+            animation: pulse-logo 2s infinite;
+        }
+
+        @keyframes pulse-logo {
+            0%, 100% { box-shadow: 0 10px 40px rgba(0,212,255,0.4); }
+            50% { box-shadow: 0 10px 40px rgba(0,212,255,0.7), 0 0 0 20px rgba(0,212,255,0.1); }
+        }
+
+        .login-title {
+            font-size: 2em;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .login-subtitle {
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+
+        .pin-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            direction: ltr;
+        }
+
+        .pin-digit {
+            width: 60px;
+            height: 70px;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            color: var(--primary);
+            font-size: 2em;
+            font-weight: 700;
+            text-align: center;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .pin-digit:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0,212,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .pin-digit.filled {
+            background: rgba(0,212,255,0.1);
+            border-color: var(--primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,212,255,0.4);
+        }
+
+        .login-error {
+            color: var(--accent);
+            margin-top: 15px;
+            font-size: 0.95em;
+            min-height: 20px;
+        }
+
+        /* ===== Admin Dashboard ===== */
+        .admin-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .admin-container.active {
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(10,10,10,0.95);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid var(--glass-border);
+            height: 100vh;
+            position: fixed;
+            right: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85em;
+        }
+
+        .sidebar-menu {
+            padding: 20px 15px;
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover {
+            background: var(--glass);
+            color: var(--primary);
+        }
+
+        .sidebar-menu a.active {
+            background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,212,255,0.05));
+            color: var(--primary);
+            border: 1px solid rgba(0,212,255,0.3);
+        }
+
+        .sidebar-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 15px 0;
+        }
+
+        .logout-btn {
+            margin: 20px 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,107,107,0.05));
+            border: 1px solid rgba(255,107,107,0.3);
+            color: var(--accent);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-right: 280px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 25px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+        }
+
+        .top-bar h1 {
+            font-size: 1.8em;
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .site-status-badge {
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95em;
+        }
+
+        .site-status-badge.active {
+            background: rgba(0,255,136,0.15);
+            color: var(--active-color);
+            border: 1px solid var(--active-color);
+        }
+
+        .site-status-badge.locked {
+            background: rgba(255,71,87,0.15);
+            color: var(--busy-color);
+            border: 1px solid var(--busy-color);
+        }
+
+        .site-status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Dashboard Sections */
+        .dashboard-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .dashboard-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 15px 40px rgba(0,212,255,0.15);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--gold));
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.95em;
+        }
+
+        /* Panel */
+        .panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .panel-title {
+            font-size: 1.3em;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 18px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--glass-border);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0,212,255,0.2);
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95em;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,212,255,0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--active-color), #00c853);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent), #ee5a5a);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--break-color), #ff8800);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--glass-border);
+            color: #fff;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Status Selector */
+        .status-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .status-option {
+            padding: 20px;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .status-option:hover {
+            transform: translateY(-3px);
+        }
+
+        .status-option.active {
+            border-color: var(--active-color);
+            background: rgba(0,255,136,0.1);
+        }
+
+        .status-option.inactive {
+            border-color: var(--inactive-color);
+            background: rgba(136,136,136,0.1);
+        }
+
+        .status-option.break {
+            border-color: var(--break-color);
+            background: rgba(255,170,0,0.1);
+        }
+
+        .status-option.busy {
+            border-color: var(--busy-color);
+            background: rgba(255,71,87,0.1);
+        }
+
+        .status-option i {
+            font-size: 2em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .status-option.active i { color: var(--active-color); }
+        .status-option.inactive i { color: var(--inactive-color); }
+        .status-option.break i { color: var(--break-color); }
+        .status-option.busy i { color: var(--busy-color); }
+
+        /* Image Upload */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .image-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .image-item:hover {
+            border-color: var(--primary);
+            transform: scale(1.03);
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-item .image-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            padding: 5px;
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .image-item .image-actions {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .image-item:hover .image-actions {
+            opacity: 1;
+        }
+
+        .image-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.8em;
+        }
+
+        .image-action-btn.edit {
+            background: var(--primary);
+        }
+
+        .image-action-btn.delete {
+            background: var(--accent);
+        }
+
+        /* Orders List */
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .order-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .order-card:hover {
+            border-color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .order-id {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .order-time {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9em;
+        }
+
+        .order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .order-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95em;
+        }
+
+        .order-info-item i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* Notifications */
+        .notification-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            border-color: var(--primary);
+        }
+
+        .notification-item.new {
+            border-right: 3px solid var(--primary);
+            background: rgba(0,212,255,0.05);
+        }
+
+        .notification-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .notification-text {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8em;
+        }
+
+        /* Section Toggles */
+        .section-toggles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .section-toggle {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .section-toggle.enabled {
+            border-color: var(--active-color);
+            background: rgba(0,255,136,0.05);
+        }
+
+        .section-toggle.disabled {
+            border-color: var(--accent);
+            background: rgba(255,107,107,0.05);
+            opacity: 0.7;
+        }
+
+        .section-toggle-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-toggle-info i {
+            font-size: 1.5em;
+            color: var(--primary);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .4s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            right: 3px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, var(--active-color), #00c853);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(-24px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 10000;
+            opacity: 0;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, var(--accent), #ee5a5a);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--primary);
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                right: -280px;
+            }
+
+            .sidebar.open {
+                right: 0;
+            }
+
+            .main-content {
+                margin-right: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .top-bar h1 {
+                font-size: 1.4em;
+            }
+
+            .pin-digit {
+                width: 50px;
+                height: 60px;
+                font-size: 1.5em;
+            }
+
+            .login-box {
+                padding: 30px 20px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--darker); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+        /* Search Box */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 18px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--glass-border);
+            border-radius: 50px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .empty-state i {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: var(--primary);
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== Login Screen ===== -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1 class="login-title">لوحة التحكم</h1>
+            <p class="login-subtitle">ورشة المنتظر - أدخل رمز الدخول</p>
+            
+            <div class="pin-input-container">
+                <input type="password" class="pin-digit" maxlength="1" data-index="0" inputmode="numeric">
+                <input type="password" class="pin-digit" maxlength="1" data-index="1" inputmode="numeric">
+                <input type="password" class="pin-digit" maxlength="1" data-index="2" inputmode="numeric">
+                <input type="password" class="pin-digit" maxlength="1" data-index="3" inputmode="numeric">
+                <input type="password" class="pin-digit" maxlength="1" data-index="4" inputmode="numeric">
+            </div>
+            
+            <button class="login-btn" onclick="attemptLogin()">
+                <i class="fas fa-sign-in-alt"></i>
+                دخول
+            </button>
+            
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- ===== Admin Dashboard ===== -->
+    <div class="admin-container" id="adminContainer">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-cogs"></i> لوحة التحكم</h2>
+                <p>ورشة المنتظر</p>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li><a class="active" onclick="showSection('dashboard', this)"><i class="fas fa-tachometer-alt"></i> الرئيسية</a></li>
+                <li><a onclick="showSection('orders', this)"><i class="fas fa-clipboard-list"></i> الطلبات</a></li>
+                <li><a onclick="showSection('notifications', this)"><i class="fas fa-bell"></i> الإشعارات</a></li>
+                
+                <div class="sidebar-divider"></div>
+                
+                <li><a onclick="showSection('site-status', this)"><i class="fas fa-signal"></i> حالة الموقع</a></li>
+                <li><a onclick="showSection('sections-control', this)"><i class="fas fa-th-large"></i> التحكم بالأقسام</a></li>
+                <li><a onclick="showSection('lock-site', this)"><i class="fas fa-lock"></i> قفل الموقع</a></li>
+                
+                <div class="sidebar-divider"></div>
+                
+                <li><a onclick="showSection('images', this)"><i class="fas fa-images"></i> إدارة الصور</a></li>
+                <li><a onclick="showSection('ticker', this)"><i class="fas fa-bullhorn"></i> شريط الإعلانات</a></li>
+                <li><a onclick="showSection('tips', this)"><i class="fas fa-lightbulb"></i> النصائح</a></li>
+                <li><a onclick="showSection('warnings', this)"><i class="fas fa-exclamation-triangle"></i> التحذيرات</a></li>
+                <li><a onclick="showSection('welcome', this)"><i class="fas fa-hand-sparkles"></i> رسالة الترحيب</a></li>
+                
+                <div class="sidebar-divider"></div>
+                
+                <li><a onclick="showSection('phones', this)"><i class="fas fa-phone"></i> أرقام الهواتف</a></li>
+                <li><a onclick="showSection('settings', this)"><i class="fas fa-cog"></i> الإعدادات</a></li>
+            </ul>
+            
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                تسجيل الخروج
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle">الرئيسية</h1>
+                </div>
+                <div class="top-bar-actions">
+                    <div class="site-status-badge active" id="siteStatusBadge">
+                        <span class="dot"></span>
+                        <span id="siteStatusText">نشط</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Dashboard Section ===== -->
+            <div class="dashboard-section active" id="section-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                        <div class="stat-value" id="stat-orders">0</div>
+                        <div class="stat-label">إجمالي الطلبات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--active-color), #00c853);"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-value" id="stat-bookings">0</div>
+                        <div class="stat-label">حجوزات اليوم</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--gold), #ffa500);"><i class="fas fa-store"></i></div>
+                        <div class="stat-value" id="stat-market">0</div>
+                        <div class="stat-label">طلبات البيع/الشراء</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--accent), #ee5a5a);"><i class="fas fa-envelope"></i></div>
+                        <div class="stat-value" id="stat-messages">0</div>
+                        <div class="stat-label">الرسائل</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-history"></i>
+                            آخر الطلبات
+                        </div>
+                    </div>
+                    <div class="orders-list" id="recentOrders">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>لا توجد طلبات حتى الآن</h3>
+                            <p>ستظهر هنا الطلبات الجديدة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Orders Section ===== -->
+            <div class="dashboard-section" id="section-orders">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-search"></i>
+                            البحث عن طلب
+                        </div>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="orderSearch" placeholder="ابحث برقم الطلب أو اسم العميل..." oninput="searchOrders()">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            جميع الطلبات
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-outline" onclick="exportOrders()">
+                                <i class="fas fa-download"></i> تصدير
+                            </button>
+                            <button class="btn btn-danger" onclick="clearAllOrders()">
+                                <i class="fas fa-trash"></i> حذف الكل
+                            </button>
+                        </div>
+                    </div>
+                    <div class="orders-list" id="allOrders">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>لا توجد طلبات</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Notifications Section ===== -->
+            <div class="dashboard-section" id="section-notifications">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-bell"></i>
+                            الإشعارات
+                        </div>
+                        <button class="btn btn-outline" onclick="clearNotifications()">
+                            <i class="fas fa-check"></i> تحديد الكل كمقروء
+                        </button>
+                    </div>
+                    <div id="notificationsList">
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash"></i>
+                            <h3>لا توجد إشعارات</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Site Status Section ===== -->
+            <div class="dashboard-section" id="section-site-status">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-signal"></i>
+                            حالة الموقع
+                        </div>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                        اختر حالة الورشة الحالية - ستظهر للزوار في الصفحة الرئيسية
+                    </p>
+                    
+                    <div class="status-selector">
+                        <div class="status-option active" data-status="active" onclick="setSiteStatus('active')">
+                            <i class="fas fa-check-circle"></i>
+                            <div>نشط الآن</div>
+                        </div>
+                        <div class="status-option inactive" data-status="inactive" onclick="setSiteStatus('inactive')">
+                            <i class="fas fa-times-circle"></i>
+                            <div>غير نشط</div>
+                        </div>
+                        <div class="status-option break" data-status="break" onclick="setSiteStatus('break')">
+                            <i class="fas fa-coffee"></i>
+                            <div>استراحة</div>
+                        </div>
+                        <div class="status-option busy" data-status="busy" onclick="setSiteStatus('busy')">
+                            <i class="fas fa-user-clock"></i>
+                            <div>مشغول</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>رسالة الحالة المخصصة</label>
+                        <textarea class="form-control" id="statusMessage" placeholder="اكتب رسالة تظهر للزوار..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSiteStatus()">
+                        <i class="fas fa-save"></i> حفظ الحالة
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Sections Control ===== -->
+            <div class="dashboard-section" id="section-sections-control">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-th-large"></i>
+                            التحكم بالأقسام
+                        </div>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                        قم بتفعيل أو تعطيل أي قسم من أقسام الموقع
+                    </p>
+                    
+                    <div class="section-toggles" id="sectionToggles">
+                        <!-- Will be generated by JS -->
+                    </div>
+
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveSectionsState()">
+                        <i class="fas fa-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Lock Site ===== -->
+            <div class="dashboard-section" id="section-lock-site">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-lock"></i>
+                            قفل الموقع
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 20px;">
+                        <i class="fas fa-shield-alt" style="font-size: 4em; color: var(--accent); margin-bottom: 20px;"></i>
+                        <h3 style="margin-bottom: 15px;">قفل الموقع بالكامل</h3>
+                        <p style="color: rgba(255,255,255,0.7); margin-bottom: 25px;">
+                            عند قفل الموقع، سيظهر للزوار رسالة الصيانة فقط
+                        </p>
+
+                        <div class="form-group">
+                            <label>رسالة القفل</label>
+                            <textarea class="form-control" id="lockMessage" placeholder="الموقع مغلق للصيانة، سنعود قريباً..."></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-danger" onclick="lockSite()">
+                                <i class="fas fa-lock"></i> قفل الموقع
+                            </button>
+                            <button class="btn btn-success" onclick="unlockSite()">
+                                <i class="fas fa-unlock"></i> فتح الموقع
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Images Management ===== -->
+            <div class="dashboard-section" id="section-images">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-images"></i>
+                            إدارة الصور
+                        </div>
+                    </div>
+
+                    <h3 style="color: var(--gold); margin-bottom: 15px;">
+                        <i class="fas fa-photo-video"></i> صور الألبوم (S1 - S18)
+                    </h3>
+                    <div class="image-grid" id="sliderImagesGrid"></div>
+
+                    <h3 style="color: var(--gold); margin: 30px 0 15px;">
+                        <i class="fas fa-th"></i> صور المعرض (1 - 9)
+                    </h3>
+                    <div class="image-grid" id="galleryImagesGrid"></div>
+
+                    <h3 style="color: var(--gold); margin: 30px 0 15px;">
+                        <i class="fas fa-users"></i> صور المنصبين (A1 - A3)
+                    </h3>
+                    <div class="image-grid" id="techniciansImagesGrid"></div>
+
+                    <h3 style="color: var(--gold); margin: 30px 0 15px;">
+                        <i class="fas fa-crown"></i> شعار الموقع
+                    </h3>
+                    <div class="image-grid" id="logoImageGrid"></div>
+                </div>
+            </div>
+
+            <!-- ===== Ticker Management ===== -->
+            <div class="dashboard-section" id="section-ticker">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-bullhorn"></i>
+                            شريط الإعلانات
+                        </div>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                        أضف أو عدّل عناصر شريط الإعلانات المتحرك في أعلى الموقع
+                    </p>
+                    
+                    <div id="tickerItems">
+                        <!-- Will be generated by JS -->
+                    </div>
+
+                    <button class="btn btn-primary" onclick="addTickerItem()">
+                        <i class="fas fa-plus"></i> إضافة عنصر جديد
+                    </button>
+
+                    <button class="btn btn-success" style="margin-top: 15px;" onclick="saveTicker()">
+                        <i class="fas fa-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Tips Management ===== -->
+            <div class="dashboard-section" id="section-tips">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-lightbulb"></i>
+                            إدارة النصائح
+                        </div>
+                    </div>
+                    
+                    <div id="tipsList"></div>
+
+                    <button class="btn btn-primary" onclick="addTip()">
+                        <i class="fas fa-plus"></i> إضافة نصيحة جديدة
+                    </button>
+
+                    <button class="btn btn-success" style="margin-top: 15px;" onclick="saveTips()">
+                        <i class="fas fa-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Warnings Management ===== -->
+            <div class="dashboard-section" id="section-warnings">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            إدارة التحذيرات
+                        </div>
+                    </div>
+                    
+                    <div id="warningsList"></div>
+
+                    <button class="btn btn-primary" onclick="addWarning()">
+                        <i class="fas fa-plus"></i> إضافة تحذير جديد
+                    </button>
+
+                    <button class="btn btn-success" style="margin-top: 15px;" onclick="saveWarnings()">
+                        <i class="fas fa-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Welcome Message ===== -->
+            <div class="dashboard-section" id="section-welcome">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-hand-sparkles"></i>
+                            رسالة الترحيب
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>العنوان الرئيسي</label>
+                        <input type="text" class="form-control" id="welcomeTitle" placeholder="أهلاً بك في ورشة المنتظر">
+                    </div>
+
+                    <div class="form-group">
+                        <label>العنوان الفرعي</label>
+                        <input type="text" class="form-control" id="welcomeSubtitle" placeholder="لتنصيب وصيانة السبلت">
+                    </div>
+
+                    <div class="form-group">
+                        <label>نص الترحيب</label>
+                        <textarea class="form-control" id="welcomeText" placeholder="مرحباً بك..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>عنوان التعليمات</label>
+                        <input type="text" class="form-control" id="instructionsTitle" placeholder="قبل البدء يرجى قراءة التعليمات">
+                    </div>
+
+                    <div class="form-group">
+                        <label>التعليمات (كل سطر تعليمات)</label>
+                        <textarea class="form-control" id="instructionsList" placeholder="اختر الخدمة المناسبة&#10;أدخل معلومات صحيحة&#10;سيتم التواصل معك بأسرع وقت"></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveWelcome()">
+                        <i class="fas fa-save"></i> حفظ التغييرات
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Phones Management ===== -->
+            <div class="dashboard-section" id="section-phones">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-phone"></i>
+                            أرقام الهواتف
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user-tie"></i> المنصب الأول</label>
+                        <input type="tel" class="form-control" id="phone1" placeholder="07726283627">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user-cog"></i> المنصب الثاني</label>
+                        <input type="tel" class="form-control" id="phone2" placeholder="07726392793">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-user-hard-hat"></i> المنصب الثالث</label>
+                        <input type="tel" class="form-control" id="phone3" placeholder="07728483629">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="savePhones()">
+                        <i class="fas fa-save"></i> حفظ الأرقام
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== Settings ===== -->
+            <div class="dashboard-section" id="section-settings">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-cog"></i>
+                            الإعدادات العامة
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>اسم الورشة</label>
+                        <input type="text" class="form-control" id="shopName" value="ورشة المنتظر">
+                    </div>
+
+                    <div class="form-group">
+                        <label>وصف الورشة</label>
+                        <textarea class="form-control" id="shopDescription">الاحترافية في تنصيب وصيانة السبلت بأعلى معايير الجودة</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>توقيت فتح العمل</label>
+                        <input type="text" class="form-control" id="workHours" value="8:00 ص - 10:00 م">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> حفظ الإعدادات
+                    </button>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fas fa-database"></i>
+                            النسخ الاحتياطي
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="exportBackup()">
+                            <i class="fas fa-download"></i> تصدير نسخة احتياطية
+                        </button>
+                        <button class="btn btn-warning" onclick="document.getElementById('importBackup').click()">
+                            <i class="fas fa-upload"></i> استيراد نسخة احتياطية
+                        </button>
+                        <input type="file" id="importBackup" style="display: none;" accept=".json" onchange="importBackup(event)">
+                        <button class="btn btn-danger" onclick="resetAllData()">
+                            <i class="fas fa-trash"></i> حذف جميع البيانات
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">تم الحفظ بنجاح!</span>
+    </div>
+
+    <!-- Hidden file input for images -->
+    <input type="file" id="imageUploader" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+
+    <script>
+        // ===== Configuration =====
+        const CORRECT_PIN = 'ONX44';
+        const STORAGE_KEY = 'workshop_admin_data';
+        
+        // Current image upload target
+        let currentUploadTarget = null;
+
+        // Default Data Structure
+        const defaultData = {
+            siteStatus: 'active',
+            statusMessage: '',
+            siteLocked: false,
+            lockMessage: 'الموقع مغلق للصيانة، سنعود قريباً...',
+            phones: {
+                phone1: '07726283627',
+                phone2: '07726392793',
+                phone3: '07728483629'
+            },
+            sections: {
+                home: true,
+                gallery: true,
+                services: true,
+                marketplace: true,
+                booking: true,
+                contact: true
+            },
+            ticker: [
+                { icon: 'fa-fire', text: 'خصم 20% على جميع خدمات التنصيب لهذا الأسبوع' },
+                { icon: 'fa-bolt', text: 'خدمة طوارئ 24 ساعة - اتصل الآن' },
+                { icon: 'fa-gift', text: 'فحص مجاني مع كل عملية تنصيب' },
+                { icon: 'fa-star', text: 'ضمان 6 أشهر على جميع الخدمات' },
+                { icon: 'fa-phone', text: 'تواصل معنا: 07726283627' }
+            ],
+            tips: [
+                { icon: 'fa-play-circle', title: 'قبل تشغيل السبلت', text: 'تأكد من إغلاق جميع النوافذ والأبواب، واضبط الحرارة على 24 درجة مئوية للحصول على أفضل أداء.' },
+                { icon: 'fa-bolt', title: 'عند انقطاع الكهرباء', text: 'أطفئ السبلت فوراً عند انقطاع التيار الكهربائي، وانتظر 3 دقائق على الأقل بعد عودة الكهرباء.' },
+                { icon: 'fa-snowflake', title: 'عند تجميد الأنابيب', text: 'إذا لاحظت تجمد في أنابيب السبلت، أطفئ الجهاز فوراً واتصل بنا.' },
+                { icon: 'fa-power-off', title: 'عند فصل السبلت', text: 'عند عدم استخدام السبلت لفترات طويلة، افصله من الكهرباء وقم بتنظيف الفلاتر.' },
+                { icon: 'fa-thermometer-empty', title: 'عند عدم التبريد', text: 'إذا كان السبلت يعمل لكن لا يبرد بشكل كافٍ، تحقق من نظافة الفلاتر.' },
+                { icon: 'fa-wind', title: 'اختفاء البرودة تدريجياً', text: 'إذا لاحظت أن برودة السبلت تقل تدريجياً، فهذا مؤشر على حاجة الجهاز لصيانة.' }
+            ],
+            warnings: [
+                { icon: 'fa-hand-paper', text: 'عدم العبث بجهاز التكيف: لا تقم بفك أو تعديل أي جزء من الجهاز بنفسك.' },
+                { icon: 'fa-bolt', text: 'عدم التقرب من القطع الداخلية والأسلاك أثناء تشغيل الجهاز.' },
+                { icon: 'fa-snowflake', text: 'عند ملاحظة تجميد الأنابيب: اتصل بنا فوراً.' },
+                { icon: 'fa-fire-alt', text: 'عدم تشغيل الجهاز بدون فلتر.' },
+                { icon: 'fa-child', text: 'إبعاد الأطفال عن الوحدة الخارجية.' }
+            ],
+            welcome: {
+                title: 'أهلاً بك في ورشة المنتظر',
+                subtitle: 'لتنصيب وصيانة السبلت',
+                text: 'مرحباً بك... نسعد بخدمتك، تم تصميم هذا الموقع لتسهيل الحجز والتواصل معنا.',
+                instructionsTitle: 'قبل البدء يرجى قراءة التعليمات:',
+                instructions: [
+                    'اختر الخدمة المناسبة',
+                    'أدخل معلومات صحيحة',
+                    'سيتم التواصل معك بأسرع وقت',
+                    'بعد الإرسال ستحصل على رقم طلب'
+                ]
+            },
+            orders: [],
+            notifications: [],
+            images: {}
+        };
+
+        // ===== Load/Save Data =====
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return JSON.parse(JSON.stringify(defaultData));
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        let appData = loadData();
+
+        // ===== Login System =====
+        const pinInputs = document.querySelectorAll('.pin-digit');
+        
+        pinInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                if (value) {
+                    e.target.classList.add('filled');
+                    if (index < pinInputs.length - 1) {
+                        pinInputs[index + 1].focus();
+                    }
+                } else {
+                    e.target.classList.remove('filled');
+                }
+                checkPinComplete();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    pinInputs[index - 1].focus();
+                }
+                if (e.key === 'Enter') {
+                    attemptLogin();
+                }
+            });
+        });
+
+        function checkPinComplete() {
+            const pin = Array.from(pinInputs).map(i => i.value).join('');
+            if (pin.length === 5) {
+                setTimeout(attemptLogin, 200);
+            }
+        }
+
+        function attemptLogin() {
+            const pin = Array.from(pinInputs).map(i => i.value).join('');
+            const errorEl = document.getElementById('loginError');
+            
+            if (pin === CORRECT_PIN) {
+                errorEl.textContent = '';
+                document.getElementById('loginScreen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminContainer').classList.add('active');
+                    initializeDashboard();
+                }, 500);
+            } else {
+                errorEl.textContent = '❌ رمز الدخول غير صحيح';
+                pinInputs.forEach(i => {
+                    i.value = '';
+                    i.classList.remove('filled');
+                });
+                pinInputs[0].focus();
+                
+                // Shake animation
+                const box = document.querySelector('.login-box');
+                box.style.animation = 'none';
+                setTimeout(() => {
+                    box.style.animation = 'shake 0.5s';
+                }, 10);
+            }
+        }
+
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                document.getElementById('adminContainer').classList.remove('active');
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('loginScreen').style.opacity = '1';
+                pinInputs.forEach(i => {
+                    i.value = '';
+                    i.classList.remove('filled');
+                });
+            }
+        }
+
+        // ===== Navigation =====
+        function showSection(sectionId, element) {
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+            
+            // Show target section
+            document.getElementById('section-' + sectionId).classList.add('active');
+            if (element) element.classList.add('active');
+            
+            // Update title
+            const titles = {
+                'dashboard': 'الرئيسية',
+                'orders': 'الطلبات',
+                'notifications': 'الإشعارات',
+                'site-status': 'حالة الموقع',
+                'sections-control': 'التحكم بالأقسام',
+                'lock-site': 'قفل الموقع',
+                'images': 'إدارة الصور',
+                'ticker': 'شريط الإعلانات',
+                'tips': 'النصائح',
+                'warnings': 'التحذيرات',
+                'welcome': 'رسالة الترحيب',
+                'phones': 'أرقام الهواتف',
+                'settings': 'الإعدادات'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionId] || '';
+            
+            // Close mobile sidebar
+            document.getElementById('sidebar').classList.remove('open');
+            
+            // Load section data
+            loadSectionData(sectionId);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // ===== Initialize Dashboard =====
+        function initializeDashboard() {
+            updateStats();
+            loadRecentOrders();
+            updateSiteStatusBadge();
+        }
+
+        function updateStats() {
+            const orders = appData.orders || [];
+            const today = new Date().toDateString();
+            
+            document.getElementById('stat-orders').textContent = orders.length;
+            document.getElementById('stat-bookings').textContent = 
+                orders.filter(o => o.type === 'booking' && new Date(o.timestamp).toDateString() === today).length;
+            document.getElementById('stat-market').textContent = 
+                orders.filter(o => o.type === 'sell' || o.type === 'buy').length;
+            document.getElementById('stat-messages').textContent = 
+                orders.filter(o => o.type === 'message').length;
+        }
+
+        function loadRecentOrders() {
+            const orders = (appData.orders || []).slice(-5).reverse();
+            const container = document.getElementById('recentOrders');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>لا توجد طلبات حتى الآن</h3>
+                        <p>ستظهر هنا الطلبات الجديدة</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = orders.map(order => renderOrderCard(order)).join('');
+        }
+
+        function renderOrderCard(order) {
+            const typeLabels = {
+                'booking': { label: 'حجز', color: 'var(--primary)', icon: 'fa-calendar-check' },
+                'sell': { label: 'بيع', color: 'var(--gold)', icon: 'fa-tag' },
+                'buy': { label: 'شراء', color: 'var(--active-color)', icon: 'fa-shopping-cart' },
+                'message': { label: 'رسالة', color: 'var(--accent)', icon: 'fa-envelope' }
+            };
+            
+            const type = typeLabels[order.type] || typeLabels.booking;
+            
+            return `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">
+                            <i class="fas ${type.icon}" style="color: ${type.color};"></i>
+                            ${order.id || 'N/A'}
+                            <span style="background: ${type.color}; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 0.8em; margin-right: 10px;">${type.label}</span>
+                        </div>
+                        <div class="order-time">
+                            <i class="fas fa-clock"></i> ${order.timestamp || ''}
+                        </div>
+                    </div>
+                    <div class="order-info">
+                        <div class="order-info-item">
+                            <i class="fas fa-user"></i>
+                            <span>${order.name || 'غير محدد'}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <i class="fas fa-phone"></i>
+                            <span>${order.phone || 'غير محدد'}</span>
+                        </div>
+                        <div class="order-info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${order.area || 'غير محدد'}</span>
+                        </div>
+                        ${order.serviceType ? `<div class="order-info-item"><i class="fas fa-concierge-bell"></i><span>${order.serviceType}</span></div>` : ''}
+                    </div>
+                    <div class="order-actions">
+                        <button class="btn btn-primary" onclick="viewOrder('${order.id}')">
+                            <i class="fas fa-eye"></i> عرض التفاصيل
+                        </button>
+                        <a href="tel:${order.phone}" class="btn btn-success">
+                            <i class="fas fa-phone"></i> اتصال
+                        </a>
+                        ${order.location ? `<a href="https://www.google.com/maps?q=${order.location.lat},${order.location.lon}" target="_blank" class="btn btn-warning"><i class="fas fa-map"></i> الموقع</a>` : ''}
+                        <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function viewOrder(orderId) {
+            const order = appData.orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            let details = `📋 رقم الطلب: ${order.id}\n`;
+            details += `⏰ الوقت: ${order.timestamp}\n`;
+            details += `👤 الاسم: ${order.name}\n`;
+            details += `📱 الهاتف: ${order.phone}\n`;
+            details += `📍 المنطقة: ${order.area}\n`;
+            details += `🎯 أقرب نقطة: ${order.landmark}\n`;
+            
+            if (order.serviceType) details += `🔧 الخدمة: ${order.serviceType}\n`;
+            if (order.extraInfo) details += `📝 ملاحظات: ${order.extraInfo}\n`;
+            if (order.splitType) details += `💨 نوع السبلت: ${order.splitType}\n`;
+            if (order.condition) details += `✨ الحالة: ${order.condition}\n`;
+            if (order.price) details += `💰 السعر: ${parseInt(order.price).toLocaleString()} د.ع\n`;
+            if (order.location) details += `🗺️ الموقع: https://www.google.com/maps?q=${order.location.lat},${order.location.lon}\n`;
+            
+            alert(details);
+        }
+
+        function deleteOrder(orderId) {
+            if (!confirm('هل تريد حذف هذا الطلب؟')) return;
+            appData.orders = appData.orders.filter(o => o.id !== orderId);
+            saveData(appData);
+            updateStats();
+            loadRecentOrders();
+            loadAllOrders();
+            showToast('تم حذف الطلب');
+        }
+
+        function searchOrders() {
+            const query = document.getElementById('orderSearch').value.toLowerCase();
+            const filtered = appData.orders.filter(o => 
+                o.id.toLowerCase().includes(query) ||
+                (o.name && o.name.toLowerCase().includes(query)) ||
+                (o.phone && o.phone.includes(query))
+            );
+            
+            const container = document.getElementById('allOrders');
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>لا توجد نتائج</h3>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = filtered.slice().reverse().map(renderOrderCard).join('');
+            }
+        }
+
+        function loadAllOrders() {
+            const orders = (appData.orders || []).slice().reverse();
+            const container = document.getElementById('allOrders');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>لا توجد طلبات</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = orders.map(renderOrderCard).join('');
+        }
+
+        function clearAllOrders() {
+            if (!confirm('⚠️ هل أنت متأكد من حذف جميع الطلبات؟ لا يمكن التراجع!')) return;
+            if (!confirm('⚠️ تأكيد نهائي: سيتم حذف كل الطلبات!')) return;
+            appData.orders = [];
+            saveData(appData);
+            updateStats();
+            loadRecentOrders();
+            loadAllOrders();
+            showToast('تم حذف جميع الطلبات');
+        }
+
+        function exportOrders() {
+            const data = JSON.stringify(appData.orders, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `orders_${Date.now()}.json`;
+            a.click();
+            showToast('تم تصدير الطلبات');
+        }
+
+        // ===== Site Status =====
+        function setSiteStatus(status) {
+            document.querySelectorAll('.status-option').forEach(el => {
+                el.style.transform = 'scale(1)';
+                el.style.boxShadow = 'none';
+            });
+            const selected = document.querySelector(`.status-option[data-status="${status}"]`);
+            selected.style.transform = 'scale(1.05)';
+            selected.style.boxShadow = '0 0 30px rgba(0,212,255,0.3)';
+            appData.siteStatus = status;
+        }
+
+        function saveSiteStatus() {
+            const message = document.getElementById('statusMessage').value;
+            appData.statusMessage = message;
+            saveData(appData);
+            updateSiteStatusBadge();
+            showToast('تم حفظ حالة الموقع');
+        }
+
+        function updateSiteStatusBadge() {
+            const badge = document.getElementById('siteStatusBadge');
+            const text = document.getElementById('siteStatusText');
+            
+            const statusMap = {
+                'active': { text: 'نشط', class: 'active' },
+                'inactive': { text: 'غير نشط', class: 'locked' },
+                'break': { text: 'استراحة', class: 'locked' },
+                'busy': { text: 'مشغول', class: 'locked' }
+            };
+            
+            const status = statusMap[appData.siteStatus] || statusMap.active;
+            badge.className = 'site-status-badge ' + status.class;
+            text.textContent = status.text;
+        }
+
+        // ===== Sections Control =====
+        function loadSectionsControl() {
+            const sections = [
+                { id: 'home', name: 'الرئيسية', icon: 'fa-home' },
+                { id: 'gallery', name: 'المعرض', icon: 'fa-images' },
+                { id: 'services', name: 'الخدمات', icon: 'fa-tools' },
+                { id: 'marketplace', name: 'بيع وشراء', icon: 'fa-store' },
+                { id: 'booking', name: 'الحجز', icon: 'fa-calendar-check' },
+                { id: 'contact', name: 'التواصل', icon: 'fa-phone' }
+            ];
+            
+            const container = document.getElementById('sectionToggles');
+            container.innerHTML = sections.map(section => `
+                <div class="section-toggle ${appData.sections[section.id] ? 'enabled' : 'disabled'}" data-section="${section.id}">
+                    <div class="section-toggle-info">
+                        <i class="fas ${section.icon}"></i>
+                        <div>
+                            <div style="font-weight: 600;">${section.name}</div>
+                            <div style="font-size: 0.85em; color: rgba(255,255,255,0.5);">
+                                ${appData.sections[section.id] ? 'مفعّل' : 'معطّل'}
+                            </div>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${appData.sections[section.id] ? 'checked' : ''} onchange="toggleSection('${section.id}', this)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            `).join('');
+        }
+
+        function toggleSection(sectionId, checkbox) {
+            appData.sections[sectionId] = checkbox.checked;
+            const toggle = checkbox.closest('.section-toggle');
+            toggle.className = 'section-toggle ' + (checkbox.checked ? 'enabled' : 'disabled');
+            toggle.querySelector('div div div:last-child').textContent = checkbox.checked ? 'مفعّل' : 'معطّل';
+        }
+
+        function saveSectionsState() {
+            saveData(appData);
+            showToast('تم حفظ حالة الأقسام');
+        }
+
+        // ===== Lock Site =====
+        function lockSite() {
+            const message = document.getElementById('lockMessage').value || 'الموقع مغلق للصيانة، سنعود قريباً...';
+            if (!confirm('هل تريد قفل الموقع؟')) return;
+            appData.siteLocked = true;
+            appData.lockMessage = message;
+            saveData(appData);
+            showToast('🔒 تم قفل الموقع');
+        }
+
+        function unlockSite() {
+            if (!confirm('هل تريد فتح الموقع؟')) return;
+            appData.siteLocked = false;
+            saveData(appData);
+            showToast('🔓 تم فتح الموقع');
+        }
+
+        // ===== Images Management =====
+        function loadImagesManagement() {
+            // Slider images (S1-S18)
+            const sliderGrid = document.getElementById('sliderImagesGrid');
+            sliderGrid.innerHTML = '';
+            for (let i = 1; i <= 18; i++) {
+                sliderGrid.appendChild(createImageItem(`S${i}`, `S${i}.jpg`));
+            }
+            
+            // Gallery images (1-9)
+            const galleryGrid = document.getElementById('galleryImagesGrid');
+            galleryGrid.innerHTML = '';
+            for (let i = 1; i <= 9; i++) {
+                galleryGrid.appendChild(createImageItem(`G${i}`, `${i}.jpg`));
+            }
+            
+            // Technicians (A1-A3)
+            const techGrid = document.getElementById('techniciansImagesGrid');
+            techGrid.innerHTML = '';
+            for (let i = 1; i <= 3; i++) {
+                techGrid.appendChild(createImageItem(`A${i}`, `A${i}.jpg`));
+            }
+            
+            // Logo
+            const logoGrid = document.getElementById('logoImageGrid');
+            logoGrid.innerHTML = '';
+            logoGrid.appendChild(createImageItem('logo', 'G.jpg'));
+        }
+
+        function createImageItem(key, filename) {
+            const div = document.createElement('div');
+            div.className = 'image-item';
+            
+            const imageData = appData.images[key];
+            const imgSrc = imageData || filename;
+            
+            div.innerHTML = `
+                <img src="${imgSrc}" alt="${key}" onerror="this.src='https://via.placeholder.com/150/00d4ff/ffffff?text=${key}'">
+                <div class="image-label">${key}</div>
+                <div class="image-actions">
+                    <button class="image-action-btn edit" onclick="event.stopPropagation(); uploadImage('${key}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    ${imageData ? `<button class="image-action-btn delete" onclick="event.stopPropagation(); deleteImage('${key}')">
+                        <i class="fas fa-trash"></i>
+                    </button>` : ''}
+                </div>
+            `;
+            
+            div.onclick = () => uploadImage(key);
+            return div;
+        }
+
+        function uploadImage(key) {
+            currentUploadTarget = key;
+            document.getElementById('imageUploader').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !currentUploadTarget) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                appData.images[currentUploadTarget] = e.target.result;
+                saveData(appData);
+                loadImagesManagement();
+                showToast('✅ تم رفع الصورة بنجاح');
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function deleteImage(key) {
+            if (!confirm('هل تريد حذف هذه الصورة؟')) return;
+            delete appData.images[key];
+            saveData(appData);
+            loadImagesManagement();
+            showToast('تم حذف الصورة');
+        }
+
+        // ===== Ticker Management =====
+        function loadTicker() {
+            const container = document.getElementById('tickerItems');
+            container.innerHTML = appData.ticker.map((item, index) => `
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="${item.icon}" placeholder="fa-icon" id="ticker-icon-${index}">
+                    <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="${item.text}" placeholder="نص الإعلان" id="ticker-text-${index}">
+                    <button class="btn btn-danger" onclick="removeTickerItem(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addTickerItem() {
+            appData.ticker.push({ icon: 'fa-star', text: 'إعلان جديد' });
+            loadTicker();
+        }
+
+        function removeTickerItem(index) {
+            appData.ticker.splice(index, 1);
+            loadTicker();
+        }
+
+        function saveTicker() {
+            const items = [];
+            appData.ticker.forEach((item, index) => {
+                const icon = document.getElementById(`ticker-icon-${index}`).value;
+                const text = document.getElementById(`ticker-text-${index}`).value;
+                if (text) items.push({ icon, text });
+            });
+            appData.ticker = items;
+            saveData(appData);
+            showToast('✅ تم حفظ شريط الإعلانات');
+        }
+
+        // ===== Tips Management =====
+        function loadTips() {
+            const container = document.getElementById('tipsList');
+            container.innerHTML = appData.tips.map((tip, index) => `
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <input type="text" class="form-control" style="width: 150px;" value="${tip.icon}" placeholder="fa-icon" id="tip-icon-${index}">
+                        <input type="text" class="form-control" style="flex: 1;" value="${tip.title}" placeholder="العنوان" id="tip-title-${index}">
+                        <button class="btn btn-danger" onclick="removeTip(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <textarea class="form-control" id="tip-text-${index}" placeholder="النص">${tip.text}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function addTip() {
+            appData.tips.push({ icon: 'fa-lightbulb', title: 'نصيحة جديدة', text: 'النص هنا...' });
+            loadTips();
+        }
+
+        function removeTip(index) {
+            appData.tips.splice(index, 1);
+            loadTips();
+        }
+
+        function saveTips() {
+            const tips = [];
+            appData.tips.forEach((tip, index) => {
+                const icon = document.getElementById(`tip-icon-${index}`).value;
+                const title = document.getElementById(`tip-title-${index}`).value;
+                const text = document.getElementById(`tip-text-${index}`).value;
+                if (title && text) tips.push({ icon, title, text });
+            });
+            appData.tips = tips;
+            saveData(appData);
+            showToast('✅ تم حفظ النصائح');
+        }
+
+        // ===== Warnings Management =====
+        function loadWarnings() {
+            const container = document.getElementById('warningsList');
+            container.innerHTML = appData.warnings.map((warn, index) => `
+                <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <input type="text" class="form-control" style="width: 150px;" value="${warn.icon}" placeholder="fa-icon" id="warn-icon-${index}">
+                        <button class="btn btn-danger" onclick="removeWarning(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <textarea class="form-control" id="warn-text-${index}" placeholder="النص">${warn.text}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function addWarning() {
+            appData.warnings.push({ icon: 'fa-exclamation-circle', text: 'تحذير جديد' });
+            loadWarnings();
+        }
+
+        function removeWarning(index) {
+            appData.warnings.splice(index, 1);
+            loadWarnings();
+        }
+
+        function saveWarnings() {
+            const warnings = [];
+            appData.warnings.forEach((warn, index) => {
+                const icon = document.getElementById(`warn-icon-${index}`).value;
+                const text = document.getElementById(`warn-text-${index}`).value;
+                if (text) warnings.push({ icon, text });
+            });
+            appData.warnings = warnings;
+            saveData(appData);
+            showToast('✅ تم حفظ التحذيرات');
+        }
+
+        // ===== Welcome Message =====
+        function loadWelcome() {
+            document.getElementById('welcomeTitle').value = appData.welcome.title || '';
+            document.getElementById('welcomeSubtitle').value = appData.welcome.subtitle || '';
+            document.getElementById('welcomeText').value = appData.welcome.text || '';
+            document.getElementById('instructionsTitle').value = appData.welcome.instructionsTitle || '';
+            document.getElementById('instructionsList').value = (appData.welcome.instructions || []).join('\n');
+        }
+
+        function saveWelcome() {
+            appData.welcome = {
+                title: document.getElementById('welcomeTitle').value,
+                subtitle: document.getElementById('welcomeSubtitle').value,
+                text: document.getElementById('welcomeText').value,
+                instructionsTitle: document.getElementById('instructionsTitle').value,
+                instructions: document.getElementById('instructionsList').value.split('\n').filter(i => i.trim())
+            };
+            saveData(appData);
+            showToast('✅ تم حفظ رسالة الترحيب');
+        }
+
+        // ===== Phones =====
+        function loadPhones() {
+            document.getElementById('phone1').value = appData.phones.phone1 || '';
+            document.getElementById('phone2').value = appData.phones.phone2 || '';
+            document.getElementById('phone3').value = appData.phones.phone3 || '';
+        }
+
+        function savePhones() {
+            appData.phones = {
+                phone1: document.getElementById('phone1').value,
+                phone2: document.getElementById('phone2').value,
+                phone3: document.getElementById('phone3').value
+            };
+            saveData(appData);
+            showToast('✅ تم حفظ الأرقام');
+        }
+
+        // ===== Settings =====
+        function saveSettings() {
+            appData.shopName = document.getElementById('shopName').value;
+            appData.shopDescription = document.getElementById('shopDescription').value;
+            appData.workHours = document.getElementById('workHours').value;
+            saveData(appData);
+            showToast('✅ تم حفظ الإعدادات');
+        }
+
+        // ===== Backup =====
+        function exportBackup() {
+            const data = JSON.stringify(appData, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_${Date.now()}.json`;
+            a.click();
+            showToast('✅ تم تصدير النسخة الاحتياطية');
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (confirm('⚠️ سيتم استبدال جميع البيانات الحالية. هل تريد المتابعة؟')) {
+                        appData = imported;
+                        saveData(appData);
+                        initializeDashboard();
+                        showToast('✅ تم استيراد النسخة الاحتياطية');
+                    }
+                } catch (err) {
+                    showToast('❌ ملف غير صالح', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetAllData() {
+            if (!confirm('⚠️ سيتم حذف جميع البيانات والعودة للإعدادات الافتراضية!')) return;
+            if (!confirm('⚠️ تأكيد نهائي: لا يمكن التراجع!')) return;
+            appData = JSON.parse(JSON.stringify(defaultData));
+            saveData(appData);
+            initializeDashboard();
+            showToast('تم إعادة التعيين');
+        }
+
+        // ===== Notifications =====
+        function addNotification(title, text, type = 'info') {
+            const notification = {
+                id: Date.now(),
+                title,
+                text,
+                type,
+                time: new Date().toLocaleString('ar-IQ'),
+                read: false
+            };
+            appData.notifications = appData.notifications || [];
+            appData.notifications.unshift(notification);
+            if (appData.notifications.length > 50) {
+                appData.notifications = appData.notifications.slice(0, 50);
+            }
+            saveData(appData);
+        }
+
+        function loadNotifications() {
+            const notifications = appData.notifications || [];
+            const container = document.getElementById('notificationsList');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>لا توجد إشعارات</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = notifications.map(n => `
+                <div class="notification-item ${n.read ? '' : 'new'}">
+                    <div class="notification-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-text">${n.text}</div>
+                        <div class="notification-time"><i class="fas fa-clock"></i> ${n.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearNotifications() {
+            appData.notifications = (appData.notifications || []).map(n => ({ ...n, read: true }));
+            saveData(appData);
+            loadNotifications();
+            showToast('تم تحديد جميع الإشعارات كمقروءة');
+        }
+
+        // ===== Load Section Data =====
+        function loadSectionData(sectionId) {
+            switch(sectionId) {
+                case 'orders': loadAllOrders(); break;
+                case 'notifications': loadNotifications(); break;
+                case 'site-status': 
+                    document.getElementById('statusMessage').value = appData.statusMessage || '';
+                    document.querySelectorAll('.status-option').forEach(el => {
+                        el.style.transform = el.dataset.status === appData.siteStatus ? 'scale(1.05)' : 'scale(1)';
+                    });
+                    break;
+                case 'sections-control': loadSectionsControl(); break;
+                case 'lock-site': 
+                    document.getElementById('lockMessage').value = appData.lockMessage || '';
+                    break;
+                case 'images': loadImagesManagement(); break;
+                case 'ticker': loadTicker(); break;
+                case 'tips': loadTips(); break;
+                case 'warnings': loadWarnings(); break;
+                case 'welcome': loadWelcome(); break;
+                case 'phones': loadPhones(); break;
+                case 'settings':
+                    document.getElementById('shopName').value = appData.shopName || 'ورشة المنتظر';
+                    document.getElementById('shopDescription').value = appData.shopDescription || '';
+                    document.getElementById('workHours').value = appData.workHours || '8:00 ص - 10:00 م';
+                    break;
+            }
+        }
+
+        // ===== Toast =====
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ===== Listen for new orders from main site =====
+        window.addEventListener('storage', (e) => {
+            if (e.key === STORAGE_KEY) {
+                appData = loadData();
+                updateStats();
+                loadRecentOrders();
+                
+                // Add notification for new order
+                if (appData.orders.length > 0) {
+                    const lastOrder = appData.orders[appData.orders.length - 1];
+                    addNotification(
+                        'طلب جديد!',
+                        `طلب من ${lastOrder.name} - ${lastOrder.phone}`,
+                        'order'
+                    );
+                }
+            }
+        });
+
+        // ===== Shake Animation =====
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Auto-focus first input
+        window.addEventListener('load', () => {
+            pinInputs[0].focus();
+        });
+    </script>
+</body>
+</html>

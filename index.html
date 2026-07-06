@@ -2655,10 +2655,102 @@
             localStorage.setItem('workStatus', status);
         }
 
-        function loadWorkStatus() {
-            const savedStatus = localStorage.getItem('workStatus') || 'active';
-            updateWorkStatus(savedStatus);
+// دالة جديدة لقراءة البيانات من لوحة التحكم
+function loadAdminData() {
+    const saved = localStorage.getItem('workshop_admin_data');
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    return null;
+}
+
+// تحديث دالة loadWorkStatus
+    function loadWorkStatus() {
+    const adminData = loadAdminData();
+    
+    // التحقق من قفل الموقع
+    if (adminData && adminData.siteLocked) {
+        showLockScreen(adminData.lockMessage);
+        return;
+    }
+    
+    // التحقق من حالة الموقع
+    const savedStatus = (adminData && adminData.siteStatus) || localStorage.getItem('workStatus') || 'active';
+    updateWorkStatus(savedStatus);
+    
+    // تحديث الأرقام
+    if (adminData && adminData.phones) {
+        updatePhones(adminData.phones);
+    }
+    
+    // تحديث شريط الإعلانات
+    if (adminData && adminData.ticker) {
+        updateTicker(adminData.ticker);
+    }
+    
+    // التحقق من الأقسام المعطلة
+    if (adminData && adminData.sections) {
+        updateSectionsVisibility(adminData.sections);
+    }
+}
+
+// دالة عرض شاشة القفل
+    function showLockScreen(message) {
+    document.body.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a0a0a, #1a1a2e); display: flex; justify-content: center; align-items: center; z-index: 99999;">
+            <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; max-width: 500px;">
+                <i class="fas fa-lock" style="font-size: 5em; color: #ff6b6b; margin-bottom: 20px;"></i>
+                <h1 style="color: #00d4ff; margin-bottom: 20px;">الموقع مغلق</h1>
+                <p style="color: rgba(255,255,255,0.8); font-size: 1.2em; line-height: 1.8;">${message || 'الموقع مغلق للصيانة، سنعود قريباً...'}</p>
+            </div>
+        </div>
+    `;
+}
+
+// دالة تحديث الأرقام
+    function updatePhones(phones) {
+    // تحديث روابط الهاتف في الموقع
+    document.querySelectorAll('a[href^="tel:"]').forEach(link => {
+        const currentPhone = link.getAttribute('href').replace('tel:', '');
+        if (currentPhone === '07726283627' && phones.phone1) {
+            link.setAttribute('href', `tel:${phones.phone1}`);
+            link.innerHTML = link.innerHTML.replace(/07726283627/g, phones.phone1);
+        } else if (currentPhone === '07726392793' && phones.phone2) {
+            link.setAttribute('href', `tel:${phones.phone2}`);
+            link.innerHTML = link.innerHTML.replace(/07726392793/g, phones.phone2);
+        } else if (currentPhone === '07728483629' && phones.phone3) {
+            link.setAttribute('href', `tel:${phones.phone3}`);
+            link.innerHTML = link.innerHTML.replace(/07728483629/g, phones.phone3);
         }
+    });
+}
+
+// دالة تحديث شريط الإعلانات
+    function updateTicker(tickerItems) {
+    const tickerWrap = document.querySelector('.ticker-wrap');
+    if (tickerWrap && tickerItems.length > 0) {
+        tickerWrap.innerHTML = tickerItems.map(item => `
+            <div class="ticker-item"><i class="fas ${item.icon}"></i> ${item.text}</div>
+        `).join('');
+    }
+}
+
+// دالة إخفاء/إظهار الأقسام
+    function updateSectionsVisibility(sections) {
+    const navLinks = document.querySelectorAll('.nav-links a');
+    navLinks.forEach(link => {
+        const onclick = link.getAttribute('onclick');
+        if (onclick) {
+            const match = onclick.match(/navigateTo\('([^']+)'\)/);
+            if (match) {
+                const sectionId = match[1];
+                if (sections[sectionId] === false) {
+                    link.parentElement.style.display = 'none';
+                }
+            }
+        }
+    });
+}
 
         // ===== Slider System =====
         let currentSlide = 0;
@@ -3347,9 +3439,16 @@ ${message}
 
         // ===== Initialize on Load =====
         window.addEventListener('DOMContentLoaded', () => {
-            initSlider();
+    initSlider();
+    loadWorkStatus(); // هذا سيقرأ من لوحة التحكم
+    
+    // الاستماع للتغييرات من لوحة التحكم
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'workshop_admin_data') {
             loadWorkStatus();
-        });
+        }
+    });
+});
 
         // ===== GSAP Animations =====
         gsap.registerPlugin(ScrollTrigger);
