@@ -2582,631 +2582,675 @@
     </div>
 
     <script>
-        // ===== Configuration =====
-        const BOT_TOKEN = '7735965641:AAFzkUy27zKXYWroodhdxOBapMgwttyq5_s';
-        const CHAT_ID = '910624538';
+    // ===== Configuration =====
+    const BOT_TOKEN = '7735965641:AAFzkUy27zKXYWroodhdxOBapMgwttyq5_s';
+    const CHAT_ID = '910624538';
 
-        let userLocations = { booking: null, sell: null, buy: null };
-        let sellImagesData = [];
-        let currentLocationForm = null;
+    let userLocations = { booking: null, sell: null, buy: null };
+    let sellImagesData = [];
+    let currentLocationForm = null;
 
-        // ===== NEW: Prevent Copy/Select/Context Menu =====
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-        document.addEventListener('selectstart', (e) => e.preventDefault());
-        document.addEventListener('copy', (e) => e.preventDefault());
-        document.addEventListener('cut', (e) => e.preventDefault());
-        document.addEventListener('dragstart', (e) => e.preventDefault());
+    // ===== Prevent Copy/Select/Context Menu =====
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('selectstart', (e) => e.preventDefault());
+    document.addEventListener('copy', (e) => e.preventDefault());
+    document.addEventListener('cut', (e) => e.preventDefault());
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+    
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey && (e.key === 'c' || e.key === 'C' || 
+                          e.key === 'x' || e.key === 'X' || 
+                          e.key === 'a' || e.key === 'A' ||
+                          e.key === 'u' || e.key === 'U' ||
+                          e.key === 's' || e.key === 'S')) || 
+            e.key === 'F12') {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        }
+    });
+
+    // ===== Work Status System =====
+    const STATUS_CONFIG = {
+        active: {
+            class: 'active',
+            title: 'نشط الآن',
+            icon: 'fas fa-check-circle',
+            message: '<i class="fas fa-headset"></i> فريقنا جاهز لاستقبال طلباتكم - اتصل بنا الآن على <strong style="color: var(--active-color);">07726283627</strong>',
+            glow: 'rgba(0,255,136,0.2)'
+        },
+        inactive: {
+            class: 'inactive',
+            title: 'غير نشط',
+            icon: 'fas fa-times-circle',
+            message: '<i class="fas fa-moon"></i> الورشة مغلقة حالياً - سنعود غداً من الساعة 8:00 صباحاً',
+            glow: 'rgba(136,136,136,0.1)'
+        },
+        break: {
+            class: 'break',
+            title: 'استراحة',
+            icon: 'fas fa-coffee',
+            message: '<i class="fas fa-clock"></i> الفريق في استراحة مؤقتة - سنعود قريباً، يمكنك ترك رسالة وسنرد عليك',
+            glow: 'rgba(255,170,0,0.2)'
+        },
+        busy: {
+            class: 'break',
+            title: 'مشغول',
+            icon: 'fas fa-user-clock',
+            message: '<i class="fas fa-user-clock"></i> الفريق مشغول حالياً - سنرد عليك في أقرب وقت',
+            glow: 'rgba(255,71,87,0.2)'
+        }
+    };
+
+    // ===== ✅ دالة updateWorkStatus (محدثة - تدعم 4 حالات) =====
+    function updateWorkStatus(status) {
+        const container = document.getElementById('workStatusContainer');
+        const title = document.getElementById('statusTitle');
+        const message = document.getElementById('statusMessage');
+        const icon = document.getElementById('statusIcon');
         
-        // منع الاختصارات
-        document.addEventListener('keydown', (e) => {
-            // Ctrl+C, Ctrl+X, Ctrl+A, Ctrl+U, Ctrl+S, F12
-            if ((e.ctrlKey && (e.key === 'c' || e.key === 'C' || 
-                              e.key === 'x' || e.key === 'X' || 
-                              e.key === 'a' || e.key === 'A' ||
-                              e.key === 'u' || e.key === 'U' ||
-                              e.key === 's' || e.key === 'S')) || 
-                e.key === 'F12') {
-                // السماح بالاختصارات في حقول الإدخال فقط
-                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                }
-            }
-        });
-
-        // ===== NEW: Work Status System =====
-        const STATUS_CONFIG = {
-            active: {
-                class: 'active',
-                title: 'نشط الآن',
-                icon: 'fas fa-check-circle',
-                message: '<i class="fas fa-headset"></i> فريقنا جاهز لاستقبال طلباتكم - اتصل بنا الآن على <strong style="color: var(--active-color);">07726283627</strong>',
-                glow: 'rgba(0,255,136,0.2)'
-            },
-            inactive: {
-                class: 'inactive',
-                title: 'غير نشط',
-                icon: 'fas fa-times-circle',
-                message: '<i class="fas fa-moon"></i> الورشة مغلقة حالياً - سنعود غداً من الساعة 8:00 صباحاً',
-                glow: 'rgba(136,136,136,0.1)'
-            },
-            break: {
-                class: 'break',
-                title: 'استراحة',
-                icon: 'fas fa-coffee',
-                message: '<i class="fas fa-clock"></i> الفريق في استراحة مؤقتة - سنعود قريباً، يمكنك ترك رسالة وسنرد عليك',
-                glow: 'rgba(255,170,0,0.2)'
-            }
-        };
-
-        function updateWorkStatus(status) {
-            const container = document.getElementById('workStatusContainer');
-            const title = document.getElementById('statusTitle');
-            const message = document.getElementById('statusMessage');
-            const icon = document.getElementById('statusIcon');
-            
-            const config = STATUS_CONFIG[status] || STATUS_CONFIG.active;
-            
-            container.className = 'work-status-container ' + config.class;
-            title.textContent = config.title;
-            message.innerHTML = config.message;
-            icon.innerHTML = `<i class="${config.icon}"></i>`;
-            
-            // حفظ الحالة في localStorage
-            localStorage.setItem('workStatus', status);
-        }
-
-// دالة جديدة لقراءة البيانات من لوحة التحكم
-function loadAdminData() {
-    const saved = localStorage.getItem('workshop_admin_data');
-    if (saved) {
-        return JSON.parse(saved);
+        if (!container || !title || !message || !icon) return;
+        
+        const config = STATUS_CONFIG[status] || STATUS_CONFIG.active;
+        
+        container.className = 'work-status-container ' + config.class;
+        title.textContent = config.title;
+        message.innerHTML = config.message;
+        icon.innerHTML = `<i class="${config.icon}"></i>`;
+        
+        localStorage.setItem('workStatus', status);
     }
-    return null;
-}
 
-// تحديث دالة loadWorkStatus
+    // ===== ✅ دالة loadAdminData (قراءة البيانات من لوحة التحكم) =====
+    function loadAdminData() {
+        const saved = localStorage.getItem('workshop_admin_data');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Error parsing admin data:', e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    // ===== ✅ دالة loadWorkStatus (النسخة الموحدة - تحذف القديمة) =====
     function loadWorkStatus() {
-    const adminData = loadAdminData();
-    
-    // التحقق من قفل الموقع
-    if (adminData && adminData.siteLocked) {
-        showLockScreen(adminData.lockMessage);
-        return;
+        const adminData = loadAdminData();
+        
+        // التحقق من قفل الموقع
+        if (adminData && adminData.siteLocked) {
+            showLockScreen(adminData.lockMessage);
+            return;
+        }
+        
+        // التحقق من حالة الموقع
+        const savedStatus = (adminData && adminData.siteStatus) || 
+                           localStorage.getItem('workStatus') || 
+                           'active';
+        updateWorkStatus(savedStatus);
+        
+        // تحديث الأرقام
+        if (adminData && adminData.phones) {
+            updatePhones(adminData.phones);
+        }
+        
+        // تحديث شريط الإعلانات
+        if (adminData && adminData.ticker) {
+            updateTicker(adminData.ticker);
+        }
+        
+        // التحقق من الأقسام المعطلة
+        if (adminData && adminData.sections) {
+            updateSectionsVisibility(adminData.sections);
+        }
     }
-    
-    // التحقق من حالة الموقع
-    const savedStatus = (adminData && adminData.siteStatus) || localStorage.getItem('workStatus') || 'active';
-    updateWorkStatus(savedStatus);
-    
-    // تحديث الأرقام
-    if (adminData && adminData.phones) {
-        updatePhones(adminData.phones);
-    }
-    
-    // تحديث شريط الإعلانات
-    if (adminData && adminData.ticker) {
-        updateTicker(adminData.ticker);
-    }
-    
-    // التحقق من الأقسام المعطلة
-    if (adminData && adminData.sections) {
-        updateSectionsVisibility(adminData.sections);
-    }
-}
 
-// دالة عرض شاشة القفل
+    // ===== ✅ دالة showLockScreen =====
     function showLockScreen(message) {
-    document.body.innerHTML = `
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0a0a0a, #1a1a2e); display: flex; justify-content: center; align-items: center; z-index: 99999;">
-            <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; max-width: 500px;">
-                <i class="fas fa-lock" style="font-size: 5em; color: #ff6b6b; margin-bottom: 20px;"></i>
-                <h1 style="color: #00d4ff; margin-bottom: 20px;">الموقع مغلق</h1>
-                <p style="color: rgba(255,255,255,0.8); font-size: 1.2em; line-height: 1.8;">${message || 'الموقع مغلق للصيانة، سنعود قريباً...'}</p>
+        document.body.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                        background: linear-gradient(135deg, #0a0a0a, #1a1a2e); 
+                        display: flex; justify-content: center; align-items: center; 
+                        z-index: 99999;">
+                <div style="text-align: center; padding: 40px; 
+                            background: rgba(255,255,255,0.05); 
+                            backdrop-filter: blur(20px); 
+                            border: 1px solid rgba(255,255,255,0.1); 
+                            border-radius: 30px; max-width: 500px; margin: 20px;">
+                    <i class="fas fa-lock" style="font-size: 5em; color: #ff6b6b; 
+                       margin-bottom: 20px; display: block;"></i>
+                    <h1 style="color: #00d4ff; margin-bottom: 20px; font-size: 2em;">
+                        الموقع مغلق
+                    </h1>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 1.2em; 
+                       line-height: 1.8;">
+                        ${message || 'الموقع مغلق للصيانة، سنعود قريباً...'}
+                    </p>
+                </div>
             </div>
-        </div>
-    `;
-}
-
-// دالة تحديث الأرقام
-    function updatePhones(phones) {
-    // تحديث روابط الهاتف في الموقع
-    document.querySelectorAll('a[href^="tel:"]').forEach(link => {
-        const currentPhone = link.getAttribute('href').replace('tel:', '');
-        if (currentPhone === '07726283627' && phones.phone1) {
-            link.setAttribute('href', `tel:${phones.phone1}`);
-            link.innerHTML = link.innerHTML.replace(/07726283627/g, phones.phone1);
-        } else if (currentPhone === '07726392793' && phones.phone2) {
-            link.setAttribute('href', `tel:${phones.phone2}`);
-            link.innerHTML = link.innerHTML.replace(/07726392793/g, phones.phone2);
-        } else if (currentPhone === '07728483629' && phones.phone3) {
-            link.setAttribute('href', `tel:${phones.phone3}`);
-            link.innerHTML = link.innerHTML.replace(/07728483629/g, phones.phone3);
-        }
-    });
-}
-
-// دالة تحديث شريط الإعلانات
-    function updateTicker(tickerItems) {
-    const tickerWrap = document.querySelector('.ticker-wrap');
-    if (tickerWrap && tickerItems.length > 0) {
-        tickerWrap.innerHTML = tickerItems.map(item => `
-            <div class="ticker-item"><i class="fas ${item.icon}"></i> ${item.text}</div>
-        `).join('');
+        `;
     }
-}
 
-// دالة إخفاء/إظهار الأقسام
+    // ===== ✅ دالة updatePhones =====
+    function updatePhones(phones) {
+        if (!phones) return;
+        
+        document.querySelectorAll('a[href^="tel:"]').forEach(link => {
+            const currentPhone = link.getAttribute('href').replace('tel:', '');
+            
+            if (currentPhone === '07726283627' && phones.phone1) {
+                link.setAttribute('href', `tel:${phones.phone1}`);
+                link.innerHTML = link.innerHTML.replace(/07726283627/g, phones.phone1);
+            } else if (currentPhone === '07726392793' && phones.phone2) {
+                link.setAttribute('href', `tel:${phones.phone2}`);
+                link.innerHTML = link.innerHTML.replace(/07726392793/g, phones.phone2);
+            } else if (currentPhone === '07728483629' && phones.phone3) {
+                link.setAttribute('href', `tel:${phones.phone3}`);
+                link.innerHTML = link.innerHTML.replace(/07728483629/g, phones.phone3);
+            }
+        });
+    }
+
+    // ===== ✅ دالة updateTicker =====
+    function updateTicker(tickerItems) {
+        const tickerWrap = document.querySelector('.ticker-wrap');
+        if (tickerWrap && tickerItems.length > 0) {
+            tickerWrap.innerHTML = tickerItems.map(item => `
+                <div class="ticker-item">
+                    <i class="fas ${item.icon}"></i> ${item.text}
+                </div>
+            `).join('');
+        }
+    }
+
+    // ===== ✅ دالة updateSectionsVisibility =====
     function updateSectionsVisibility(sections) {
-    const navLinks = document.querySelectorAll('.nav-links a');
-    navLinks.forEach(link => {
-        const onclick = link.getAttribute('onclick');
-        if (onclick) {
-            const match = onclick.match(/navigateTo\('([^']+)'\)/);
-            if (match) {
-                const sectionId = match[1];
-                if (sections[sectionId] === false) {
-                    link.parentElement.style.display = 'none';
+        if (!sections) return;
+        
+        const navLinks = document.querySelectorAll('.nav-links a');
+        navLinks.forEach(link => {
+            const onclick = link.getAttribute('onclick');
+            if (onclick) {
+                const match = onclick.match(/navigateTo\('([^']+)'\)/);
+                if (match) {
+                    const sectionId = match[1];
+                    if (sections[sectionId] === false) {
+                        link.parentElement.style.display = 'none';
+                    } else {
+                        link.parentElement.style.display = '';
+                    }
                 }
             }
+        });
+    }
+
+    // ===== Slider System =====
+    let currentSlide = 0;
+    const totalSlides = 18;
+    let sliderInterval;
+
+    function initSlider() {
+        const track = document.getElementById('sliderTrack');
+        const thumbnails = document.getElementById('sliderThumbnails');
+        
+        const slideTitles = [
+            'تنصيب احترافي', 'صيانة شاملة', 'فحص دقيق', 'تركيب غاز آمن',
+            'سبلت عمودي', 'سبلت جداري', 'تنظيف متقن', 'نقل وتركيب',
+            'عمل مميز 1', 'عمل مميز 2', 'عمل مميز 3', 'عمل مميز 4',
+            'عمل مميز 5', 'عمل مميز 6', 'عمل مميز 7', 'عمل مميز 8',
+            'عمل مميز 9', 'عمل مميز 10'
+        ];
+
+        for (let i = 1; i <= totalSlides; i++) {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            slide.innerHTML = `
+                <img src="S${i}.jpg" alt="صورة ${i}" 
+                     onerror="this.src='https://via.placeholder.com/1000x600/00d4ff/ffffff?text=S${i}'">
+                <div class="slide-overlay">
+                    <h3>${slideTitles[i-1]}</h3>
+                    <p>ورشة المنتظر - جودة واحترافية</p>
+                </div>
+            `;
+            track.appendChild(slide);
+
+            const thumb = document.createElement('div');
+            thumb.className = 'thumb' + (i === 1 ? ' active' : '');
+            thumb.innerHTML = `<img src="S${i}.jpg" alt="Thumb ${i}" 
+                              onerror="this.src='https://via.placeholder.com/100x75/00d4ff/ffffff?text=${i}'">`;
+            thumb.onclick = () => goToSlide(i - 1);
+            thumbnails.appendChild(thumb);
+        }
+
+        startAutoSlide();
+    }
+
+    function updateSlider() {
+        const track = document.getElementById('sliderTrack');
+        track.style.transform = `translateX(${currentSlide * 100}%)`;
+        
+        document.getElementById('sliderCounter').textContent = 
+            `${currentSlide + 1} / ${totalSlides}`;
+        
+        document.querySelectorAll('.thumb').forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === currentSlide);
+        });
+
+        const activeThumb = document.querySelectorAll('.thumb')[currentSlide];
+        if (activeThumb) {
+            activeThumb.scrollIntoView({ 
+                behavior: 'smooth', block: 'nearest', inline: 'center' 
+            });
+        }
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateSlider();
+        resetAutoSlide();
+    }
+
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateSlider();
+        resetAutoSlide();
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        updateSlider();
+        resetAutoSlide();
+    }
+
+    function startAutoSlide() {
+        sliderInterval = setInterval(nextSlide, 4000);
+    }
+
+    function resetAutoSlide() {
+        clearInterval(sliderInterval);
+        startAutoSlide();
+    }
+
+    // ===== Loading Screen =====
+    function hideLoader() {
+        const loader = document.getElementById('loader');
+        if (loader && !loader.classList.contains('hide')) {
+            loader.classList.add('hide');
+            setTimeout(() => {
+                loader.style.display = 'none';
+                checkWelcome();
+            }, 800);
+        }
+    }
+
+    window.addEventListener('load', () => {
+        const progress = document.getElementById('loader-progress');
+        let width = 0;
+        
+        const interval = setInterval(() => {
+            width += 3;
+            if (progress) progress.style.width = width + '%';
+            
+            if (width >= 100) {
+                clearInterval(interval);
+                setTimeout(hideLoader, 500);
+            }
+        }, 30);
+    });
+
+    setTimeout(hideLoader, 8000);
+
+    window.addEventListener('error', () => {
+        setTimeout(hideLoader, 1000);
+    });
+
+    // ===== Mouse Glow =====
+    document.addEventListener('mousemove', (e) => {
+        const glow = document.getElementById('mouse-glow');
+        if (glow) {
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
         }
     });
-}
 
-        // ===== Slider System =====
-        let currentSlide = 0;
-        const totalSlides = 18;
-        let sliderInterval;
+    // ===== Three.js Particles =====
+    function initParticles() {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 
+            window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        function initSlider() {
-            const track = document.getElementById('sliderTrack');
-            const thumbnails = document.getElementById('sliderThumbnails');
-            
-            const slideTitles = [
-                'تنصيب احترافي', 'صيانة شاملة', 'فحص دقيق', 'تركيب غاز آمن',
-                'سبلت عمودي', 'سبلت جداري', 'تنظيف متقن', 'نقل وتركيب',
-                'عمل مميز 1', 'عمل مميز 2', 'عمل مميز 3', 'عمل مميز 4',
-                'عمل مميز 5', 'عمل مميز 6', 'عمل مميز 7', 'عمل مميز 8',
-                'عمل مميز 9', 'عمل مميز 10'
-            ];
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
 
-            for (let i = 1; i <= totalSlides; i++) {
-                const slide = document.createElement('div');
-                slide.className = 'slide';
-                slide.innerHTML = `
-                    <img src="S${i}.jpg" alt="صورة ${i}" onerror="this.src='https://via.placeholder.com/1000x600/00d4ff/ffffff?text=S${i}'">
-                    <div class="slide-overlay">
-                        <h3>${slideTitles[i-1]}</h3>
-                        <p>ورشة المنتظر - جودة واحترافية</p>
-                    </div>
-                `;
-                track.appendChild(slide);
-
-                const thumb = document.createElement('div');
-                thumb.className = 'thumb' + (i === 1 ? ' active' : '');
-                thumb.innerHTML = `<img src="S${i}.jpg" alt="Thumb ${i}" onerror="this.src='https://via.placeholder.com/100x75/00d4ff/ffffff?text=${i}'">`;
-                thumb.onclick = () => goToSlide(i - 1);
-                thumbnails.appendChild(thumb);
-            }
-
-            startAutoSlide();
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
         }
 
-        function updateSlider() {
-            const track = document.getElementById('sliderTrack');
-            track.style.transform = `translateX(${currentSlide * 100}%)`;
-            
-            document.getElementById('sliderCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
-            
-            document.querySelectorAll('.thumb').forEach((thumb, i) => {
-                thumb.classList.toggle('active', i === currentSlide);
-            });
-
-            const activeThumb = document.querySelectorAll('.thumb')[currentSlide];
-            if (activeThumb) {
-                activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % totalSlides;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function prevSlide() {
-            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function goToSlide(index) {
-            currentSlide = index;
-            updateSlider();
-            resetAutoSlide();
-        }
-
-        function startAutoSlide() {
-            sliderInterval = setInterval(nextSlide, 4000);
-        }
-
-        function resetAutoSlide() {
-            clearInterval(sliderInterval);
-            startAutoSlide();
-        }
-
-        // ===== Loading Screen =====
-        function hideLoader() {
-            const loader = document.getElementById('loader');
-            if (loader && !loader.classList.contains('hide')) {
-                loader.classList.add('hide');
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                    checkWelcome();
-                }, 800);
-            }
-        }
-
-        window.addEventListener('load', () => {
-            const progress = document.getElementById('loader-progress');
-            let width = 0;
-            
-            const interval = setInterval(() => {
-                width += 3;
-                if (progress) progress.style.width = width + '%';
-                
-                if (width >= 100) {
-                    clearInterval(interval);
-                    setTimeout(hideLoader, 500);
-                }
-            }, 30);
+        particlesGeometry.setAttribute('position', 
+            new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.02,
+            color: 0x00d4ff,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
         });
 
-        setTimeout(hideLoader, 8000);
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        camera.position.z = 3;
 
-        window.addEventListener('error', () => {
-            setTimeout(hideLoader, 1000);
-        });
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.x += 0.0005;
+            particlesMesh.rotation.y += 0.0005;
+            renderer.render(scene, camera);
+        }
+        animate();
 
-        // ===== Mouse Glow =====
-        document.addEventListener('mousemove', (e) => {
-            const glow = document.getElementById('mouse-glow');
-            if (glow) {
-                glow.style.left = e.clientX + 'px';
-                glow.style.top = e.clientY + 'px';
-            }
-        });
-
-        // ===== Three.js Particles =====
-        function initParticles() {
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+        });
+    }
 
-            const particlesGeometry = new THREE.BufferGeometry();
-            const particlesCount = 1500;
-            const posArray = new Float32Array(particlesCount * 3);
+    initParticles();
 
-            for(let i = 0; i < particlesCount * 3; i++) {
-                posArray[i] = (Math.random() - 0.5) * 10;
+    // ===== SPA Navigation =====
+    function navigateTo(pageId) {
+        document.querySelectorAll('.page').forEach(page => 
+            page.classList.remove('active'));
+        const targetPage = document.getElementById('page-' + pageId);
+        if (targetPage) targetPage.classList.add('active');
+        
+        document.querySelectorAll('.nav-links a').forEach(link => 
+            link.classList.remove('active'));
+        const links = document.querySelectorAll('.nav-links a');
+        links.forEach(link => {
+            const onclickAttr = link.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes(`'${pageId}'`)) {
+                link.classList.add('active');
             }
+        });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('navLinks').classList.remove('active');
+    }
 
-            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.02,
-                color: 0x00d4ff,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending
-            });
+    function toggleMobileMenu() {
+        document.getElementById('navLinks').classList.toggle('active');
+    }
 
-            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-            scene.add(particlesMesh);
-            camera.position.z = 3;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                particlesMesh.rotation.x += 0.0005;
-                particlesMesh.rotation.y += 0.0005;
-                renderer.render(scene, camera);
-            }
-            animate();
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+    // ===== Welcome Dialog =====
+    function checkWelcome() {
+        const hasSeenWelcome = localStorage.getItem('hasSeenWelcome_v3');
+        if (!hasSeenWelcome) {
+            setTimeout(() => {
+                document.getElementById('welcome-overlay').classList.add('active');
+            }, 500);
         }
+    }
 
-        initParticles();
+    function closeWelcome() {
+        document.getElementById('welcome-overlay').classList.remove('active');
+        localStorage.setItem('hasSeenWelcome_v3', 'true');
+    }
 
-        // ===== SPA Navigation =====
-        function navigateTo(pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            const targetPage = document.getElementById('page-' + pageId);
-            if (targetPage) targetPage.classList.add('active');
-            
-            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
-            const links = document.querySelectorAll('.nav-links a');
-            links.forEach(link => {
-                const onclickAttr = link.getAttribute('onclick');
-                if (onclickAttr && onclickAttr.includes(`'${pageId}'`)) {
-                    link.classList.add('active');
-                }
-            });
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            document.getElementById('navLinks').classList.remove('active');
+    function skipWelcome() {
+        closeWelcome();
+    }
+
+    // ===== Location Modal =====
+    function openLocationModal(formType) {
+        currentLocationForm = formType;
+        document.getElementById('locationNormalState').style.display = 'block';
+        document.getElementById('locationLoadingState').classList.remove('active');
+        document.getElementById('locationModal').classList.add('active');
+    }
+
+    function closeLocationModal() {
+        document.getElementById('locationModal').classList.remove('active');
+    }
+
+    function confirmLocation() {
+        document.getElementById('locationNormalState').style.display = 'none';
+        document.getElementById('locationLoadingState').classList.add('active');
+        requestLocation(currentLocationForm);
+    }
+
+    function cancelLocation() {
+        closeLocationModal();
+        const statusEl = document.getElementById(currentLocationForm + 'LocationStatus');
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color: var(--accent);">' +
+                '<i class="fas fa-times-circle"></i> تم إلغاء تحديد الموقع</span>';
         }
+    }
 
-        function toggleMobileMenu() {
-            document.getElementById('navLinks').classList.toggle('active');
-        }
-
-        // ===== Welcome Dialog =====
-        function checkWelcome() {
-            const hasSeenWelcome = localStorage.getItem('hasSeenWelcome_v3');
-            if (!hasSeenWelcome) {
-                setTimeout(() => {
-                    document.getElementById('welcome-overlay').classList.add('active');
-                }, 500);
-            }
-        }
-
-        function closeWelcome() {
-            document.getElementById('welcome-overlay').classList.remove('active');
-            localStorage.setItem('hasSeenWelcome_v3', 'true');
-        }
-
-        function skipWelcome() {
-            closeWelcome();
-        }
-
-        // ===== Location Modal (Enhanced) =====
-        function openLocationModal(formType) {
-            currentLocationForm = formType;
-            // Reset to normal state
-            document.getElementById('locationNormalState').style.display = 'block';
-            document.getElementById('locationLoadingState').classList.remove('active');
-            document.getElementById('locationModal').classList.add('active');
-        }
-
-        function closeLocationModal() {
-            document.getElementById('locationModal').classList.remove('active');
-        }
-
-        function confirmLocation() {
-            // Show loading state
-            document.getElementById('locationNormalState').style.display = 'none';
-            document.getElementById('locationLoadingState').classList.add('active');
-            
-            // Request location immediately
-            requestLocation(currentLocationForm);
-        }
-
-        function cancelLocation() {
+    function requestLocation(formType) {
+        const statusEl = document.getElementById(formType + 'LocationStatus');
+        const btn = statusEl ? statusEl.previousElementSibling : null;
+        
+        if (!navigator.geolocation) {
             closeLocationModal();
-            const statusEl = document.getElementById(currentLocationForm + 'LocationStatus');
             if (statusEl) {
-                statusEl.innerHTML = '<span style="color: var(--accent);"><i class="fas fa-times-circle"></i> تم إلغاء تحديد الموقع</span>';
+                statusEl.innerHTML = '<span style="color: var(--accent);">' +
+                    '<i class="fas fa-times-circle"></i> المتصفح لا يدعم تحديد الموقع</span>';
             }
+            showToast('المتصفح لا يدعم تحديد الموقع', 'error');
+            return;
         }
 
-        function requestLocation(formType) {
-            const statusEl = document.getElementById(formType + 'LocationStatus');
-            const btn = statusEl ? statusEl.previousElementSibling : null;
-            
-            if (!navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                userLocations[formType] = { lat, lon };
+                
                 closeLocationModal();
+                
                 if (statusEl) {
-                    statusEl.innerHTML = '<span style="color: var(--accent);"><i class="fas fa-times-circle"></i> المتصفح لا يدعم تحديد الموقع</span>';
+                    statusEl.innerHTML = `<span style="color: #00c853;">
+                        <i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح
+                        </span><br>
+                        <small>الإحداثيات: ${lat.toFixed(5)}, ${lon.toFixed(5)}</small>`;
                 }
-                showToast('المتصفح لا يدعم تحديد الموقع', 'error');
+                if (btn) {
+                    btn.classList.add('located');
+                    btn.innerHTML = '<i class="fas fa-check"></i><span>تم تحديد الموقع</span>';
+                }
+                
+                showToast('تم تحديد موقعك بنجاح!');
+            },
+            (error) => {
+                closeLocationModal();
+                let errorMsg = 'حدث خطأ في تحديد الموقع';
+                if (error.code === 1) {
+                    errorMsg = 'تم رفض إذن الموقع - يرجى السماح بالوصول من إعدادات المتصفح';
+                } else if (error.code === 2) {
+                    errorMsg = 'الموقع غير متاح - تأكد من تفعيل GPS';
+                } else if (error.code === 3) {
+                    errorMsg = 'انتهت مهلة الطلب - يرجى المحاولة مرة أخرى';
+                }
+                
+                if (statusEl) {
+                    statusEl.innerHTML = `<span style="color: var(--accent);">
+                        <i class="fas fa-times-circle"></i> ${errorMsg}</span>`;
+                }
+                showToast(errorMsg, 'error');
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    }
+
+    // ===== Generate Unique ID =====
+    function generateUniqueID() {
+        const timestamp = Date.now().toString(36);
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const fingerprint = navigator.userAgent + navigator.language + 
+                           screen.width + screen.height;
+        const hash = fingerprint.split('').reduce((a,b) => { 
+            a = ((a << 5) - a) + b.charCodeAt(0); return a & a 
+        }, 0);
+        return `REQ-${timestamp}-${randomStr}-${Math.abs(hash).toString(36).toUpperCase()}`;
+    }
+
+    function getDeviceFingerprint() {
+        return {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            platform: navigator.platform,
+            screen: `${screen.width}x${screen.height}`,
+            colorDepth: screen.colorDepth,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            cores: navigator.hardwareConcurrency || 'N/A'
+        };
+    }
+
+    // ===== Send to Telegram =====
+    async function sendToTelegram(message) {
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: message,
+                    parse_mode: 'HTML'
+                })
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Error:', error);
+            return false;
+        }
+    }
+
+    async function sendPhotoToTelegram(base64Data, caption) {
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
+        try {
+            const byteString = atob(base64Data.split(',')[1]);
+            const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+
+            const formData = new FormData();
+            formData.append('chat_id', CHAT_ID);
+            formData.append('photo', blob, 'image.jpg');
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'HTML');
+
+            const response = await fetch(url, { method: 'POST', body: formData });
+            return response.ok;
+        } catch (error) {
+            console.error('Error sending photo:', error);
+            return false;
+        }
+    }
+
+    // ===== Price Update =====
+    function updateSellPrice(value) {
+        document.getElementById('sellPriceDisplay').textContent = 
+            parseInt(value).toLocaleString() + ' د.ع';
+    }
+
+    function updateBuyPrice(value) {
+        document.getElementById('buyPriceDisplay').textContent = 
+            parseInt(value).toLocaleString() + ' د.ع';
+    }
+
+    // ===== Marketplace Tabs =====
+    function switchMarketTab(tab, element) {
+        document.querySelectorAll('.market-tab').forEach(t => 
+            t.classList.remove('active'));
+        element.classList.add('active');
+        
+        if (tab === 'sell') {
+            document.getElementById('sellForm').style.display = 'block';
+            document.getElementById('buyForm').style.display = 'none';
+        } else {
+            document.getElementById('sellForm').style.display = 'none';
+            document.getElementById('buyForm').style.display = 'block';
+        }
+    }
+
+    // ===== Handle Sell Images =====
+    function handleSellImages(event) {
+        const files = event.target.files;
+        Array.from(files).forEach(file => {
+            if (sellImagesData.length >= 5) {
+                showToast('الحد الأقصى 5 صور', 'error');
                 return;
             }
-
-            // Request location from browser - this will show the permission dialog
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    userLocations[formType] = { lat, lon };
-                    
-                    // Close modal
-                    closeLocationModal();
-                    
-                    // Update UI
-                    if (statusEl) {
-                        statusEl.innerHTML = `<span style="color: #00c853;"><i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح</span><br>
-                            <small>الإحداثيات: ${lat.toFixed(5)}, ${lon.toFixed(5)}</small>`;
-                    }
-                    if (btn) {
-                        btn.classList.add('located');
-                        btn.innerHTML = '<i class="fas fa-check"></i><span>تم تحديد الموقع</span>';
-                    }
-                    
-                    showToast('تم تحديد موقعك بنجاح!');
-                },
-                (error) => {
-                    closeLocationModal();
-                    let errorMsg = 'حدث خطأ في تحديد الموقع';
-                    if (error.code === 1) {
-                        errorMsg = 'تم رفض إذن الموقع - يرجى السماح بالوصول من إعدادات المتصفح';
-                    } else if (error.code === 2) {
-                        errorMsg = 'الموقع غير متاح - تأكد من تفعيل GPS';
-                    } else if (error.code === 3) {
-                        errorMsg = 'انتهت مهلة الطلب - يرجى المحاولة مرة أخرى';
-                    }
-                    
-                    if (statusEl) {
-                        statusEl.innerHTML = `<span style="color: var(--accent);"><i class="fas fa-times-circle"></i> ${errorMsg}</span>`;
-                    }
-                    showToast(errorMsg, 'error');
-                },
-                { 
-                    enableHighAccuracy: true, 
-                    timeout: 15000, 
-                    maximumAge: 0 
-                }
-            );
-        }
-
-        // ===== Generate Unique ID =====
-        function generateUniqueID() {
-            const timestamp = Date.now().toString(36);
-            const randomStr = Math.random().toString(36).substring(2, 8);
-            const fingerprint = navigator.userAgent + navigator.language + screen.width + screen.height;
-            const hash = fingerprint.split('').reduce((a,b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
-            return `REQ-${timestamp}-${randomStr}-${Math.abs(hash).toString(36).toUpperCase()}`;
-        }
-
-        function getDeviceFingerprint() {
-            return {
-                userAgent: navigator.userAgent,
-                language: navigator.language,
-                platform: navigator.platform,
-                screen: `${screen.width}x${screen.height}`,
-                colorDepth: screen.colorDepth,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                cores: navigator.hardwareConcurrency || 'N/A'
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                sellImagesData.push(e.target.result);
+                renderImagePreviews();
             };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderImagePreviews() {
+        const preview = document.getElementById('sellImagePreview');
+        preview.innerHTML = '';
+        sellImagesData.forEach((img, index) => {
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            item.innerHTML = `
+                <img src="${img}" alt="صورة ${index + 1}">
+                <button type="button" class="remove-img" 
+                        onclick="removeSellImage(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            preview.appendChild(item);
+        });
+    }
+
+    function removeSellImage(index) {
+        sellImagesData.splice(index, 1);
+        renderImagePreviews();
+    }
+
+    // ===== Submit Sell Form =====
+    async function submitSellForm() {
+        const name = document.getElementById('sellName').value.trim();
+        const phone = document.getElementById('sellPhone').value.trim();
+        const area = document.getElementById('sellArea').value.trim();
+        const landmark = document.getElementById('sellLandmark').value.trim();
+        const type = document.getElementById('sellType').value;
+        const condition = document.getElementById('sellCondition').value;
+        const price = document.getElementById('sellPrice').value;
+        const notes = document.getElementById('sellNotes').value.trim();
+
+        if (!name || !phone || !area || !landmark || !type || !condition) {
+            showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            return;
         }
 
-        // ===== Send to Telegram =====
-        async function sendToTelegram(message) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        chat_id: CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
-                });
-                return response.ok;
-            } catch (error) {
-                console.error('Error:', error);
-                return false;
-            }
+        if (sellImagesData.length === 0) {
+            showToast('يرجى رفع صورة واحدة على الأقل', 'error');
+            return;
         }
 
-        async function sendPhotoToTelegram(base64Data, caption) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`;
-            try {
-                const byteString = atob(base64Data.split(',')[1]);
-                const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
-                const ab = new ArrayBuffer(byteString.length);
-                const ia = new Uint8Array(ab);
-                for (let i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
-                }
-                const blob = new Blob([ab], { type: mimeString });
+        const requestID = generateUniqueID();
+        const timestamp = new Date().toLocaleString('ar-IQ');
+        const fingerprint = getDeviceFingerprint();
 
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('photo', blob, 'image.jpg');
-                formData.append('caption', caption);
-                formData.append('parse_mode', 'HTML');
-
-                const response = await fetch(url, { method: 'POST', body: formData });
-                return response.ok;
-            } catch (error) {
-                console.error('Error sending photo:', error);
-                return false;
-            }
-        }
-
-        // ===== Price Update =====
-        function updateSellPrice(value) {
-            document.getElementById('sellPriceDisplay').textContent = parseInt(value).toLocaleString() + ' د.ع';
-        }
-
-        function updateBuyPrice(value) {
-            document.getElementById('buyPriceDisplay').textContent = parseInt(value).toLocaleString() + ' د.ع';
-        }
-
-        // ===== Marketplace Tabs =====
-        function switchMarketTab(tab, element) {
-            document.querySelectorAll('.market-tab').forEach(t => t.classList.remove('active'));
-            element.classList.add('active');
-            
-            if (tab === 'sell') {
-                document.getElementById('sellForm').style.display = 'block';
-                document.getElementById('buyForm').style.display = 'none';
-            } else {
-                document.getElementById('sellForm').style.display = 'none';
-                document.getElementById('buyForm').style.display = 'block';
-            }
-        }
-
-        // ===== Handle Sell Images =====
-        function handleSellImages(event) {
-            const files = event.target.files;
-            Array.from(files).forEach(file => {
-                if (sellImagesData.length >= 5) {
-                    showToast('الحد الأقصى 5 صور', 'error');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    sellImagesData.push(e.target.result);
-                    renderImagePreviews();
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function renderImagePreviews() {
-            const preview = document.getElementById('sellImagePreview');
-            preview.innerHTML = '';
-            sellImagesData.forEach((img, index) => {
-                const item = document.createElement('div');
-                item.className = 'preview-item';
-                item.innerHTML = `
-                    <img src="${img}" alt="صورة ${index + 1}">
-                    <button type="button" class="remove-img" onclick="removeSellImage(${index})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                preview.appendChild(item);
-            });
-        }
-
-        function removeSellImage(index) {
-            sellImagesData.splice(index, 1);
-            renderImagePreviews();
-        }
-
-        // ===== Submit Sell Form =====
-        async function submitSellForm() {
-            const name = document.getElementById('sellName').value.trim();
-            const phone = document.getElementById('sellPhone').value.trim();
-            const area = document.getElementById('sellArea').value.trim();
-            const landmark = document.getElementById('sellLandmark').value.trim();
-            const type = document.getElementById('sellType').value;
-            const condition = document.getElementById('sellCondition').value;
-            const price = document.getElementById('sellPrice').value;
-            const notes = document.getElementById('sellNotes').value.trim();
-
-            if (!name || !phone || !area || !landmark || !type || !condition) {
-                showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
-                return;
-            }
-
-            if (sellImagesData.length === 0) {
-                showToast('يرجى رفع صورة واحدة على الأقل', 'error');
-                return;
-            }
-
-            const requestID = generateUniqueID();
-            const timestamp = new Date().toLocaleString('ar-IQ');
-            const fingerprint = getDeviceFingerprint();
-
-            const message = `
+        const message = `
 <b>طلب بيع سبلت جديد</b>
 
 <b>رقم الطلب:</b> ${requestID}
@@ -3232,60 +3276,60 @@ ${userLocations.sell ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=${us
 
 ━━━━━━━━━━━━━━━━
 ورشة المنتظر
-            `;
+        `;
 
-            const success = await sendToTelegram(message);
-            
-            if (success) {
-                for (let i = 0; i < sellImagesData.length; i++) {
-                    const caption = `صورة ${i + 1} من ${sellImagesData.length}\nرقم الطلب: ${requestID}`;
-                    await sendPhotoToTelegram(sellImagesData[i], caption);
-                }
-
-                showToast(`تم إرسال طلبك بنجاح!\nرقم الطلب: ${requestID}`);
-                
-                document.getElementById('sellName').value = '';
-                document.getElementById('sellPhone').value = '';
-                document.getElementById('sellArea').value = '';
-                document.getElementById('sellLandmark').value = '';
-                document.getElementById('sellType').value = '';
-                document.getElementById('sellCondition').value = '';
-                document.getElementById('sellPrice').value = 50000;
-                document.getElementById('sellPriceDisplay').textContent = '50,000 د.ع';
-                document.getElementById('sellNotes').value = '';
-                sellImagesData = [];
-                renderImagePreviews();
-                userLocations.sell = null;
-                
-                localStorage.setItem(`request_${requestID}`, JSON.stringify({
-                    type: 'sell', name, phone, area, landmark, splitType: type, 
-                    condition, price, notes, timestamp, fingerprint
-                }));
-            } else {
-                showToast('حدث خطأ في الإرسال', 'error');
+        const success = await sendToTelegram(message);
+        
+        if (success) {
+            for (let i = 0; i < sellImagesData.length; i++) {
+                const caption = `صورة ${i + 1} من ${sellImagesData.length}\nرقم الطلب: ${requestID}`;
+                await sendPhotoToTelegram(sellImagesData[i], caption);
             }
+
+            showToast(`تم إرسال طلبك بنجاح!\nرقم الطلب: ${requestID}`);
+            
+            document.getElementById('sellName').value = '';
+            document.getElementById('sellPhone').value = '';
+            document.getElementById('sellArea').value = '';
+            document.getElementById('sellLandmark').value = '';
+            document.getElementById('sellType').value = '';
+            document.getElementById('sellCondition').value = '';
+            document.getElementById('sellPrice').value = 50000;
+            document.getElementById('sellPriceDisplay').textContent = '50,000 د.ع';
+            document.getElementById('sellNotes').value = '';
+            sellImagesData = [];
+            renderImagePreviews();
+            userLocations.sell = null;
+            
+            localStorage.setItem(`request_${requestID}`, JSON.stringify({
+                type: 'sell', name, phone, area, landmark, splitType: type, 
+                condition, price, notes, timestamp, fingerprint
+            }));
+        } else {
+            showToast('حدث خطأ في الإرسال', 'error');
+        }
+    }
+
+    // ===== Submit Buy Form =====
+    async function submitBuyForm() {
+        const name = document.getElementById('buyName').value.trim();
+        const phone = document.getElementById('buyPhone').value.trim();
+        const area = document.getElementById('buyArea').value.trim();
+        const landmark = document.getElementById('buyLandmark').value.trim();
+        const type = document.getElementById('buyType').value;
+        const price = document.getElementById('buyPrice').value;
+        const notes = document.getElementById('buyNotes').value.trim();
+
+        if (!name || !phone || !area || !landmark || !type) {
+            showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
+            return;
         }
 
-        // ===== Submit Buy Form =====
-        async function submitBuyForm() {
-            const name = document.getElementById('buyName').value.trim();
-            const phone = document.getElementById('buyPhone').value.trim();
-            const area = document.getElementById('buyArea').value.trim();
-            const landmark = document.getElementById('buyLandmark').value.trim();
-            const type = document.getElementById('buyType').value;
-            const price = document.getElementById('buyPrice').value;
-            const notes = document.getElementById('buyNotes').value.trim();
+        const requestID = generateUniqueID();
+        const timestamp = new Date().toLocaleString('ar-IQ');
+        const fingerprint = getDeviceFingerprint();
 
-            if (!name || !phone || !area || !landmark || !type) {
-                showToast('يرجى ملء جميع الحقول المطلوبة', 'error');
-                return;
-            }
-
-            const requestID = generateUniqueID();
-            const timestamp = new Date().toLocaleString('ar-IQ');
-            const fingerprint = getDeviceFingerprint();
-
-            const message = `
+        const message = `
 <b>طلب شراء سبلت جديد</b>
 
 <b>رقم الطلب:</b> ${requestID}
@@ -3309,51 +3353,51 @@ ${userLocations.buy ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=${use
 
 ━━━━━━━━━━━━━━━━
 ورشة المنتظر
-            `;
+        `;
 
-            const success = await sendToTelegram(message);
+        const success = await sendToTelegram(message);
+        
+        if (success) {
+            showToast(`تم إرسال طلبك بنجاح!\nرقم الطلب: ${requestID}`);
             
-            if (success) {
-                showToast(`تم إرسال طلبك بنجاح!\nرقم الطلب: ${requestID}`);
-                
-                document.getElementById('buyName').value = '';
-                document.getElementById('buyPhone').value = '';
-                document.getElementById('buyArea').value = '';
-                document.getElementById('buyLandmark').value = '';
-                document.getElementById('buyType').value = '';
-                document.getElementById('buyPrice').value = 50000;
-                document.getElementById('buyPriceDisplay').textContent = '50,000 د.ع';
-                document.getElementById('buyNotes').value = '';
-                userLocations.buy = null;
-                
-                localStorage.setItem(`request_${requestID}`, JSON.stringify({
-                    type: 'buy', name, phone, area, landmark, splitType: type, 
-                    price, notes, timestamp, fingerprint
-                }));
-            } else {
-                showToast('حدث خطأ في الإرسال', 'error');
-            }
+            document.getElementById('buyName').value = '';
+            document.getElementById('buyPhone').value = '';
+            document.getElementById('buyArea').value = '';
+            document.getElementById('buyLandmark').value = '';
+            document.getElementById('buyType').value = '';
+            document.getElementById('buyPrice').value = 50000;
+            document.getElementById('buyPriceDisplay').textContent = '50,000 د.ع';
+            document.getElementById('buyNotes').value = '';
+            userLocations.buy = null;
+            
+            localStorage.setItem(`request_${requestID}`, JSON.stringify({
+                type: 'buy', name, phone, area, landmark, splitType: type, 
+                price, notes, timestamp, fingerprint
+            }));
+        } else {
+            showToast('حدث خطأ في الإرسال', 'error');
         }
+    }
 
-        // ===== Booking Form =====
-        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const btn = document.getElementById('submitBtn');
-            btn.classList.add('loading');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    // ===== Booking Form =====
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        btn.classList.add('loading');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
-            const fullName = document.getElementById('fullName').value;
-            const phone = document.getElementById('phone').value;
-            const area = document.getElementById('area').value;
-            const landmark = document.getElementById('landmark').value;
-            const serviceType = document.getElementById('serviceType').value;
-            const extraInfo = document.getElementById('extraInfo').value;
-            const requestID = generateUniqueID();
-            const timestamp = new Date().toLocaleString('ar-IQ');
-            const fingerprint = getDeviceFingerprint();
+        const fullName = document.getElementById('fullName').value;
+        const phone = document.getElementById('phone').value;
+        const area = document.getElementById('area').value;
+        const landmark = document.getElementById('landmark').value;
+        const serviceType = document.getElementById('serviceType').value;
+        const extraInfo = document.getElementById('extraInfo').value;
+        const requestID = generateUniqueID();
+        const timestamp = new Date().toLocaleString('ar-IQ');
+        const fingerprint = getDeviceFingerprint();
 
-            const message = `
+        const message = `
 <b>طلب حجز جديد</b>
 
 <b>رقم الطلب:</b> ${requestID}
@@ -3375,34 +3419,34 @@ ${userLocations.booking ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=$
 
 ━━━━━━━━━━━━━━━━
 ورشة المنتظر
-            `;
+        `;
 
-            const success = await sendToTelegram(message);
-            
-            btn.classList.remove('loading');
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+        const success = await sendToTelegram(message);
+        
+        btn.classList.remove('loading');
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
 
-            if (success) {
-                showToast(`تم إرسال طلبك بنجاح!\nرقم الطلب: ${requestID}`);
-                document.getElementById('bookingForm').reset();
-                userLocations.booking = null;
-                document.getElementById('bookingLocationStatus').innerHTML = '';
-                localStorage.setItem(`request_${requestID}`, JSON.stringify({
-                    fullName, phone, area, landmark, serviceType, extraInfo, timestamp, fingerprint
-                }));
-            } else {
-                showToast('حدث خطأ في الإرسال', 'error');
-            }
-        });
+        if (success) {
+            showToast(`تم إرسال طلبك بنجاح!\nرقم الطلب: ${requestID}`);
+            document.getElementById('bookingForm').reset();
+            userLocations.booking = null;
+            document.getElementById('bookingLocationStatus').innerHTML = '';
+            localStorage.setItem(`request_${requestID}`, JSON.stringify({
+                fullName, phone, area, landmark, serviceType, extraInfo, timestamp, fingerprint
+            }));
+        } else {
+            showToast('حدث خطأ في الإرسال', 'error');
+        }
+    });
 
-        // ===== Contact Form =====
-        document.getElementById('contactForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const message = document.getElementById('contactMessage').value;
-            const timestamp = new Date().toLocaleString('ar-IQ');
+    // ===== Contact Form =====
+    document.getElementById('contactForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const message = document.getElementById('contactMessage').value;
+        const timestamp = new Date().toLocaleString('ar-IQ');
 
-            const telegramMessage = `
+        const telegramMessage = `
 <b>رسالة جديدة من الموقع</b>
 
 <b>الوقت:</b> ${timestamp}
@@ -3412,60 +3456,58 @@ ${message}
 
 ━━━━━━━━━━━━━━━━
 ورشة المنتظر
-            `;
+        `;
 
-            const success = await sendToTelegram(telegramMessage);
-            
-            if (success) {
-                showToast('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً');
-                document.getElementById('contactForm').reset();
-            } else {
-                showToast('حدث خطأ في الإرسال', 'error');
-            }
-        });
-
-        // ===== Toast =====
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            
-            toastMessage.textContent = message;
-            toast.className = 'toast show ' + (type === 'error' ? 'error' : '');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 5000);
-        }
-
-        // ===== Initialize on Load =====
-        window.addEventListener('DOMContentLoaded', () => {
-    initSlider();
-    loadWorkStatus(); // هذا سيقرأ من لوحة التحكم
-    
-    // الاستماع للتغييرات من لوحة التحكم
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'workshop_admin_data') {
-            loadWorkStatus();
+        const success = await sendToTelegram(telegramMessage);
+        
+        if (success) {
+            showToast('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً');
+            document.getElementById('contactForm').reset();
+        } else {
+            showToast('حدث خطأ في الإرسال', 'error');
         }
     });
-});
 
-        // ===== GSAP Animations =====
-        gsap.registerPlugin(ScrollTrigger);
+    // ===== Toast =====
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        toastMessage.textContent = message;
+        toast.className = 'toast show ' + (type === 'error' ? 'error' : '');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 5000);
+    }
 
-        gsap.utils.toArray('.glass-card, .service-card, .cert-badge, .technician-card, .tip-card, .brand-item').forEach((element, i) => {
-            gsap.from(element, {
-                scrollTrigger: {
-                    trigger: element,
-                    start: 'top 85%',
-                },
-                y: 50,
-                opacity: 0,
-                duration: 0.8,
-                delay: i * 0.05,
-                ease: 'power3.out'
-            });
+    // ===== ✅ Initialize on Load (محدث) =====
+    window.addEventListener('DOMContentLoaded', () => {
+        initSlider();
+        loadWorkStatus();
+        
+        // الاستماع للتغييرات من لوحة التحكم
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'workshop_admin_data') {
+                loadWorkStatus();
+            }
         });
-    </script>
-</body>
-</html>
+    });
+
+    // ===== GSAP Animations =====
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray('.glass-card, .service-card, .cert-badge, .technician-card, .tip-card, .brand-item').forEach((element, i) => {
+        gsap.from(element, {
+            scrollTrigger: {
+                trigger: element,
+                start: 'top 85%',
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            delay: i * 0.05,
+            ease: 'power3.out'
+        });
+    });
+</script>
