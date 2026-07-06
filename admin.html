@@ -7,7 +7,9 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr/npm/chart.js"></script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -45,6 +47,53 @@
             color: #fff;
             min-height: 100vh;
             overflow-x: hidden;
+        }
+
+        /* ===== Connection Status ===== */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 0.85em;
+            font-weight: 600;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .connection-status.connected {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--active-color);
+            border: 1px solid var(--active-color);
+        }
+
+        .connection-status.disconnected {
+            background: rgba(255, 107, 107, 0.15);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .connection-status.syncing {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
         /* ===== Login Screen ===== */
@@ -588,25 +637,15 @@
             transform: translateY(-3px);
         }
 
-        .status-option.active {
-            border-color: var(--active-color);
-            background: rgba(0,255,136,0.1);
+        .status-option.selected {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0,212,255,0.3);
         }
 
-        .status-option.inactive {
-            border-color: var(--inactive-color);
-            background: rgba(136,136,136,0.1);
-        }
-
-        .status-option.break {
-            border-color: var(--break-color);
-            background: rgba(255,170,0,0.1);
-        }
-
-        .status-option.busy {
-            border-color: var(--busy-color);
-            background: rgba(255,71,87,0.1);
-        }
+        .status-option.active { border-color: var(--active-color); background: rgba(0,255,136,0.1); }
+        .status-option.inactive { border-color: var(--inactive-color); background: rgba(136,136,136,0.1); }
+        .status-option.break { border-color: var(--break-color); background: rgba(255,170,0,0.1); }
+        .status-option.busy { border-color: var(--busy-color); background: rgba(255,71,87,0.1); }
 
         .status-option i {
             font-size: 2em;
@@ -619,7 +658,7 @@
         .status-option.break i { color: var(--break-color); }
         .status-option.busy i { color: var(--busy-color); }
 
-        /* Image Upload */
+        /* Image Grid */
         .image-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -687,13 +726,8 @@
             font-size: 0.8em;
         }
 
-        .image-action-btn.edit {
-            background: var(--primary);
-        }
-
-        .image-action-btn.delete {
-            background: var(--accent);
-        }
+        .image-action-btn.edit { background: var(--primary); }
+        .image-action-btn.delete { background: var(--accent); }
 
         /* Orders List */
         .orders-list {
@@ -759,60 +793,6 @@
             gap: 10px;
             margin-top: 15px;
             flex-wrap: wrap;
-        }
-
-        /* Notifications */
-        .notification-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            margin-bottom: 10px;
-            transition: all 0.3s;
-        }
-
-        .notification-item:hover {
-            border-color: var(--primary);
-        }
-
-        .notification-item.new {
-            border-right: 3px solid var(--primary);
-            background: rgba(0,212,255,0.05);
-        }
-
-        .notification-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-
-        .notification-text {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-
-        .notification-time {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.8em;
         }
 
         /* Section Toggles */
@@ -900,6 +880,60 @@
             transform: translateX(-24px);
         }
 
+        /* Notifications */
+        .notification-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            border-color: var(--primary);
+        }
+
+        .notification-item.new {
+            border-right: 3px solid var(--primary);
+            background: rgba(0,212,255,0.05);
+        }
+
+        .notification-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .notification-text {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8em;
+        }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -957,10 +991,6 @@
 
             .main-content {
                 margin-right: 0;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             }
         }
 
@@ -1037,11 +1067,23 @@
             margin-bottom: 10px;
             color: rgba(255,255,255,0.7);
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
     </style>
 </head>
 <body>
 
-    <!-- ===== Login Screen ===== -->
+    <!-- Connection Status -->
+    <div class="connection-status disconnected" id="connectionStatus">
+        <span class="connection-dot"></span>
+        <span id="connectionText">جاري الاتصال...</span>
+    </div>
+
+    <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-box">
             <div class="login-logo">
@@ -1067,7 +1109,7 @@
         </div>
     </div>
 
-    <!-- ===== Admin Dashboard ===== -->
+    <!-- Admin Dashboard -->
     <div class="admin-container" id="adminContainer">
         
         <!-- Sidebar -->
@@ -1099,7 +1141,7 @@
                 <div class="sidebar-divider"></div>
                 
                 <li><a onclick="showSection('phones', this)"><i class="fas fa-phone"></i> أرقام الهواتف</a></li>
-                <li><a onclick="showSection('settings', this)"><i class="fas fa-cog"></i> الإعدادات</a></li>
+                <li><a onclick="showSection('ban', this)"><i class="fas fa-ban"></i> الحظر</a></li>
             </ul>
             
             <button class="logout-btn" onclick="logout()">
@@ -1125,7 +1167,7 @@
                 </div>
             </div>
 
-            <!-- ===== Dashboard Section ===== -->
+            <!-- Dashboard Section -->
             <div class="dashboard-section active" id="section-dashboard">
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1144,9 +1186,9 @@
                         <div class="stat-label">طلبات البيع/الشراء</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--accent), #ee5a5a);"><i class="fas fa-envelope"></i></div>
-                        <div class="stat-value" id="stat-messages">0</div>
-                        <div class="stat-label">الرسائل</div>
+                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--accent), #ee5a5a);"><i class="fas fa-ban"></i></div>
+                        <div class="stat-value" id="stat-banned">0</div>
+                        <div class="stat-label">المحظورين</div>
                     </div>
                 </div>
 
@@ -1161,37 +1203,27 @@
                         <div class="empty-state">
                             <i class="fas fa-inbox"></i>
                             <h3>لا توجد طلبات حتى الآن</h3>
-                            <p>ستظهر هنا الطلبات الجديدة</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ===== Orders Section ===== -->
+            <!-- Orders Section -->
             <div class="dashboard-section" id="section-orders">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-search"></i>
-                            البحث عن طلب
-                        </div>
+                        <div class="panel-title"><i class="fas fa-search"></i> البحث عن طلب</div>
                     </div>
                     <div class="search-box">
-                        <input type="text" id="orderSearch" placeholder="ابحث برقم الطلب أو اسم العميل..." oninput="searchOrders()">
+                        <input type="text" id="orderSearch" placeholder="ابحث برقم الطلب أو اسم العميل أو الهاتف..." oninput="searchOrders()">
                         <i class="fas fa-search"></i>
                     </div>
                 </div>
 
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-clipboard-list"></i>
-                            جميع الطلبات
-                        </div>
+                        <div class="panel-title"><i class="fas fa-clipboard-list"></i> جميع الطلبات</div>
                         <div class="panel-actions">
-                            <button class="btn btn-outline" onclick="exportOrders()">
-                                <i class="fas fa-download"></i> تصدير
-                            </button>
                             <button class="btn btn-danger" onclick="clearAllOrders()">
                                 <i class="fas fa-trash"></i> حذف الكل
                             </button>
@@ -1206,14 +1238,11 @@
                 </div>
             </div>
 
-            <!-- ===== Notifications Section ===== -->
+            <!-- Notifications Section -->
             <div class="dashboard-section" id="section-notifications">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-bell"></i>
-                            الإشعارات
-                        </div>
+                        <div class="panel-title"><i class="fas fa-bell"></i> الإشعارات</div>
                         <button class="btn btn-outline" onclick="clearNotifications()">
                             <i class="fas fa-check"></i> تحديد الكل كمقروء
                         </button>
@@ -1227,41 +1256,33 @@
                 </div>
             </div>
 
-            <!-- ===== Site Status Section ===== -->
+            <!-- Site Status Section -->
             <div class="dashboard-section" id="section-site-status">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-signal"></i>
-                            حالة الموقع
-                        </div>
+                        <div class="panel-title"><i class="fas fa-signal"></i> حالة الموقع</div>
                     </div>
                     <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
                         اختر حالة الورشة الحالية - ستظهر للزوار في الصفحة الرئيسية
                     </p>
                     
                     <div class="status-selector">
-                        <div class="status-option active" data-status="active" onclick="setSiteStatus('active')">
+                        <div class="status-option active" data-status="active" onclick="selectStatus('active')">
                             <i class="fas fa-check-circle"></i>
                             <div>نشط الآن</div>
                         </div>
-                        <div class="status-option inactive" data-status="inactive" onclick="setSiteStatus('inactive')">
+                        <div class="status-option inactive" data-status="inactive" onclick="selectStatus('inactive')">
                             <i class="fas fa-times-circle"></i>
                             <div>غير نشط</div>
                         </div>
-                        <div class="status-option break" data-status="break" onclick="setSiteStatus('break')">
+                        <div class="status-option break" data-status="break" onclick="selectStatus('break')">
                             <i class="fas fa-coffee"></i>
                             <div>استراحة</div>
                         </div>
-                        <div class="status-option busy" data-status="busy" onclick="setSiteStatus('busy')">
+                        <div class="status-option busy" data-status="busy" onclick="selectStatus('busy')">
                             <i class="fas fa-user-clock"></i>
                             <div>مشغول</div>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>رسالة الحالة المخصصة</label>
-                        <textarea class="form-control" id="statusMessage" placeholder="اكتب رسالة تظهر للزوار..."></textarea>
                     </div>
 
                     <button class="btn btn-primary" onclick="saveSiteStatus()">
@@ -1270,22 +1291,17 @@
                 </div>
             </div>
 
-            <!-- ===== Sections Control ===== -->
+            <!-- Sections Control -->
             <div class="dashboard-section" id="section-sections-control">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-th-large"></i>
-                            التحكم بالأقسام
-                        </div>
+                        <div class="panel-title"><i class="fas fa-th-large"></i> التحكم بالأقسام</div>
                     </div>
                     <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
                         قم بتفعيل أو تعطيل أي قسم من أقسام الموقع
                     </p>
                     
-                    <div class="section-toggles" id="sectionToggles">
-                        <!-- Will be generated by JS -->
-                    </div>
+                    <div class="section-toggles" id="sectionToggles"></div>
 
                     <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveSectionsState()">
                         <i class="fas fa-save"></i> حفظ التغييرات
@@ -1293,14 +1309,11 @@
                 </div>
             </div>
 
-            <!-- ===== Lock Site ===== -->
+            <!-- Lock Site -->
             <div class="dashboard-section" id="section-lock-site">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-lock"></i>
-                            قفل الموقع
-                        </div>
+                        <div class="panel-title"><i class="fas fa-lock"></i> قفل الموقع</div>
                     </div>
                     
                     <div style="text-align: center; padding: 20px;">
@@ -1327,14 +1340,11 @@
                 </div>
             </div>
 
-            <!-- ===== Images Management ===== -->
+            <!-- Images Management -->
             <div class="dashboard-section" id="section-images">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-images"></i>
-                            إدارة الصور
-                        </div>
+                        <div class="panel-title"><i class="fas fa-images"></i> إدارة الصور</div>
                     </div>
 
                     <h3 style="color: var(--gold); margin-bottom: 15px;">
@@ -1359,22 +1369,17 @@
                 </div>
             </div>
 
-            <!-- ===== Ticker Management ===== -->
+            <!-- Ticker Management -->
             <div class="dashboard-section" id="section-ticker">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-bullhorn"></i>
-                            شريط الإعلانات
-                        </div>
+                        <div class="panel-title"><i class="fas fa-bullhorn"></i> شريط الإعلانات</div>
                     </div>
                     <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
-                        أضف أو عدّل عناصر شريط الإعلانات المتحرك في أعلى الموقع
+                        أضف أو عدّل عناصر شريط الإعلانات المتحرك
                     </p>
                     
-                    <div id="tickerItems">
-                        <!-- Will be generated by JS -->
-                    </div>
+                    <div id="tickerItems"></div>
 
                     <button class="btn btn-primary" onclick="addTickerItem()">
                         <i class="fas fa-plus"></i> إضافة عنصر جديد
@@ -1386,14 +1391,11 @@
                 </div>
             </div>
 
-            <!-- ===== Tips Management ===== -->
+            <!-- Tips Management -->
             <div class="dashboard-section" id="section-tips">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-lightbulb"></i>
-                            إدارة النصائح
-                        </div>
+                        <div class="panel-title"><i class="fas fa-lightbulb"></i> إدارة النصائح</div>
                     </div>
                     
                     <div id="tipsList"></div>
@@ -1408,14 +1410,11 @@
                 </div>
             </div>
 
-            <!-- ===== Warnings Management ===== -->
+            <!-- Warnings Management -->
             <div class="dashboard-section" id="section-warnings">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            إدارة التحذيرات
-                        </div>
+                        <div class="panel-title"><i class="fas fa-exclamation-triangle"></i> إدارة التحذيرات</div>
                     </div>
                     
                     <div id="warningsList"></div>
@@ -1430,14 +1429,11 @@
                 </div>
             </div>
 
-            <!-- ===== Welcome Message ===== -->
+            <!-- Welcome Message -->
             <div class="dashboard-section" id="section-welcome">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-hand-sparkles"></i>
-                            رسالة الترحيب
-                        </div>
+                        <div class="panel-title"><i class="fas fa-hand-sparkles"></i> رسالة الترحيب</div>
                     </div>
 
                     <div class="form-group">
@@ -1462,7 +1458,7 @@
 
                     <div class="form-group">
                         <label>التعليمات (كل سطر تعليمات)</label>
-                        <textarea class="form-control" id="instructionsList" placeholder="اختر الخدمة المناسبة&#10;أدخل معلومات صحيحة&#10;سيتم التواصل معك بأسرع وقت"></textarea>
+                        <textarea class="form-control" id="instructionsList" placeholder="اختر الخدمة المناسبة&#10;أدخل معلومات صحيحة"></textarea>
                     </div>
 
                     <button class="btn btn-primary" onclick="saveWelcome()">
@@ -1471,14 +1467,11 @@
                 </div>
             </div>
 
-            <!-- ===== Phones Management ===== -->
+            <!-- Phones Management -->
             <div class="dashboard-section" id="section-phones">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-phone"></i>
-                            أرقام الهواتف
-                        </div>
+                        <div class="panel-title"><i class="fas fa-phone"></i> أرقام الهواتف</div>
                     </div>
 
                     <div class="form-group">
@@ -1502,55 +1495,29 @@
                 </div>
             </div>
 
-            <!-- ===== Settings ===== -->
-            <div class="dashboard-section" id="section-settings">
+            <!-- Ban Management -->
+            <div class="dashboard-section" id="section-ban">
                 <div class="panel">
                     <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-cog"></i>
-                            الإعدادات العامة
+                        <div class="panel-title"><i class="fas fa-ban"></i> إدارة الحظر</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>حظر مستخدم برقم الهاتف</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="tel" class="form-control" id="banPhone" placeholder="07xxxxxxxxx" style="flex: 1;">
+                            <button class="btn btn-danger" onclick="banUser()">
+                                <i class="fas fa-ban"></i> حظر
+                            </button>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>اسم الورشة</label>
-                        <input type="text" class="form-control" id="shopName" value="ورشة المنتظر">
-                    </div>
-
-                    <div class="form-group">
-                        <label>وصف الورشة</label>
-                        <textarea class="form-control" id="shopDescription">الاحترافية في تنصيب وصيانة السبلت بأعلى معايير الجودة</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>توقيت فتح العمل</label>
-                        <input type="text" class="form-control" id="workHours" value="8:00 ص - 10:00 م">
-                    </div>
-
-                    <button class="btn btn-primary" onclick="saveSettings()">
-                        <i class="fas fa-save"></i> حفظ الإعدادات
-                    </button>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-database"></i>
-                            النسخ الاحتياطي
+                    <h3 style="color: var(--gold); margin: 20px 0 15px;">المستخدمين المحظورين</h3>
+                    <div id="bannedList">
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>لا يوجد مستخدمين محظورين</h3>
                         </div>
-                    </div>
-
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="exportBackup()">
-                            <i class="fas fa-download"></i> تصدير نسخة احتياطية
-                        </button>
-                        <button class="btn btn-warning" onclick="document.getElementById('importBackup').click()">
-                            <i class="fas fa-upload"></i> استيراد نسخة احتياطية
-                        </button>
-                        <input type="file" id="importBackup" style="display: none;" accept=".json" onchange="importBackup(event)">
-                        <button class="btn btn-danger" onclick="resetAllData()">
-                            <i class="fas fa-trash"></i> حذف جميع البيانات
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1564,89 +1531,90 @@
         <span id="toastMessage">تم الحفظ بنجاح!</span>
     </div>
 
-    <!-- Hidden file input for images -->
+    <!-- Hidden file input -->
     <input type="file" id="imageUploader" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
 
     <script>
         // ===== Configuration =====
         const CORRECT_PIN = 'ONX44';
-        const STORAGE_KEY = 'workshop_admin_data';
         
-        // Current image upload target
+        // ⚠️ ضع هنا بيانات Supabase الخاصة بك
+        const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+        const SUPABASE_KEY = 'YOUR_ANON_KEY';
+        
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         let currentUploadTarget = null;
+        let currentStatus = 'active';
 
-        // Default Data Structure
-        const defaultData = {
-            siteStatus: 'active',
-            statusMessage: '',
-            siteLocked: false,
-            lockMessage: 'الموقع مغلق للصيانة، سنعود قريباً...',
-            phones: {
-                phone1: '07726283627',
-                phone2: '07726392793',
-                phone3: '07728483629'
-            },
-            sections: {
-                home: true,
-                gallery: true,
-                services: true,
-                marketplace: true,
-                booking: true,
-                contact: true
-            },
-            ticker: [
-                { icon: 'fa-fire', text: 'خصم 20% على جميع خدمات التنصيب لهذا الأسبوع' },
-                { icon: 'fa-bolt', text: 'خدمة طوارئ 24 ساعة - اتصل الآن' },
-                { icon: 'fa-gift', text: 'فحص مجاني مع كل عملية تنصيب' },
-                { icon: 'fa-star', text: 'ضمان 6 أشهر على جميع الخدمات' },
-                { icon: 'fa-phone', text: 'تواصل معنا: 07726283627' }
-            ],
-            tips: [
-                { icon: 'fa-play-circle', title: 'قبل تشغيل السبلت', text: 'تأكد من إغلاق جميع النوافذ والأبواب، واضبط الحرارة على 24 درجة مئوية للحصول على أفضل أداء.' },
-                { icon: 'fa-bolt', title: 'عند انقطاع الكهرباء', text: 'أطفئ السبلت فوراً عند انقطاع التيار الكهربائي، وانتظر 3 دقائق على الأقل بعد عودة الكهرباء.' },
-                { icon: 'fa-snowflake', title: 'عند تجميد الأنابيب', text: 'إذا لاحظت تجمد في أنابيب السبلت، أطفئ الجهاز فوراً واتصل بنا.' },
-                { icon: 'fa-power-off', title: 'عند فصل السبلت', text: 'عند عدم استخدام السبلت لفترات طويلة، افصله من الكهرباء وقم بتنظيف الفلاتر.' },
-                { icon: 'fa-thermometer-empty', title: 'عند عدم التبريد', text: 'إذا كان السبلت يعمل لكن لا يبرد بشكل كافٍ، تحقق من نظافة الفلاتر.' },
-                { icon: 'fa-wind', title: 'اختفاء البرودة تدريجياً', text: 'إذا لاحظت أن برودة السبلت تقل تدريجياً، فهذا مؤشر على حاجة الجهاز لصيانة.' }
-            ],
-            warnings: [
-                { icon: 'fa-hand-paper', text: 'عدم العبث بجهاز التكيف: لا تقم بفك أو تعديل أي جزء من الجهاز بنفسك.' },
-                { icon: 'fa-bolt', text: 'عدم التقرب من القطع الداخلية والأسلاك أثناء تشغيل الجهاز.' },
-                { icon: 'fa-snowflake', text: 'عند ملاحظة تجميد الأنابيب: اتصل بنا فوراً.' },
-                { icon: 'fa-fire-alt', text: 'عدم تشغيل الجهاز بدون فلتر.' },
-                { icon: 'fa-child', text: 'إبعاد الأطفال عن الوحدة الخارجية.' }
-            ],
-            welcome: {
-                title: 'أهلاً بك في ورشة المنتظر',
-                subtitle: 'لتنصيب وصيانة السبلت',
-                text: 'مرحباً بك... نسعد بخدمتك، تم تصميم هذا الموقع لتسهيل الحجز والتواصل معنا.',
-                instructionsTitle: 'قبل البدء يرجى قراءة التعليمات:',
-                instructions: [
-                    'اختر الخدمة المناسبة',
-                    'أدخل معلومات صحيحة',
-                    'سيتم التواصل معك بأسرع وقت',
-                    'بعد الإرسال ستحصل على رقم طلب'
-                ]
-            },
-            orders: [],
-            notifications: [],
-            images: {}
-        };
+        // ===== Connection Status =====
+        function updateConnectionStatus(status, text) {
+            const el = document.getElementById('connectionStatus');
+            const textEl = document.getElementById('connectionText');
+            el.className = 'connection-status ' + status;
+            textEl.textContent = text;
+        }
 
-        // ===== Load/Save Data =====
-        function loadData() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                return JSON.parse(saved);
+        // Test connection
+        async function testConnection() {
+            try {
+                const { data, error } = await supabase.from('settings').select('key').limit(1);
+                if (error) throw error;
+                updateConnectionStatus('connected', 'متصل بـ Supabase');
+                return true;
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateConnectionStatus('disconnected', 'غير متصل');
+                return false;
             }
-            return JSON.parse(JSON.stringify(defaultData));
         }
 
-        function saveData(data) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        }
+        // ===== Realtime Subscriptions =====
+        function setupRealtime() {
+            // Listen for orders changes
+            supabase
+                .channel('orders-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'orders' },
+                    (payload) => {
+                        console.log('Order changed:', payload);
+                        if (payload.eventType === 'INSERT') {
+                            showToast('🔔 طلب جديد!');
+                            updateStats();
+                            loadRecentOrders();
+                            addNotification('طلب جديد', `طلب من ${payload.new.name || 'غير معروف'}`);
+                        } else if (payload.eventType === 'DELETE') {
+                            updateStats();
+                            loadRecentOrders();
+                        }
+                    }
+                )
+                .subscribe();
 
-        let appData = loadData();
+            // Listen for settings changes
+            supabase
+                .channel('settings-changes')
+                .on('postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'settings' },
+                    (payload) => {
+                        console.log('Setting changed:', payload);
+                        showToast('⚙️ تم تحديث الإعدادات');
+                    }
+                )
+                .subscribe();
+
+            // Listen for banned changes
+            supabase
+                .channel('banned-changes')
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'banned' },
+                    (payload) => {
+                        loadBannedList();
+                    }
+                )
+                .subscribe();
+        }
 
         // ===== Login System =====
         const pinInputs = document.querySelectorAll('.pin-digit');
@@ -1702,7 +1670,6 @@
                 });
                 pinInputs[0].focus();
                 
-                // Shake animation
                 const box = document.querySelector('.login-box');
                 box.style.animation = 'none';
                 setTimeout(() => {
@@ -1725,15 +1692,12 @@
 
         // ===== Navigation =====
         function showSection(sectionId, element) {
-            // Hide all sections
             document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
             
-            // Show target section
             document.getElementById('section-' + sectionId).classList.add('active');
             if (element) element.classList.add('active');
             
-            // Update title
             const titles = {
                 'dashboard': 'الرئيسية',
                 'orders': 'الطلبات',
@@ -1747,14 +1711,11 @@
                 'warnings': 'التحذيرات',
                 'welcome': 'رسالة الترحيب',
                 'phones': 'أرقام الهواتف',
-                'settings': 'الإعدادات'
+                'ban': 'الحظر'
             };
             document.getElementById('pageTitle').textContent = titles[sectionId] || '';
             
-            // Close mobile sidebar
             document.getElementById('sidebar').classList.remove('open');
-            
-            // Load section data
             loadSectionData(sectionId);
         }
 
@@ -1763,41 +1724,102 @@
         }
 
         // ===== Initialize Dashboard =====
-        function initializeDashboard() {
-            updateStats();
-            loadRecentOrders();
-            updateSiteStatusBadge();
+        async function initializeDashboard() {
+            updateConnectionStatus('syncing', 'جاري التحميل...');
+            await testConnection();
+            setupRealtime();
+            await updateStats();
+            await loadRecentOrders();
+            await updateSiteStatusBadge();
         }
 
-        function updateStats() {
-            const orders = appData.orders || [];
-            const today = new Date().toDateString();
+        // ===== Settings Helpers =====
+        async function getSetting(key) {
+            const { data, error } = await supabase
+                .from('settings')
+                .select('value')
+                .eq('key', key)
+                .single();
             
-            document.getElementById('stat-orders').textContent = orders.length;
-            document.getElementById('stat-bookings').textContent = 
-                orders.filter(o => o.type === 'booking' && new Date(o.timestamp).toDateString() === today).length;
-            document.getElementById('stat-market').textContent = 
-                orders.filter(o => o.type === 'sell' || o.type === 'buy').length;
-            document.getElementById('stat-messages').textContent = 
-                orders.filter(o => o.type === 'message').length;
+            if (error) return null;
+            return data.value;
         }
 
-        function loadRecentOrders() {
-            const orders = (appData.orders || []).slice(-5).reverse();
+        async function setSetting(key, value) {
+            const { error } = await supabase
+                .from('settings')
+                .upsert({ key, value, updated_at: new Date().toISOString() });
+            
+            if (error) {
+                console.error('Error saving setting:', error);
+                return false;
+            }
+            return true;
+        }
+
+        // ===== Statistics =====
+        async function updateStats() {
+            try {
+                const { data: orders } = await supabase.from('orders').select('*');
+                const { data: banned } = await supabase.from('banned').select('*');
+                
+                const ordersList = orders || [];
+                const bannedList = banned || [];
+                const today = new Date().toDateString();
+                
+                document.getElementById('stat-orders').textContent = ordersList.length;
+                document.getElementById('stat-bookings').textContent = 
+                    ordersList.filter(o => o.type === 'booking' && new Date(o.created_at).toDateString() === today).length;
+                document.getElementById('stat-market').textContent = 
+                    ordersList.filter(o => o.type === 'sell' || o.type === 'buy').length;
+                document.getElementById('stat-banned').textContent = bannedList.length;
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        // ===== Orders =====
+        async function loadRecentOrders() {
+            const { data: orders, error } = await supabase
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5);
+            
             const container = document.getElementById('recentOrders');
             
-            if (orders.length === 0) {
+            if (error || !orders || orders.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <h3>لا توجد طلبات حتى الآن</h3>
-                        <p>ستظهر هنا الطلبات الجديدة</p>
                     </div>
                 `;
                 return;
             }
             
-            container.innerHTML = orders.map(order => renderOrderCard(order)).join('');
+            container.innerHTML = orders.map(renderOrderCard).join('');
+        }
+
+        async function loadAllOrders() {
+            const { data: orders, error } = await supabase
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            const container = document.getElementById('allOrders');
+            
+            if (error || !orders || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>لا توجد طلبات</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = orders.map(renderOrderCard).join('');
         }
 
         function renderOrderCard(order) {
@@ -1809,17 +1831,20 @@
             };
             
             const type = typeLabels[order.type] || typeLabels.booking;
+            const location = (order.location_lat && order.location_lon) 
+                ? `https://www.google.com/maps?q=${order.location_lat},${order.location_lon}` 
+                : '';
             
             return `
                 <div class="order-card">
                     <div class="order-header">
                         <div class="order-id">
                             <i class="fas ${type.icon}" style="color: ${type.color};"></i>
-                            ${order.id || 'N/A'}
+                            ${order.request_id || order.id}
                             <span style="background: ${type.color}; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 0.8em; margin-right: 10px;">${type.label}</span>
                         </div>
                         <div class="order-time">
-                            <i class="fas fa-clock"></i> ${order.timestamp || ''}
+                            <i class="fas fa-clock"></i> ${new Date(order.created_at).toLocaleString('ar-IQ')}
                         </div>
                     </div>
                     <div class="order-info">
@@ -1835,85 +1860,61 @@
                             <i class="fas fa-map-marker-alt"></i>
                             <span>${order.area || 'غير محدد'}</span>
                         </div>
-                        ${order.serviceType ? `<div class="order-info-item"><i class="fas fa-concierge-bell"></i><span>${order.serviceType}</span></div>` : ''}
+                        ${order.service_type ? `<div class="order-info-item"><i class="fas fa-concierge-bell"></i><span>${order.service_type}</span></div>` : ''}
                     </div>
                     <div class="order-actions">
-                        <button class="btn btn-primary" onclick="viewOrder('${order.id}')">
-                            <i class="fas fa-eye"></i> عرض التفاصيل
-                        </button>
                         <a href="tel:${order.phone}" class="btn btn-success">
                             <i class="fas fa-phone"></i> اتصال
                         </a>
-                        ${order.location ? `<a href="https://www.google.com/maps?q=${order.location.lat},${order.location.lon}" target="_blank" class="btn btn-warning"><i class="fas fa-map"></i> الموقع</a>` : ''}
+                        ${location ? `<a href="${location}" target="_blank" class="btn btn-warning"><i class="fas fa-map"></i> الموقع</a>` : ''}
                         <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">
                             <i class="fas fa-trash"></i> حذف
+                        </button>
+                        <button class="btn btn-outline" onclick="banUserByPhone('${order.phone}')">
+                            <i class="fas fa-ban"></i> حظر
                         </button>
                     </div>
                 </div>
             `;
         }
 
-        function viewOrder(orderId) {
-            const order = appData.orders.find(o => o.id === orderId);
-            if (!order) return;
-            
-            let details = `📋 رقم الطلب: ${order.id}\n`;
-            details += `⏰ الوقت: ${order.timestamp}\n`;
-            details += `👤 الاسم: ${order.name}\n`;
-            details += `📱 الهاتف: ${order.phone}\n`;
-            details += `📍 المنطقة: ${order.area}\n`;
-            details += `🎯 أقرب نقطة: ${order.landmark}\n`;
-            
-            if (order.serviceType) details += `🔧 الخدمة: ${order.serviceType}\n`;
-            if (order.extraInfo) details += `📝 ملاحظات: ${order.extraInfo}\n`;
-            if (order.splitType) details += `💨 نوع السبلت: ${order.splitType}\n`;
-            if (order.condition) details += `✨ الحالة: ${order.condition}\n`;
-            if (order.price) details += `💰 السعر: ${parseInt(order.price).toLocaleString()} د.ع\n`;
-            if (order.location) details += `🗺️ الموقع: https://www.google.com/maps?q=${order.location.lat},${order.location.lon}\n`;
-            
-            alert(details);
-        }
-
-        function deleteOrder(orderId) {
+        async function deleteOrder(orderId) {
             if (!confirm('هل تريد حذف هذا الطلب؟')) return;
-            appData.orders = appData.orders.filter(o => o.id !== orderId);
-            saveData(appData);
+            
+            const { error } = await supabase.from('orders').delete().eq('id', orderId);
+            
+            if (error) {
+                showToast('❌ حدث خطأ في الحذف', 'error');
+                return;
+            }
+            
+            showToast('✅ تم حذف الطلب');
             updateStats();
             loadRecentOrders();
             loadAllOrders();
-            showToast('تم حذف الطلب');
         }
 
-        function searchOrders() {
+        async function searchOrders() {
             const query = document.getElementById('orderSearch').value.toLowerCase();
-            const filtered = appData.orders.filter(o => 
-                o.id.toLowerCase().includes(query) ||
-                (o.name && o.name.toLowerCase().includes(query)) ||
-                (o.phone && o.phone.includes(query))
-            );
+            
+            if (!query) {
+                loadAllOrders();
+                return;
+            }
+            
+            const { data: orders } = await supabase
+                .from('orders')
+                .select('*')
+                .or(`id.ilike.%${query}%,name.ilike.%${query}%,phone.ilike.%${query}%`)
+                .order('created_at', { ascending: false });
             
             const container = document.getElementById('allOrders');
-            if (filtered.length === 0) {
+            
+            if (!orders || orders.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
                         <h3>لا توجد نتائج</h3>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = filtered.slice().reverse().map(renderOrderCard).join('');
-            }
-        }
-
-        function loadAllOrders() {
-            const orders = (appData.orders || []).slice().reverse();
-            const container = document.getElementById('allOrders');
-            
-            if (orders.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>لا توجد طلبات</h3>
                     </div>
                 `;
                 return;
@@ -1922,49 +1923,45 @@
             container.innerHTML = orders.map(renderOrderCard).join('');
         }
 
-        function clearAllOrders() {
-            if (!confirm('⚠️ هل أنت متأكد من حذف جميع الطلبات؟ لا يمكن التراجع!')) return;
-            if (!confirm('⚠️ تأكيد نهائي: سيتم حذف كل الطلبات!')) return;
-            appData.orders = [];
-            saveData(appData);
+        async function clearAllOrders() {
+            if (!confirm('⚠️ هل أنت متأكد من حذف جميع الطلبات؟')) return;
+            if (!confirm('⚠️ تأكيد نهائي!')) return;
+            
+            const { error } = await supabase.from('orders').delete().neq('id', '');
+            
+            if (error) {
+                showToast('❌ حدث خطأ', 'error');
+                return;
+            }
+            
+            showToast('✅ تم حذف جميع الطلبات');
             updateStats();
             loadRecentOrders();
             loadAllOrders();
-            showToast('تم حذف جميع الطلبات');
-        }
-
-        function exportOrders() {
-            const data = JSON.stringify(appData.orders, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `orders_${Date.now()}.json`;
-            a.click();
-            showToast('تم تصدير الطلبات');
         }
 
         // ===== Site Status =====
-        function setSiteStatus(status) {
+        function selectStatus(status) {
             document.querySelectorAll('.status-option').forEach(el => {
-                el.style.transform = 'scale(1)';
-                el.style.boxShadow = 'none';
+                el.classList.remove('selected');
             });
-            const selected = document.querySelector(`.status-option[data-status="${status}"]`);
-            selected.style.transform = 'scale(1.05)';
-            selected.style.boxShadow = '0 0 30px rgba(0,212,255,0.3)';
-            appData.siteStatus = status;
+            document.querySelector(`.status-option[data-status="${status}"]`).classList.add('selected');
+            currentStatus = status;
         }
 
-        function saveSiteStatus() {
-            const message = document.getElementById('statusMessage').value;
-            appData.statusMessage = message;
-            saveData(appData);
-            updateSiteStatusBadge();
-            showToast('تم حفظ حالة الموقع');
+        async function saveSiteStatus() {
+            const success = await setSetting('siteStatus', currentStatus);
+            
+            if (success) {
+                showToast('✅ تم حفظ الحالة');
+                updateSiteStatusBadge();
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
-        function updateSiteStatusBadge() {
+        async function updateSiteStatusBadge() {
+            const status = await getSetting('siteStatus') || 'active';
             const badge = document.getElementById('siteStatusBadge');
             const text = document.getElementById('siteStatusText');
             
@@ -1975,14 +1972,24 @@
                 'busy': { text: 'مشغول', class: 'locked' }
             };
             
-            const status = statusMap[appData.siteStatus] || statusMap.active;
-            badge.className = 'site-status-badge ' + status.class;
-            text.textContent = status.text;
+            const info = statusMap[status] || statusMap.active;
+            badge.className = 'site-status-badge ' + info.class;
+            text.textContent = info.text;
+            
+            // Update status selector
+            document.querySelectorAll('.status-option').forEach(el => {
+                el.classList.toggle('selected', el.dataset.status === status);
+            });
         }
 
         // ===== Sections Control =====
-        function loadSectionsControl() {
-            const sections = [
+        async function loadSectionsControl() {
+            const sections = await getSetting('sections') || {
+                home: true, gallery: true, services: true,
+                marketplace: true, booking: true, contact: true
+            };
+            
+            const sectionsList = [
                 { id: 'home', name: 'الرئيسية', icon: 'fa-home' },
                 { id: 'gallery', name: 'المعرض', icon: 'fa-images' },
                 { id: 'services', name: 'الخدمات', icon: 'fa-tools' },
@@ -1992,103 +1999,114 @@
             ];
             
             const container = document.getElementById('sectionToggles');
-            container.innerHTML = sections.map(section => `
-                <div class="section-toggle ${appData.sections[section.id] ? 'enabled' : 'disabled'}" data-section="${section.id}">
+            container.innerHTML = sectionsList.map(section => `
+                <div class="section-toggle ${sections[section.id] !== false ? 'enabled' : 'disabled'}" data-section="${section.id}">
                     <div class="section-toggle-info">
                         <i class="fas ${section.icon}"></i>
                         <div>
                             <div style="font-weight: 600;">${section.name}</div>
                             <div style="font-size: 0.85em; color: rgba(255,255,255,0.5);">
-                                ${appData.sections[section.id] ? 'مفعّل' : 'معطّل'}
+                                ${sections[section.id] !== false ? 'مفعّل' : 'معطّل'}
                             </div>
                         </div>
                     </div>
                     <label class="toggle-switch">
-                        <input type="checkbox" ${appData.sections[section.id] ? 'checked' : ''} onchange="toggleSection('${section.id}', this)">
+                        <input type="checkbox" ${sections[section.id] !== false ? 'checked' : ''} onchange="toggleSection('${section.id}', this)">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
             `).join('');
         }
 
+        let tempSections = {};
+
         function toggleSection(sectionId, checkbox) {
-            appData.sections[sectionId] = checkbox.checked;
+            tempSections[sectionId] = checkbox.checked;
             const toggle = checkbox.closest('.section-toggle');
             toggle.className = 'section-toggle ' + (checkbox.checked ? 'enabled' : 'disabled');
-            toggle.querySelector('div div div:last-child').textContent = checkbox.checked ? 'مفعّل' : 'معطّل';
         }
 
-        function saveSectionsState() {
-            saveData(appData);
-            showToast('تم حفظ حالة الأقسام');
+        async function saveSectionsState() {
+            const currentSections = await getSetting('sections') || {};
+            const newSections = { ...currentSections, ...tempSections };
+            
+            const success = await setSetting('sections', newSections);
+            
+            if (success) {
+                showToast('✅ تم حفظ حالة الأقسام');
+                tempSections = {};
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
         // ===== Lock Site =====
-        function lockSite() {
+        async function lockSite() {
             const message = document.getElementById('lockMessage').value || 'الموقع مغلق للصيانة، سنعود قريباً...';
             if (!confirm('هل تريد قفل الموقع؟')) return;
-            appData.siteLocked = true;
-            appData.lockMessage = message;
-            saveData(appData);
+            
+            await setSetting('siteLocked', true);
+            await setSetting('lockMessage', message);
             showToast('🔒 تم قفل الموقع');
         }
 
-        function unlockSite() {
+        async function unlockSite() {
             if (!confirm('هل تريد فتح الموقع؟')) return;
-            appData.siteLocked = false;
-            saveData(appData);
+            await setSetting('siteLocked', false);
             showToast('🔓 تم فتح الموقع');
         }
 
         // ===== Images Management =====
-        function loadImagesManagement() {
-            // Slider images (S1-S18)
+        async function loadImagesManagement() {
+            // Load all images from database
+            const { data: images } = await supabase.from('images').select('*');
+            const imagesMap = {};
+            (images || []).forEach(img => {
+                imagesMap[img.key] = img.url;
+            });
+            
+            // Slider images
             const sliderGrid = document.getElementById('sliderImagesGrid');
             sliderGrid.innerHTML = '';
             for (let i = 1; i <= 18; i++) {
-                sliderGrid.appendChild(createImageItem(`S${i}`, `S${i}.jpg`));
+                sliderGrid.appendChild(createImageItem(`S${i}`, imagesMap[`S${i}`] || `S${i}.jpg`));
             }
             
-            // Gallery images (1-9)
+            // Gallery images
             const galleryGrid = document.getElementById('galleryImagesGrid');
             galleryGrid.innerHTML = '';
             for (let i = 1; i <= 9; i++) {
-                galleryGrid.appendChild(createImageItem(`G${i}`, `${i}.jpg`));
+                galleryGrid.appendChild(createImageItem(`${i}`, imagesMap[`${i}`] || `${i}.jpg`));
             }
             
-            // Technicians (A1-A3)
+            // Technicians
             const techGrid = document.getElementById('techniciansImagesGrid');
             techGrid.innerHTML = '';
             for (let i = 1; i <= 3; i++) {
-                techGrid.appendChild(createImageItem(`A${i}`, `A${i}.jpg`));
+                techGrid.appendChild(createImageItem(`A${i}`, imagesMap[`A${i}`] || `A${i}.jpg`));
             }
             
             // Logo
             const logoGrid = document.getElementById('logoImageGrid');
             logoGrid.innerHTML = '';
-            logoGrid.appendChild(createImageItem('logo', 'G.jpg'));
+            logoGrid.appendChild(createImageItem('logo', imagesMap['logo'] || 'G.jpg'));
         }
 
-        function createImageItem(key, filename) {
+        function createImageItem(key, url) {
             const div = document.createElement('div');
             div.className = 'image-item';
-            
-            const imageData = appData.images[key];
-            const imgSrc = imageData || filename;
-            
             div.innerHTML = `
-                <img src="${imgSrc}" alt="${key}" onerror="this.src='https://via.placeholder.com/150/00d4ff/ffffff?text=${key}'">
+                <img src="${url}" alt="${key}" onerror="this.src='https://via.placeholder.com/150/00d4ff/ffffff?text=${key}'">
                 <div class="image-label">${key}</div>
                 <div class="image-actions">
                     <button class="image-action-btn edit" onclick="event.stopPropagation(); uploadImage('${key}')">
                         <i class="fas fa-edit"></i>
                     </button>
-                    ${imageData ? `<button class="image-action-btn delete" onclick="event.stopPropagation(); deleteImage('${key}')">
+                    <button class="image-action-btn delete" onclick="event.stopPropagation(); deleteImage('${key}')">
                         <i class="fas fa-trash"></i>
-                    </button>` : ''}
+                    </button>
                 </div>
             `;
-            
             div.onclick = () => uploadImage(key);
             return div;
         }
@@ -2098,33 +2116,71 @@
             document.getElementById('imageUploader').click();
         }
 
-        function handleImageUpload(event) {
+        async function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file || !currentUploadTarget) return;
             
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                appData.images[currentUploadTarget] = e.target.result;
-                saveData(appData);
-                loadImagesManagement();
+            showToast('⏳ جاري رفع الصورة...');
+            
+            try {
+                // Upload to Supabase Storage
+                const fileName = `${currentUploadTarget}_${Date.now()}.${file.name.split('.').pop()}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('workshop-images')
+                    .upload(fileName, file, { upsert: true });
+                
+                if (uploadError) throw uploadError;
+                
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                    .from('workshop-images')
+                    .getPublicUrl(fileName);
+                
+                const publicUrl = urlData.publicUrl;
+                
+                // Save to images table
+                const { error: dbError } = await supabase
+                    .from('images')
+                    .upsert({
+                        key: currentUploadTarget,
+                        url: publicUrl,
+                        file_id: fileName,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (dbError) throw dbError;
+                
                 showToast('✅ تم رفع الصورة بنجاح');
-            };
-            reader.readAsDataURL(file);
+                loadImagesManagement();
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('❌ فشل رفع الصورة', 'error');
+            }
+            
             event.target.value = '';
         }
 
-        function deleteImage(key) {
+        async function deleteImage(key) {
             if (!confirm('هل تريد حذف هذه الصورة؟')) return;
-            delete appData.images[key];
-            saveData(appData);
+            
+            const { error } = await supabase.from('images').delete().eq('key', key);
+            
+            if (error) {
+                showToast('❌ حدث خطأ', 'error');
+                return;
+            }
+            
+            showToast('✅ تم حذف الصورة');
             loadImagesManagement();
-            showToast('تم حذف الصورة');
         }
 
         // ===== Ticker Management =====
-        function loadTicker() {
+        async function loadTicker() {
+            const ticker = await getSetting('ticker') || [];
+            
             const container = document.getElementById('tickerItems');
-            container.innerHTML = appData.ticker.map((item, index) => `
+            container.innerHTML = ticker.map((item, index) => `
                 <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
                     <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="${item.icon}" placeholder="fa-icon" id="ticker-icon-${index}">
                     <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="${item.text}" placeholder="نص الإعلان" id="ticker-text-${index}">
@@ -2136,31 +2192,48 @@
         }
 
         function addTickerItem() {
-            appData.ticker.push({ icon: 'fa-star', text: 'إعلان جديد' });
-            loadTicker();
+            const container = document.getElementById('tickerItems');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;';
+            div.innerHTML = `
+                <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="fa-star" placeholder="fa-icon" id="ticker-icon-${index}">
+                <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="إعلان جديد" placeholder="نص الإعلان" id="ticker-text-${index}">
+                <button class="btn btn-danger" onclick="this.parentElement.remove()">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(div);
         }
 
         function removeTickerItem(index) {
-            appData.ticker.splice(index, 1);
-            loadTicker();
+            document.getElementById(`ticker-icon-${index}`).parentElement.remove();
         }
 
-        function saveTicker() {
+        async function saveTicker() {
             const items = [];
-            appData.ticker.forEach((item, index) => {
-                const icon = document.getElementById(`ticker-icon-${index}`).value;
-                const text = document.getElementById(`ticker-text-${index}`).value;
+            const container = document.getElementById('tickerItems');
+            Array.from(container.children).forEach((child, index) => {
+                const icon = child.querySelector(`#ticker-icon-${index}`)?.value || 'fa-star';
+                const text = child.querySelector(`#ticker-text-${index}`)?.value || '';
                 if (text) items.push({ icon, text });
             });
-            appData.ticker = items;
-            saveData(appData);
-            showToast('✅ تم حفظ شريط الإعلانات');
+            
+            const success = await setSetting('ticker', items);
+            
+            if (success) {
+                showToast('✅ تم حفظ شريط الإعلانات');
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
         // ===== Tips Management =====
-        function loadTips() {
+        async function loadTips() {
+            const tips = await getSetting('tips') || [];
+            
             const container = document.getElementById('tipsList');
-            container.innerHTML = appData.tips.map((tip, index) => `
+            container.innerHTML = tips.map((tip, index) => `
                 <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
                     <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <input type="text" class="form-control" style="width: 150px;" value="${tip.icon}" placeholder="fa-icon" id="tip-icon-${index}">
@@ -2175,32 +2248,52 @@
         }
 
         function addTip() {
-            appData.tips.push({ icon: 'fa-lightbulb', title: 'نصيحة جديدة', text: 'النص هنا...' });
-            loadTips();
+            const container = document.getElementById('tipsList');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
+            div.innerHTML = `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input type="text" class="form-control" style="width: 150px;" value="fa-lightbulb" placeholder="fa-icon" id="tip-icon-${index}">
+                    <input type="text" class="form-control" style="flex: 1;" value="نصيحة جديدة" placeholder="العنوان" id="tip-title-${index}">
+                    <button class="btn btn-danger" onclick="this.closest('div[style]').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <textarea class="form-control" id="tip-text-${index}" placeholder="النص">النص هنا...</textarea>
+            `;
+            container.appendChild(div);
         }
 
         function removeTip(index) {
-            appData.tips.splice(index, 1);
-            loadTips();
+            document.getElementById(`tip-icon-${index}`).closest('div[style]').remove();
         }
 
-        function saveTips() {
+        async function saveTips() {
             const tips = [];
-            appData.tips.forEach((tip, index) => {
-                const icon = document.getElementById(`tip-icon-${index}`).value;
-                const title = document.getElementById(`tip-title-${index}`).value;
-                const text = document.getElementById(`tip-text-${index}`).value;
+            const container = document.getElementById('tipsList');
+            Array.from(container.children).forEach((child, index) => {
+                const icon = child.querySelector(`#tip-icon-${index}`)?.value || 'fa-lightbulb';
+                const title = child.querySelector(`#tip-title-${index}`)?.value || '';
+                const text = child.querySelector(`#tip-text-${index}`)?.value || '';
                 if (title && text) tips.push({ icon, title, text });
             });
-            appData.tips = tips;
-            saveData(appData);
-            showToast('✅ تم حفظ النصائح');
+            
+            const success = await setSetting('tips', tips);
+            
+            if (success) {
+                showToast('✅ تم حفظ النصائح');
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
         // ===== Warnings Management =====
-        function loadWarnings() {
+        async function loadWarnings() {
+            const warnings = await getSetting('warnings') || [];
+            
             const container = document.getElementById('warningsList');
-            container.innerHTML = appData.warnings.map((warn, index) => `
+            container.innerHTML = warnings.map((warn, index) => `
                 <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
                     <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                         <input type="text" class="form-control" style="width: 150px;" value="${warn.icon}" placeholder="fa-icon" id="warn-icon-${index}">
@@ -2214,139 +2307,196 @@
         }
 
         function addWarning() {
-            appData.warnings.push({ icon: 'fa-exclamation-circle', text: 'تحذير جديد' });
-            loadWarnings();
+            const container = document.getElementById('warningsList');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
+            div.innerHTML = `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <input type="text" class="form-control" style="width: 150px;" value="fa-exclamation-circle" placeholder="fa-icon" id="warn-icon-${index}">
+                    <button class="btn btn-danger" onclick="this.closest('div[style]').remove()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <textarea class="form-control" id="warn-text-${index}" placeholder="النص">تحذير جديد</textarea>
+            `;
+            container.appendChild(div);
         }
 
         function removeWarning(index) {
-            appData.warnings.splice(index, 1);
-            loadWarnings();
+            document.getElementById(`warn-icon-${index}`).closest('div[style]').remove();
         }
 
-        function saveWarnings() {
+        async function saveWarnings() {
             const warnings = [];
-            appData.warnings.forEach((warn, index) => {
-                const icon = document.getElementById(`warn-icon-${index}`).value;
-                const text = document.getElementById(`warn-text-${index}`).value;
+            const container = document.getElementById('warningsList');
+            Array.from(container.children).forEach((child, index) => {
+                const icon = child.querySelector(`#warn-icon-${index}`)?.value || 'fa-exclamation-circle';
+                const text = child.querySelector(`#warn-text-${index}`)?.value || '';
                 if (text) warnings.push({ icon, text });
             });
-            appData.warnings = warnings;
-            saveData(appData);
-            showToast('✅ تم حفظ التحذيرات');
+            
+            const success = await setSetting('warnings', warnings);
+            
+            if (success) {
+                showToast('✅ تم حفظ التحذيرات');
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
         // ===== Welcome Message =====
-        function loadWelcome() {
-            document.getElementById('welcomeTitle').value = appData.welcome.title || '';
-            document.getElementById('welcomeSubtitle').value = appData.welcome.subtitle || '';
-            document.getElementById('welcomeText').value = appData.welcome.text || '';
-            document.getElementById('instructionsTitle').value = appData.welcome.instructionsTitle || '';
-            document.getElementById('instructionsList').value = (appData.welcome.instructions || []).join('\n');
+        async function loadWelcome() {
+            const welcome = await getSetting('welcome') || {};
+            document.getElementById('welcomeTitle').value = welcome.title || '';
+            document.getElementById('welcomeSubtitle').value = welcome.subtitle || '';
+            document.getElementById('welcomeText').value = welcome.text || '';
+            document.getElementById('instructionsTitle').value = welcome.instructionsTitle || '';
+            document.getElementById('instructionsList').value = (welcome.instructions || []).join('\n');
         }
 
-        function saveWelcome() {
-            appData.welcome = {
+        async function saveWelcome() {
+            const welcome = {
                 title: document.getElementById('welcomeTitle').value,
                 subtitle: document.getElementById('welcomeSubtitle').value,
                 text: document.getElementById('welcomeText').value,
                 instructionsTitle: document.getElementById('instructionsTitle').value,
                 instructions: document.getElementById('instructionsList').value.split('\n').filter(i => i.trim())
             };
-            saveData(appData);
-            showToast('✅ تم حفظ رسالة الترحيب');
+            
+            const success = await setSetting('welcome', welcome);
+            
+            if (success) {
+                showToast('✅ تم حفظ رسالة الترحيب');
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
         // ===== Phones =====
-        function loadPhones() {
-            document.getElementById('phone1').value = appData.phones.phone1 || '';
-            document.getElementById('phone2').value = appData.phones.phone2 || '';
-            document.getElementById('phone3').value = appData.phones.phone3 || '';
+        async function loadPhones() {
+            const phones = await getSetting('phones') || {};
+            document.getElementById('phone1').value = phones.phone1 || '';
+            document.getElementById('phone2').value = phones.phone2 || '';
+            document.getElementById('phone3').value = phones.phone3 || '';
         }
 
-        function savePhones() {
-            appData.phones = {
+        async function savePhones() {
+            const phones = {
                 phone1: document.getElementById('phone1').value,
                 phone2: document.getElementById('phone2').value,
                 phone3: document.getElementById('phone3').value
             };
-            saveData(appData);
-            showToast('✅ تم حفظ الأرقام');
-        }
-
-        // ===== Settings =====
-        function saveSettings() {
-            appData.shopName = document.getElementById('shopName').value;
-            appData.shopDescription = document.getElementById('shopDescription').value;
-            appData.workHours = document.getElementById('workHours').value;
-            saveData(appData);
-            showToast('✅ تم حفظ الإعدادات');
-        }
-
-        // ===== Backup =====
-        function exportBackup() {
-            const data = JSON.stringify(appData, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup_${Date.now()}.json`;
-            a.click();
-            showToast('✅ تم تصدير النسخة الاحتياطية');
-        }
-
-        function importBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
             
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (confirm('⚠️ سيتم استبدال جميع البيانات الحالية. هل تريد المتابعة؟')) {
-                        appData = imported;
-                        saveData(appData);
-                        initializeDashboard();
-                        showToast('✅ تم استيراد النسخة الاحتياطية');
-                    }
-                } catch (err) {
-                    showToast('❌ ملف غير صالح', true);
-                }
-            };
-            reader.readAsText(file);
+            const success = await setSetting('phones', phones);
+            
+            if (success) {
+                showToast('✅ تم حفظ الأرقام');
+            } else {
+                showToast('❌ حدث خطأ', 'error');
+            }
         }
 
-        function resetAllData() {
-            if (!confirm('⚠️ سيتم حذف جميع البيانات والعودة للإعدادات الافتراضية!')) return;
-            if (!confirm('⚠️ تأكيد نهائي: لا يمكن التراجع!')) return;
-            appData = JSON.parse(JSON.stringify(defaultData));
-            saveData(appData);
-            initializeDashboard();
-            showToast('تم إعادة التعيين');
+        // ===== Ban Management =====
+        async function loadBannedList() {
+            const { data: banned } = await supabase
+                .from('banned')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            const container = document.getElementById('bannedList');
+            
+            if (!banned || banned.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>لا يوجد مستخدمين محظورين</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = banned.map(b => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 10px;">
+                    <div>
+                        <strong style="color: var(--primary);">${b.phone}</strong>
+                        <div style="color: rgba(255,255,255,0.6); font-size: 0.9em;">${b.reason || 'بدون سبب'}</div>
+                        <div style="color: rgba(255,255,255,0.4); font-size: 0.8em;">${new Date(b.created_at).toLocaleString('ar-IQ')}</div>
+                    </div>
+                    <button class="btn btn-success" onclick="unbanUser('${b.phone}')">
+                        <i class="fas fa-unlock"></i> إلغاء الحظر
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function banUser() {
+            const phone = document.getElementById('banPhone').value.trim();
+            if (!phone) {
+                showToast('❌ أدخل رقم الهاتف', 'error');
+                return;
+            }
+            
+            await banUserByPhone(phone);
+            document.getElementById('banPhone').value = '';
+        }
+
+        async function banUserByPhone(phone) {
+            if (!confirm(`هل تريد حظر ${phone}؟`)) return;
+            
+            const { error } = await supabase.from('banned').upsert({
+                phone,
+                reason: 'محظور من لوحة التحكم',
+                banned_by: 'admin',
+                created_at: new Date().toISOString()
+            });
+            
+            if (error) {
+                showToast('❌ حدث خطأ', 'error');
+                return;
+            }
+            
+            showToast(`✅ تم حظر ${phone}`);
+            loadBannedList();
+            updateStats();
+        }
+
+        async function unbanUser(phone) {
+            if (!confirm(`هل تريد إلغاء حظر ${phone}؟`)) return;
+            
+            const { error } = await supabase.from('banned').delete().eq('phone', phone);
+            
+            if (error) {
+                showToast('❌ حدث خطأ', 'error');
+                return;
+            }
+            
+            showToast(`✅ تم إلغاء حظر ${phone}`);
+            loadBannedList();
+            updateStats();
         }
 
         // ===== Notifications =====
-        function addNotification(title, text, type = 'info') {
-            const notification = {
-                id: Date.now(),
+        async function addNotification(title, text, type = 'info') {
+            await supabase.from('notifications').insert({
                 title,
                 text,
                 type,
-                time: new Date().toLocaleString('ar-IQ'),
-                read: false
-            };
-            appData.notifications = appData.notifications || [];
-            appData.notifications.unshift(notification);
-            if (appData.notifications.length > 50) {
-                appData.notifications = appData.notifications.slice(0, 50);
-            }
-            saveData(appData);
+                is_read: false,
+                created_at: new Date().toISOString()
+            });
         }
 
-        function loadNotifications() {
-            const notifications = appData.notifications || [];
+        async function loadNotifications() {
+            const { data: notifications } = await supabase
+                .from('notifications')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(50);
+            
             const container = document.getElementById('notificationsList');
             
-            if (notifications.length === 0) {
+            if (!notifications || notifications.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-bell-slash"></i>
@@ -2357,52 +2507,43 @@
             }
             
             container.innerHTML = notifications.map(n => `
-                <div class="notification-item ${n.read ? '' : 'new'}">
+                <div class="notification-item ${n.is_read ? '' : 'new'}">
                     <div class="notification-icon">
                         <i class="fas fa-bell"></i>
                     </div>
                     <div class="notification-content">
                         <div class="notification-title">${n.title}</div>
-                        <div class="notification-text">${n.text}</div>
-                        <div class="notification-time"><i class="fas fa-clock"></i> ${n.time}</div>
+                        <div class="notification-text">${n.text || ''}</div>
+                        <div class="notification-time"><i class="fas fa-clock"></i> ${new Date(n.created_at).toLocaleString('ar-IQ')}</div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function clearNotifications() {
-            appData.notifications = (appData.notifications || []).map(n => ({ ...n, read: true }));
-            saveData(appData);
+        async function clearNotifications() {
+            await supabase.from('notifications').update({ is_read: true }).neq('id', 0);
             loadNotifications();
-            showToast('تم تحديد جميع الإشعارات كمقروءة');
+            showToast('✅ تم تحديد جميع الإشعارات كمقروءة');
         }
 
         // ===== Load Section Data =====
-        function loadSectionData(sectionId) {
+        async function loadSectionData(sectionId) {
             switch(sectionId) {
-                case 'orders': loadAllOrders(); break;
-                case 'notifications': loadNotifications(); break;
-                case 'site-status': 
-                    document.getElementById('statusMessage').value = appData.statusMessage || '';
-                    document.querySelectorAll('.status-option').forEach(el => {
-                        el.style.transform = el.dataset.status === appData.siteStatus ? 'scale(1.05)' : 'scale(1)';
-                    });
+                case 'orders': await loadAllOrders(); break;
+                case 'notifications': await loadNotifications(); break;
+                case 'site-status': await updateSiteStatusBadge(); break;
+                case 'sections-control': await loadSectionsControl(); break;
+                case 'lock-site':
+                    const msg = await getSetting('lockMessage');
+                    document.getElementById('lockMessage').value = msg || 'الموقع مغلق للصيانة، سنعود قريباً...';
                     break;
-                case 'sections-control': loadSectionsControl(); break;
-                case 'lock-site': 
-                    document.getElementById('lockMessage').value = appData.lockMessage || '';
-                    break;
-                case 'images': loadImagesManagement(); break;
-                case 'ticker': loadTicker(); break;
-                case 'tips': loadTips(); break;
-                case 'warnings': loadWarnings(); break;
-                case 'welcome': loadWelcome(); break;
-                case 'phones': loadPhones(); break;
-                case 'settings':
-                    document.getElementById('shopName').value = appData.shopName || 'ورشة المنتظر';
-                    document.getElementById('shopDescription').value = appData.shopDescription || '';
-                    document.getElementById('workHours').value = appData.workHours || '8:00 ص - 10:00 م';
-                    break;
+                case 'images': await loadImagesManagement(); break;
+                case 'ticker': await loadTicker(); break;
+                case 'tips': await loadTips(); break;
+                case 'warnings': await loadWarnings(); break;
+                case 'welcome': await loadWelcome(); break;
+                case 'phones': await loadPhones(); break;
+                case 'ban': await loadBannedList(); break;
             }
         }
 
@@ -2415,39 +2556,10 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // ===== Listen for new orders from main site =====
-        window.addEventListener('storage', (e) => {
-            if (e.key === STORAGE_KEY) {
-                appData = loadData();
-                updateStats();
-                loadRecentOrders();
-                
-                // Add notification for new order
-                if (appData.orders.length > 0) {
-                    const lastOrder = appData.orders[appData.orders.length - 1];
-                    addNotification(
-                        'طلب جديد!',
-                        `طلب من ${lastOrder.name} - ${lastOrder.phone}`,
-                        'order'
-                    );
-                }
-            }
-        });
-
-        // ===== Shake Animation =====
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-10px); }
-                75% { transform: translateX(10px); }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Auto-focus first input
+        // ===== Initialize =====
         window.addEventListener('load', () => {
             pinInputs[0].focus();
+            testConnection();
         });
     </script>
 </body>

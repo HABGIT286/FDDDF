@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ورشة المنتظر | لتنصيب وصيانة السبلت</title>
+</head>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2582,132 +2586,193 @@
     </div>
 
     <script>
-    // ===== Configuration =====
+    // ===== Supabase Configuration =====
+    const SUPABASE_URL = 'https://jnedawtieiqtmagjbhld.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZWRhd3RpZWlxdG1hZ2piaGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTI1MDcsImV4cCI6MjA5ODkyODUwN30.6AXVBT1l37mOP6ykJDRuFRSN_mrMr_EmlRoVKSxVQJU';
+    
     const BOT_TOKEN = '7735965641:AAFzkUy27zKXYWroodhdxOBapMgwttyq5_s';
     const CHAT_ID = '910624538';
 
     let userLocations = { booking: null, sell: null, buy: null };
     let sellImagesData = [];
     let currentLocationForm = null;
+    let supabaseClient = null;
 
-    // ===== Prevent Copy/Select/Context Menu =====
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-    document.addEventListener('selectstart', (e) => e.preventDefault());
-    document.addEventListener('copy', (e) => e.preventDefault());
-    document.addEventListener('cut', (e) => e.preventDefault());
-    document.addEventListener('dragstart', (e) => e.preventDefault());
-    
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey && (e.key === 'c' || e.key === 'C' || 
-                          e.key === 'x' || e.key === 'X' || 
-                          e.key === 'a' || e.key === 'A' ||
-                          e.key === 'u' || e.key === 'U' ||
-                          e.key === 's' || e.key === 'S')) || 
-            e.key === 'F12') {
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault();
+    // Initialize Supabase
+    function initSupabase() {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        setupRealtimeListeners();
+        loadAllSettings();
+    }
+
+    // ===== Realtime Listeners =====
+    function setupRealtimeListeners() {
+        // Listen for settings changes
+        supabaseClient
+            .channel('settings-updates')
+            .on('postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'settings' },
+                async (payload) => {
+                    console.log('Setting updated:', payload.new.key);
+                    await loadAllSettings();
+                }
+            )
+            .subscribe();
+
+        // Listen for images changes
+        supabaseClient
+            .channel('images-updates')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'images' },
+                async () => {
+                    await loadAllImages();
+                }
+            )
+            .subscribe();
+    }
+
+    // ===== Load All Settings from Supabase =====
+    async function loadAllSettings() {
+        try {
+            // Check if site is locked
+            const locked = await getSetting('siteLocked');
+            if (locked) {
+                const lockMsg = await getSetting('lockMessage');
+                showLockScreen(lockMsg || 'الموقع مغلق للصيانة');
+                return;
             }
-        }
-    });
 
-    // ===== Work Status System =====
-    const STATUS_CONFIG = {
-        active: {
-            class: 'active',
-            title: 'نشط الآن',
-            icon: 'fas fa-check-circle',
-            message: '<i class="fas fa-headset"></i> فريقنا جاهز لاستقبال طلباتكم - اتصل بنا الآن على <strong style="color: var(--active-color);">07726283627</strong>',
-            glow: 'rgba(0,255,136,0.2)'
-        },
-        inactive: {
-            class: 'inactive',
-            title: 'غير نشط',
-            icon: 'fas fa-times-circle',
-            message: '<i class="fas fa-moon"></i> الورشة مغلقة حالياً - سنعود غداً من الساعة 8:00 صباحاً',
-            glow: 'rgba(136,136,136,0.1)'
-        },
-        break: {
-            class: 'break',
-            title: 'استراحة',
-            icon: 'fas fa-coffee',
-            message: '<i class="fas fa-clock"></i> الفريق في استراحة مؤقتة - سنعود قريباً، يمكنك ترك رسالة وسنرد عليك',
-            glow: 'rgba(255,170,0,0.2)'
-        },
-        busy: {
-            class: 'break',
-            title: 'مشغول',
-            icon: 'fas fa-user-clock',
-            message: '<i class="fas fa-user-clock"></i> الفريق مشغول حالياً - سنرد عليك في أقرب وقت',
-            glow: 'rgba(255,71,87,0.2)'
-        }
-    };
+            // Load site status
+            const status = await getSetting('siteStatus') || 'active';
+            updateWorkStatus(status);
 
-    // ===== ✅ دالة updateWorkStatus (محدثة - تدعم 4 حالات) =====
-    function updateWorkStatus(status) {
-        const container = document.getElementById('workStatusContainer');
-        const title = document.getElementById('statusTitle');
-        const message = document.getElementById('statusMessage');
-        const icon = document.getElementById('statusIcon');
-        
-        if (!container || !title || !message || !icon) return;
-        
-        const config = STATUS_CONFIG[status] || STATUS_CONFIG.active;
-        
-        container.className = 'work-status-container ' + config.class;
-        title.textContent = config.title;
-        message.innerHTML = config.message;
-        icon.innerHTML = `<i class="${config.icon}"></i>`;
-        
-        localStorage.setItem('workStatus', status);
+            // Load phones
+            const phones = await getSetting('phones');
+            if (phones) updatePhones(phones);
+
+            // Load ticker
+            const ticker = await getSetting('ticker');
+            if (ticker) updateTicker(ticker);
+
+            // Load sections
+            const sections = await getSetting('sections');
+            if (sections) updateSectionsVisibility(sections);
+
+            // Load tips
+            const tips = await getSetting('tips');
+            if (tips) updateTips(tips);
+
+            // Load warnings
+            const warnings = await getSetting('warnings');
+            if (warnings) updateWarnings(warnings);
+
+            // Load welcome
+            const welcome = await getSetting('welcome');
+            if (welcome) updateWelcome(welcome);
+
+            // Load images
+            await loadAllImages();
+
+        } catch (error) {
+            console.error('Error loading settings:', error);
+        }
     }
 
-    // ===== ✅ دالة loadAdminData (قراءة البيانات من لوحة التحكم) =====
-    function loadAdminData() {
-        const saved = localStorage.getItem('workshop_admin_data');
-        if (saved) {
-            try {
-                return JSON.parse(saved);
-            } catch (e) {
-                console.error('Error parsing admin data:', e);
-                return null;
+    // ===== Helper Functions =====
+    async function getSetting(key) {
+        if (!supabaseClient) return null;
+        
+        const { data, error } = await supabaseClient
+            .from('settings')
+            .select('value')
+            .eq('key', key)
+            .single();
+        
+        if (error) return null;
+        return data.value;
+    }
+
+    async function loadAllImages() {
+        if (!supabaseClient) return;
+        
+        const { data: images } = await supabaseClient.from('images').select('*');
+        if (!images) return;
+        
+        images.forEach(img => {
+            // Update slider images
+            if (img.key.startsWith('S')) {
+                const imgEl = document.querySelector(`img[src="S${img.key.substring(1)}.jpg"]`);
+                if (imgEl) imgEl.src = img.url;
             }
-        }
-        return null;
+            // Update gallery images
+            else if (/^\d$/.test(img.key)) {
+                const imgEl = document.querySelector(`img[src="${img.key}.jpg"]`);
+                if (imgEl) imgEl.src = img.url;
+            }
+            // Update technicians
+            else if (img.key.startsWith('A')) {
+                const imgEl = document.querySelector(`img[src="${img.key}.jpg"]`);
+                if (imgEl) imgEl.src = img.url;
+            }
+            // Update logo
+            else if (img.key === 'logo') {
+                document.querySelectorAll('img[src="G.jpg"]').forEach(el => {
+                    el.src = img.url;
+                });
+            }
+        });
     }
 
-    // ===== ✅ دالة loadWorkStatus (النسخة الموحدة - تحذف القديمة) =====
-    function loadWorkStatus() {
-        const adminData = loadAdminData();
+    // ===== Check Ban Status =====
+    async function checkBanStatus(phone) {
+        if (!supabaseClient) return false;
         
-        // التحقق من قفل الموقع
-        if (adminData && adminData.siteLocked) {
-            showLockScreen(adminData.lockMessage);
-            return;
-        }
+        const { data, error } = await supabaseClient
+            .from('banned')
+            .select('phone')
+            .eq('phone', phone)
+            .single();
         
-        // التحقق من حالة الموقع
-        const savedStatus = (adminData && adminData.siteStatus) || 
-                           localStorage.getItem('workStatus') || 
-                           'active';
-        updateWorkStatus(savedStatus);
-        
-        // تحديث الأرقام
-        if (adminData && adminData.phones) {
-            updatePhones(adminData.phones);
-        }
-        
-        // تحديث شريط الإعلانات
-        if (adminData && adminData.ticker) {
-            updateTicker(adminData.ticker);
-        }
-        
-        // التحقق من الأقسام المعطلة
-        if (adminData && adminData.sections) {
-            updateSectionsVisibility(adminData.sections);
-        }
+        return !error && data !== null;
     }
 
-    // ===== ✅ دالة showLockScreen =====
+    // ===== Save Order to Supabase =====
+    async function saveOrderToSupabase(orderData) {
+        // Check if user is banned
+        const isBanned = await checkBanStatus(orderData.phone);
+        if (isBanned) {
+            showToast('⛔ أنت محظور من تقديم الطلبات', 'error');
+            return false;
+        }
+        
+        const { error } = await supabaseClient.from('orders').insert({
+            id: orderData.id,
+            request_id: orderData.id,
+            type: orderData.type,
+            name: orderData.name,
+            phone: orderData.phone,
+            area: orderData.area,
+            landmark: orderData.landmark,
+            service_type: orderData.serviceType || null,
+            split_type: orderData.splitType || null,
+            condition: orderData.condition || null,
+            price: orderData.price || null,
+            notes: orderData.notes || orderData.extraInfo || null,
+            location_lat: orderData.location?.lat || null,
+            location_lon: orderData.location?.lon || null,
+            fingerprint: orderData.fingerprint?.userAgent || null,
+            created_at: new Date().toISOString()
+        });
+        
+        if (error) {
+            console.error('Error saving order:', error);
+            return false;
+        }
+        
+        return true;
+    }
+
+    // ===== UI Update Functions =====
     function showLockScreen(message) {
         document.body.innerHTML = `
             <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -2733,7 +2798,49 @@
         `;
     }
 
-    // ===== ✅ دالة updatePhones =====
+    const STATUS_CONFIG = {
+        active: {
+            class: 'active',
+            title: 'نشط الآن',
+            icon: 'fas fa-check-circle',
+            message: '<i class="fas fa-headset"></i> فريقنا جاهز لاستقبال طلباتكم'
+        },
+        inactive: {
+            class: 'inactive',
+            title: 'غير نشط',
+            icon: 'fas fa-times-circle',
+            message: '<i class="fas fa-moon"></i> الورشة مغلقة حالياً'
+        },
+        break: {
+            class: 'break',
+            title: 'استراحة',
+            icon: 'fas fa-coffee',
+            message: '<i class="fas fa-clock"></i> الفريق في استراحة مؤقتة'
+        },
+        busy: {
+            class: 'break',
+            title: 'مشغول',
+            icon: 'fas fa-user-clock',
+            message: '<i class="fas fa-user-clock"></i> الفريق مشغول حالياً'
+        }
+    };
+
+    function updateWorkStatus(status) {
+        const container = document.getElementById('workStatusContainer');
+        const title = document.getElementById('statusTitle');
+        const message = document.getElementById('statusMessage');
+        const icon = document.getElementById('statusIcon');
+        
+        if (!container || !title || !message || !icon) return;
+        
+        const config = STATUS_CONFIG[status] || STATUS_CONFIG.active;
+        
+        container.className = 'work-status-container ' + config.class;
+        title.textContent = config.title;
+        message.innerHTML = config.message;
+        icon.innerHTML = `<i class="${config.icon}"></i>`;
+    }
+
     function updatePhones(phones) {
         if (!phones) return;
         
@@ -2753,7 +2860,6 @@
         });
     }
 
-    // ===== ✅ دالة updateTicker =====
     function updateTicker(tickerItems) {
         const tickerWrap = document.querySelector('.ticker-wrap');
         if (tickerWrap && tickerItems.length > 0) {
@@ -2765,7 +2871,6 @@
         }
     }
 
-    // ===== ✅ دالة updateSectionsVisibility =====
     function updateSectionsVisibility(sections) {
         if (!sections) return;
         
@@ -2785,6 +2890,75 @@
             }
         });
     }
+
+    function updateTips(tips) {
+        const container = document.querySelector('.tips-container');
+        if (container && tips.length > 0) {
+            container.innerHTML = tips.map(tip => `
+                <div class="tip-card">
+                    <div class="tip-icon"><i class="fas ${tip.icon}"></i></div>
+                    <h3><i class="fas fa-info-circle"></i> ${tip.title}</h3>
+                    <p>${tip.text}</p>
+                    <a href="tel:07726283627" class="tip-contact">
+                        <i class="fas fa-phone"></i> 07726283627
+                    </a>
+                </div>
+            `).join('');
+        }
+    }
+
+    function updateWarnings(warnings) {
+        const container = document.querySelector('.warning-list');
+        if (container && warnings.length > 0) {
+            container.innerHTML = warnings.map(warn => `
+                <li class="warning-item">
+                    <i class="fas ${warn.icon}"></i>
+                    <p>${warn.text}</p>
+                </li>
+            `).join('');
+        }
+    }
+
+    function updateWelcome(welcome) {
+        if (!welcome) return;
+        
+        const title = document.querySelector('.welcome-header h1');
+        const subtitle = document.querySelector('.welcome-header p');
+        const text = document.querySelector('.welcome-content > p');
+        
+        if (title && welcome.title) title.innerHTML = welcome.title;
+        if (subtitle && welcome.subtitle) subtitle.textContent = welcome.subtitle;
+        if (text && welcome.text) text.textContent = welcome.text;
+        
+        if (welcome.instructions) {
+            const list = document.querySelector('.instructions ul');
+            if (list) {
+                list.innerHTML = welcome.instructions.map(inst => `
+                    <li><i class="fas fa-check-circle"></i> ${inst}</li>
+                `).join('');
+            }
+        }
+    }
+
+    // ===== Prevent Copy/Select =====
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('selectstart', (e) => e.preventDefault());
+    document.addEventListener('copy', (e) => e.preventDefault());
+    document.addEventListener('cut', (e) => e.preventDefault());
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+    
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey && (e.key === 'c' || e.key === 'C' || 
+                          e.key === 'x' || e.key === 'X' || 
+                          e.key === 'a' || e.key === 'A' ||
+                          e.key === 'u' || e.key === 'U' ||
+                          e.key === 's' || e.key === 'S')) || 
+            e.key === 'F12') {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        }
+    });
 
     // ===== Slider System =====
     let currentSlide = 0;
@@ -2830,9 +3004,7 @@
     function updateSlider() {
         const track = document.getElementById('sliderTrack');
         track.style.transform = `translateX(${currentSlide * 100}%)`;
-        
-        document.getElementById('sliderCounter').textContent = 
-            `${currentSlide + 1} / ${totalSlides}`;
+        document.getElementById('sliderCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
         
         document.querySelectorAll('.thumb').forEach((thumb, i) => {
             thumb.classList.toggle('active', i === currentSlide);
@@ -2840,9 +3012,7 @@
 
         const activeThumb = document.querySelectorAll('.thumb')[currentSlide];
         if (activeThumb) {
-            activeThumb.scrollIntoView({ 
-                behavior: 'smooth', block: 'nearest', inline: 'center' 
-            });
+            activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
     }
 
@@ -2918,8 +3088,7 @@
     // ===== Three.js Particles =====
     function initParticles() {
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 
-            window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('canvas-container').appendChild(renderer.domElement);
@@ -2932,8 +3101,7 @@
             posArray[i] = (Math.random() - 0.5) * 10;
         }
 
-        particlesGeometry.setAttribute('position', 
-            new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         const particlesMaterial = new THREE.PointsMaterial({
             size: 0.02,
             color: 0x00d4ff,
@@ -2965,13 +3133,11 @@
 
     // ===== SPA Navigation =====
     function navigateTo(pageId) {
-        document.querySelectorAll('.page').forEach(page => 
-            page.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
         const targetPage = document.getElementById('page-' + pageId);
         if (targetPage) targetPage.classList.add('active');
         
-        document.querySelectorAll('.nav-links a').forEach(link => 
-            link.classList.remove('active'));
+        document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
         const links = document.querySelectorAll('.nav-links a');
         links.forEach(link => {
             const onclickAttr = link.getAttribute('onclick');
@@ -3029,8 +3195,7 @@
         closeLocationModal();
         const statusEl = document.getElementById(currentLocationForm + 'LocationStatus');
         if (statusEl) {
-            statusEl.innerHTML = '<span style="color: var(--accent);">' +
-                '<i class="fas fa-times-circle"></i> تم إلغاء تحديد الموقع</span>';
+            statusEl.innerHTML = '<span style="color: var(--accent);"><i class="fas fa-times-circle"></i> تم إلغاء تحديد الموقع</span>';
         }
     }
 
@@ -3041,8 +3206,7 @@
         if (!navigator.geolocation) {
             closeLocationModal();
             if (statusEl) {
-                statusEl.innerHTML = '<span style="color: var(--accent);">' +
-                    '<i class="fas fa-times-circle"></i> المتصفح لا يدعم تحديد الموقع</span>';
+                statusEl.innerHTML = '<span style="color: var(--accent);"><i class="fas fa-times-circle"></i> المتصفح لا يدعم تحديد الموقع</span>';
             }
             showToast('المتصفح لا يدعم تحديد الموقع', 'error');
             return;
@@ -3057,9 +3221,7 @@
                 closeLocationModal();
                 
                 if (statusEl) {
-                    statusEl.innerHTML = `<span style="color: #00c853;">
-                        <i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح
-                        </span><br>
+                    statusEl.innerHTML = `<span style="color: #00c853;"><i class="fas fa-check-circle"></i> تم تحديد الموقع بنجاح</span><br>
                         <small>الإحداثيات: ${lat.toFixed(5)}, ${lon.toFixed(5)}</small>`;
                 }
                 if (btn) {
@@ -3072,17 +3234,12 @@
             (error) => {
                 closeLocationModal();
                 let errorMsg = 'حدث خطأ في تحديد الموقع';
-                if (error.code === 1) {
-                    errorMsg = 'تم رفض إذن الموقع - يرجى السماح بالوصول من إعدادات المتصفح';
-                } else if (error.code === 2) {
-                    errorMsg = 'الموقع غير متاح - تأكد من تفعيل GPS';
-                } else if (error.code === 3) {
-                    errorMsg = 'انتهت مهلة الطلب - يرجى المحاولة مرة أخرى';
-                }
+                if (error.code === 1) errorMsg = 'تم رفض إذن الموقع';
+                else if (error.code === 2) errorMsg = 'الموقع غير متاح';
+                else if (error.code === 3) errorMsg = 'انتهت مهلة الطلب';
                 
                 if (statusEl) {
-                    statusEl.innerHTML = `<span style="color: var(--accent);">
-                        <i class="fas fa-times-circle"></i> ${errorMsg}</span>`;
+                    statusEl.innerHTML = `<span style="color: var(--accent);"><i class="fas fa-times-circle"></i> ${errorMsg}</span>`;
                 }
                 showToast(errorMsg, 'error');
             },
@@ -3094,11 +3251,8 @@
     function generateUniqueID() {
         const timestamp = Date.now().toString(36);
         const randomStr = Math.random().toString(36).substring(2, 8);
-        const fingerprint = navigator.userAgent + navigator.language + 
-                           screen.width + screen.height;
-        const hash = fingerprint.split('').reduce((a,b) => { 
-            a = ((a << 5) - a) + b.charCodeAt(0); return a & a 
-        }, 0);
+        const fingerprint = navigator.userAgent + navigator.language + screen.width + screen.height;
+        const hash = fingerprint.split('').reduce((a,b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
         return `REQ-${timestamp}-${randomStr}-${Math.abs(hash).toString(36).toUpperCase()}`;
     }
 
@@ -3162,19 +3316,16 @@
 
     // ===== Price Update =====
     function updateSellPrice(value) {
-        document.getElementById('sellPriceDisplay').textContent = 
-            parseInt(value).toLocaleString() + ' د.ع';
+        document.getElementById('sellPriceDisplay').textContent = parseInt(value).toLocaleString() + ' د.ع';
     }
 
     function updateBuyPrice(value) {
-        document.getElementById('buyPriceDisplay').textContent = 
-            parseInt(value).toLocaleString() + ' د.ع';
+        document.getElementById('buyPriceDisplay').textContent = parseInt(value).toLocaleString() + ' د.ع';
     }
 
     // ===== Marketplace Tabs =====
     function switchMarketTab(tab, element) {
-        document.querySelectorAll('.market-tab').forEach(t => 
-            t.classList.remove('active'));
+        document.querySelectorAll('.market-tab').forEach(t => t.classList.remove('active'));
         element.classList.add('active');
         
         if (tab === 'sell') {
@@ -3211,8 +3362,7 @@
             item.className = 'preview-item';
             item.innerHTML = `
                 <img src="${img}" alt="صورة ${index + 1}">
-                <button type="button" class="remove-img" 
-                        onclick="removeSellImage(${index})">
+                <button type="button" class="remove-img" onclick="removeSellImage(${index})">
                     <i class="fas fa-times"></i>
                 </button>
             `;
@@ -3278,6 +3428,23 @@ ${userLocations.sell ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=${us
 ورشة المنتظر
         `;
 
+        // Save to Supabase
+        const orderData = {
+            id: requestID,
+            type: 'sell',
+            name, phone, area, landmark,
+            splitType: type,
+            condition,
+            price,
+            notes,
+            location: userLocations.sell,
+            fingerprint,
+            timestamp
+        };
+        
+        const saved = await saveOrderToSupabase(orderData);
+        if (!saved) return;
+
         const success = await sendToTelegram(message);
         
         if (success) {
@@ -3300,11 +3467,6 @@ ${userLocations.sell ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=${us
             sellImagesData = [];
             renderImagePreviews();
             userLocations.sell = null;
-            
-            localStorage.setItem(`request_${requestID}`, JSON.stringify({
-                type: 'sell', name, phone, area, landmark, splitType: type, 
-                condition, price, notes, timestamp, fingerprint
-            }));
         } else {
             showToast('حدث خطأ في الإرسال', 'error');
         }
@@ -3355,6 +3517,22 @@ ${userLocations.buy ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=${use
 ورشة المنتظر
         `;
 
+        // Save to Supabase
+        const orderData = {
+            id: requestID,
+            type: 'buy',
+            name, phone, area, landmark,
+            splitType: type,
+            price,
+            notes,
+            location: userLocations.buy,
+            fingerprint,
+            timestamp
+        };
+        
+        const saved = await saveOrderToSupabase(orderData);
+        if (!saved) return;
+
         const success = await sendToTelegram(message);
         
         if (success) {
@@ -3369,11 +3547,6 @@ ${userLocations.buy ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=${use
             document.getElementById('buyPriceDisplay').textContent = '50,000 د.ع';
             document.getElementById('buyNotes').value = '';
             userLocations.buy = null;
-            
-            localStorage.setItem(`request_${requestID}`, JSON.stringify({
-                type: 'buy', name, phone, area, landmark, splitType: type, 
-                price, notes, timestamp, fingerprint
-            }));
         } else {
             showToast('حدث خطأ في الإرسال', 'error');
         }
@@ -3421,6 +3594,26 @@ ${userLocations.booking ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=$
 ورشة المنتظر
         `;
 
+        // Save to Supabase
+        const orderData = {
+            id: requestID,
+            type: 'booking',
+            name: fullName,
+            phone, area, landmark,
+            serviceType,
+            notes: extraInfo,
+            location: userLocations.booking,
+            fingerprint,
+            timestamp
+        };
+        
+        const saved = await saveOrderToSupabase(orderData);
+        if (!saved) {
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+            return;
+        }
+
         const success = await sendToTelegram(message);
         
         btn.classList.remove('loading');
@@ -3431,9 +3624,6 @@ ${userLocations.booking ? `<b>الموقع:</b>\nhttps://www.google.com/maps?q=$
             document.getElementById('bookingForm').reset();
             userLocations.booking = null;
             document.getElementById('bookingLocationStatus').innerHTML = '';
-            localStorage.setItem(`request_${requestID}`, JSON.stringify({
-                fullName, phone, area, landmark, serviceType, extraInfo, timestamp, fingerprint
-            }));
         } else {
             showToast('حدث خطأ في الإرسال', 'error');
         }
@@ -3481,17 +3671,10 @@ ${message}
         }, 5000);
     }
 
-    // ===== ✅ Initialize on Load (محدث) =====
+    // ===== Initialize on Load =====
     window.addEventListener('DOMContentLoaded', () => {
         initSlider();
-        loadWorkStatus();
-        
-        // الاستماع للتغييرات من لوحة التحكم
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'workshop_admin_data') {
-                loadWorkStatus();
-            }
-        });
+        initSupabase();
     });
 
     // ===== GSAP Animations =====
