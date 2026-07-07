@@ -1,1603 +1,120 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | ورشة المنتظر</title>
+<script>
+    // ===== Configuration =====
+    let CORRECT_PIN = null;
+    let supabaseClient = null;
+    let currentUploadTarget = null;
+    let currentStatus = 'active';
     
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        :root {
-            --primary: #00d4ff;
-            --secondary: #0099cc;
-            --accent: #ff6b6b;
-            --gold: #ffd700;
-            --dark: #0a0a0a;
-            --darker: #050505;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --active-color: #00ff88;
-            --inactive-color: #888888;
-            --break-color: #ffaa00;
-            --busy-color: #ff4757;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Tajawal', sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        input, textarea, select {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-
-        body {
-            background: var(--dark);
-            color: #fff;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ===== Connection Status ===== */
-        .connection-status {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            padding: 8px 15px;
-            border-radius: 50px;
-            font-size: 0.85em;
-            font-weight: 600;
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(10px);
-        }
-
-        .connection-status.connected {
-            background: rgba(0, 255, 136, 0.15);
-            color: var(--active-color);
-            border: 1px solid var(--active-color);
-        }
-
-        .connection-status.disconnected {
-            background: rgba(255, 107, 107, 0.15);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-
-        .connection-status.syncing {
-            background: rgba(255, 215, 0, 0.15);
-            color: var(--gold);
-            border: 1px solid var(--gold);
-        }
-
-        .connection-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: pulse-dot 2s infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* ===== Login Screen ===== */
-        .login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        .login-screen::before {
-            content: '';
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(0,212,255,0.15), transparent 70%);
-            border-radius: 50%;
-            animation: float-bg 8s ease-in-out infinite;
-        }
-
-        @keyframes float-bg {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-        }
-
-        .login-box {
-            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-            backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 50px 40px;
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 100px rgba(0,212,255,0.15);
-            position: relative;
-            z-index: 1;
-            animation: loginSlideIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        @keyframes loginSlideIn {
-            from { opacity: 0; transform: translateY(50px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .login-logo {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 20px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3em;
-            color: #fff;
-            box-shadow: 0 10px 40px rgba(0,212,255,0.4);
-            animation: pulse-logo 2s infinite;
-        }
-
-        @keyframes pulse-logo {
-            0%, 100% { box-shadow: 0 10px 40px rgba(0,212,255,0.4); }
-            50% { box-shadow: 0 10px 40px rgba(0,212,255,0.7), 0 0 0 20px rgba(0,212,255,0.1); }
-        }
-
-        .login-title {
-            font-size: 2em;
-            background: linear-gradient(135deg, var(--primary), var(--gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            font-weight: 800;
-        }
-
-        .login-subtitle {
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 30px;
-            font-size: 1em;
-        }
-
-        .pin-input-container {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 30px;
-            direction: ltr;
-        }
-
-        .pin-digit {
-            width: 60px;
-            height: 70px;
-            background: rgba(0,0,0,0.4);
-            border: 2px solid var(--glass-border);
-            border-radius: 15px;
-            color: var(--primary);
-            font-size: 2em;
-            font-weight: 700;
-            text-align: center;
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .pin-digit:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 20px rgba(0,212,255,0.3);
-            transform: scale(1.05);
-        }
-
-        .pin-digit.filled {
-            background: rgba(0,212,255,0.1);
-            border-color: var(--primary);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border: none;
-            border-radius: 50px;
-            color: #fff;
-            font-size: 1.1em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,212,255,0.4);
-        }
-
-        .login-error {
-            color: var(--accent);
-            margin-top: 15px;
-            font-size: 0.95em;
-            min-height: 20px;
-        }
-
-        /* ===== Admin Dashboard ===== */
-        .admin-container {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .admin-container.active {
-            display: flex;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: rgba(10,10,10,0.95);
-            backdrop-filter: blur(20px);
-            border-left: 1px solid var(--glass-border);
-            height: 100vh;
-            position: fixed;
-            right: 0;
-            top: 0;
-            overflow-y: auto;
-            z-index: 100;
-            transition: all 0.3s;
-        }
-
-        .sidebar-header {
-            padding: 25px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            text-align: center;
-        }
-
-        .sidebar-header h2 {
-            background: linear-gradient(135deg, var(--primary), var(--gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1.3em;
-            margin-bottom: 5px;
-        }
-
-        .sidebar-header p {
-            color: rgba(255,255,255,0.5);
-            font-size: 0.85em;
-        }
-
-        .sidebar-menu {
-            padding: 20px 15px;
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 8px;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .sidebar-menu a:hover {
-            background: var(--glass);
-            color: var(--primary);
-        }
-
-        .sidebar-menu a.active {
-            background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,212,255,0.05));
-            color: var(--primary);
-            border: 1px solid rgba(0,212,255,0.3);
-        }
-
-        .sidebar-menu a i {
-            width: 20px;
-            text-align: center;
-            font-size: 1.1em;
-        }
-
-        .sidebar-divider {
-            height: 1px;
-            background: var(--glass-border);
-            margin: 15px 0;
-        }
-
-        .logout-btn {
-            margin: 20px 15px;
-            padding: 12px;
-            background: linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,107,107,0.05));
-            border: 1px solid rgba(255,107,107,0.3);
-            color: var(--accent);
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-right: 280px;
-            padding: 30px;
-            min-height: 100vh;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px 25px;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-        }
-
-        .top-bar h1 {
-            font-size: 1.8em;
-            background: linear-gradient(135deg, var(--primary), var(--gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .top-bar-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .site-status-badge {
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95em;
-        }
-
-        .site-status-badge.active {
-            background: rgba(0,255,136,0.15);
-            color: var(--active-color);
-            border: 1px solid var(--active-color);
-        }
-
-        .site-status-badge.locked {
-            background: rgba(255,71,87,0.15);
-            color: var(--busy-color);
-            border: 1px solid var(--busy-color);
-        }
-
-        .site-status-badge .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        /* Dashboard Sections */
-        .dashboard-section {
-            display: none;
-            animation: fadeIn 0.5s;
-        }
-
-        .dashboard-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 25px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 15px 40px rgba(0,212,255,0.15);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--gold));
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-            color: #fff;
-            margin-bottom: 15px;
-        }
-
-        .stat-value {
-            font-size: 2.2em;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.95em;
-        }
-
-        /* Panel */
-        .panel {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .panel-title {
-            font-size: 1.3em;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .panel-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Form Controls */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 0.95em;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 18px;
-            background: rgba(0,0,0,0.3);
-            border: 2px solid var(--glass-border);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 1em;
-            transition: all 0.3s;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(0,212,255,0.2);
-        }
-
-        textarea.form-control {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 10px 25px;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95em;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,212,255,0.3);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, var(--active-color), #00c853);
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--accent), #ee5a5a);
-            color: #fff;
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, var(--break-color), #ff8800);
-            color: #fff;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--glass-border);
-            color: #fff;
-        }
-
-        .btn-outline:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* Status Selector */
-        .status-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .status-option {
-            padding: 20px;
-            background: var(--glass);
-            border: 2px solid var(--glass-border);
-            border-radius: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .status-option:hover {
-            transform: translateY(-3px);
-        }
-
-        .status-option.selected {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0,212,255,0.3);
-        }
-
-        .status-option.active { border-color: var(--active-color); background: rgba(0,255,136,0.1); }
-        .status-option.inactive { border-color: var(--inactive-color); background: rgba(136,136,136,0.1); }
-        .status-option.break { border-color: var(--break-color); background: rgba(255,170,0,0.1); }
-        .status-option.busy { border-color: var(--busy-color); background: rgba(255,71,87,0.1); }
-
-        .status-option i {
-            font-size: 2em;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .status-option.active i { color: var(--active-color); }
-        .status-option.inactive i { color: var(--inactive-color); }
-        .status-option.break i { color: var(--break-color); }
-        .status-option.busy i { color: var(--busy-color); }
-
-        /* Image Grid */
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .image-item {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid var(--glass-border);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .image-item:hover {
-            border-color: var(--primary);
-            transform: scale(1.03);
-        }
-
-        .image-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .image-item .image-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
-            padding: 5px;
-            text-align: center;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .image-item .image-actions {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            display: flex;
-            gap: 5px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .image-item:hover .image-actions {
-            opacity: 1;
-        }
-
-        .image-action-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 0.8em;
-        }
-
-        .image-action-btn.edit { background: var(--primary); }
-        .image-action-btn.delete { background: var(--accent); }
-
-        /* Orders List */
-        .orders-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .order-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 20px;
-            transition: all 0.3s;
-        }
-
-        .order-card:hover {
-            border-color: var(--primary);
-            transform: translateX(-5px);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .order-id {
-            color: var(--primary);
-            font-weight: 700;
-            font-size: 1.1em;
-        }
-
-        .order-time {
-            color: rgba(255,255,255,0.5);
-            font-size: 0.9em;
-        }
-
-        .order-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-        }
-
-        .order-info-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255,255,255,0.8);
-            font-size: 0.95em;
-        }
-
-        .order-info-item i {
-            color: var(--primary);
-            width: 20px;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        /* Section Toggles */
-        .section-toggles {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .section-toggle {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s;
-        }
-
-        .section-toggle.enabled {
-            border-color: var(--active-color);
-            background: rgba(0,255,136,0.05);
-        }
-
-        .section-toggle.disabled {
-            border-color: var(--accent);
-            background: rgba(255,107,107,0.05);
-            opacity: 0.7;
-        }
-
-        .section-toggle-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-toggle-info i {
-            font-size: 1.5em;
-            color: var(--primary);
-        }
-
-        /* Toggle Switch */
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 26px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255,255,255,0.1);
-            transition: .4s;
-            border-radius: 26px;
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            right: 3px;
-            bottom: 3px;
-            background-color: #fff;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background: linear-gradient(135deg, var(--active-color), #00c853);
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(-24px);
-        }
-
-        /* Notifications */
-        .notification-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            margin-bottom: 10px;
-            transition: all 0.3s;
-        }
-
-        .notification-item:hover {
-            border-color: var(--primary);
-        }
-
-        .notification-item.new {
-            border-right: 3px solid var(--primary);
-            background: rgba(0,212,255,0.05);
-        }
-
-        .notification-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-
-        .notification-text {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9em;
-            margin-bottom: 5px;
-        }
-
-        .notification-time {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.8em;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
-            padding: 15px 30px;
-            border-radius: 50px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            z-index: 10000;
-            opacity: 0;
-            transition: all 0.3s;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .toast.error {
-            background: linear-gradient(135deg, var(--accent), #ee5a5a);
-        }
-
-        /* Mobile Menu */
-        .mobile-menu-toggle {
-            display: none;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            color: var(--primary);
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.2em;
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            .mobile-menu-toggle {
-                display: block;
+    // ⚠️ بيانات Supabase
+    const SUPABASE_URL = 'https://jnedawtieiqtmagjbhld.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZWRhd3RpZWlxdG1hZ2piaGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTI1MDcsImV4cCI6MjA5ODkyODUwN30.6AXVBT1l37mOP6ykJDRuFRSN_mrMr_EmlRoVKSxVQJU';
+
+    // ===== تهيئة Supabase =====
+    function initSupabase() {
+        try {
+            // استخدام window.supabase لتجنب التضارب
+            if (typeof window.supabase === 'undefined') {
+                console.error('❌ Supabase SDK غير محمّل!');
+                updateConnectionStatus('disconnected', 'SDK غير محمّل');
+                return false;
             }
-
-            .sidebar {
-                right: -280px;
-            }
-
-            .sidebar.open {
-                right: 0;
-            }
-
-            .main-content {
-                margin-right: 0;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .main-content {
-                padding: 15px;
-            }
-
-            .top-bar {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .top-bar h1 {
-                font-size: 1.4em;
-            }
-
-            .pin-digit {
-                width: 50px;
-                height: 60px;
-                font-size: 1.5em;
-            }
-
-            .login-box {
-                padding: 30px 20px;
-            }
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--darker); }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
-
-        /* Search Box */
-        .search-box {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 45px 12px 18px;
-            background: rgba(0,0,0,0.3);
-            border: 2px solid var(--glass-border);
-            border-radius: 50px;
-            color: #fff;
-            font-size: 1em;
-        }
-
-        .search-box i {
-            position: absolute;
-            right: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--primary);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: rgba(255,255,255,0.5);
-        }
-
-        .empty-state i {
-            font-size: 4em;
-            margin-bottom: 20px;
-            color: var(--primary);
-            opacity: 0.3;
-        }
-
-        .empty-state h3 {
-            margin-bottom: 10px;
-            color: rgba(255,255,255,0.7);
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Connection Status -->
-    <div class="connection-status disconnected" id="connectionStatus">
-        <span class="connection-dot"></span>
-        <span id="connectionText">جاري الاتصال...</span>
-    </div>
-
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-box">
-            <div class="login-logo">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <h1 class="login-title">لوحة التحكم</h1>
-            <p class="login-subtitle">ورشة المنتظر - أدخل رمز الدخول</p>
             
-            <div class="pin-input-container">
-                <input type="password" class="pin-digit" maxlength="1" data-index="0" inputmode="numeric">
-                <input type="password" class="pin-digit" maxlength="1" data-index="1" inputmode="numeric">
-                <input type="password" class="pin-digit" maxlength="1" data-index="2" inputmode="numeric">
-                <input type="password" class="pin-digit" maxlength="1" data-index="3" inputmode="numeric">
-                <input type="password" class="pin-digit" maxlength="1" data-index="4" inputmode="numeric">
-            </div>
-            
-            <button class="login-btn" onclick="attemptLogin()">
-                <i class="fas fa-sign-in-alt"></i>
-                دخول
-            </button>
-            
-            <div class="login-error" id="loginError"></div>
-        </div>
-    </div>
-
-    <!-- Admin Dashboard -->
-    <div class="admin-container" id="adminContainer">
-        
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2><i class="fas fa-cogs"></i> لوحة التحكم</h2>
-                <p>ورشة المنتظر</p>
-            </div>
-            
-            <ul class="sidebar-menu">
-                <li><a class="active" onclick="showSection('dashboard', this)"><i class="fas fa-tachometer-alt"></i> الرئيسية</a></li>
-                <li><a onclick="showSection('orders', this)"><i class="fas fa-clipboard-list"></i> الطلبات</a></li>
-                <li><a onclick="showSection('notifications', this)"><i class="fas fa-bell"></i> الإشعارات</a></li>
-                
-                <div class="sidebar-divider"></div>
-                
-                <li><a onclick="showSection('site-status', this)"><i class="fas fa-signal"></i> حالة الموقع</a></li>
-                <li><a onclick="showSection('sections-control', this)"><i class="fas fa-th-large"></i> التحكم بالأقسام</a></li>
-                <li><a onclick="showSection('lock-site', this)"><i class="fas fa-lock"></i> قفل الموقع</a></li>
-                
-                <div class="sidebar-divider"></div>
-                
-                <li><a onclick="showSection('images', this)"><i class="fas fa-images"></i> إدارة الصور</a></li>
-                <li><a onclick="showSection('ticker', this)"><i class="fas fa-bullhorn"></i> شريط الإعلانات</a></li>
-                <li><a onclick="showSection('tips', this)"><i class="fas fa-lightbulb"></i> النصائح</a></li>
-                <li><a onclick="showSection('warnings', this)"><i class="fas fa-exclamation-triangle"></i> التحذيرات</a></li>
-                <li><a onclick="showSection('welcome', this)"><i class="fas fa-hand-sparkles"></i> رسالة الترحيب</a></li>
-                
-                <div class="sidebar-divider"></div>
-                
-                <li><a onclick="showSection('phones', this)"><i class="fas fa-phone"></i> أرقام الهواتف</a></li>
-                <li><a onclick="showSection('ban', this)"><i class="fas fa-ban"></i> الحظر</a></li>
-            </ul>
-            
-            <button class="logout-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
-                تسجيل الخروج
-            </button>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="top-bar">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <h1 id="pageTitle">الرئيسية</h1>
-                </div>
-                <div class="top-bar-actions">
-                    <div class="site-status-badge active" id="siteStatusBadge">
-                        <span class="dot"></span>
-                        <span id="siteStatusText">نشط</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dashboard Section -->
-            <div class="dashboard-section active" id="section-dashboard">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
-                        <div class="stat-value" id="stat-orders">0</div>
-                        <div class="stat-label">إجمالي الطلبات</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--active-color), #00c853);"><i class="fas fa-calendar-check"></i></div>
-                        <div class="stat-value" id="stat-bookings">0</div>
-                        <div class="stat-label">حجوزات اليوم</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--gold), #ffa500);"><i class="fas fa-store"></i></div>
-                        <div class="stat-value" id="stat-market">0</div>
-                        <div class="stat-label">طلبات البيع/الشراء</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: linear-gradient(135deg, var(--accent), #ee5a5a);"><i class="fas fa-ban"></i></div>
-                        <div class="stat-value" id="stat-banned">0</div>
-                        <div class="stat-label">المحظورين</div>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <i class="fas fa-history"></i>
-                            آخر الطلبات
-                        </div>
-                    </div>
-                    <div class="orders-list" id="recentOrders">
-                        <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <h3>لا توجد طلبات حتى الآن</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Orders Section -->
-            <div class="dashboard-section" id="section-orders">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-search"></i> البحث عن طلب</div>
-                    </div>
-                    <div class="search-box">
-                        <input type="text" id="orderSearch" placeholder="ابحث برقم الطلب أو اسم العميل أو الهاتف..." oninput="searchOrders()">
-                        <i class="fas fa-search"></i>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-clipboard-list"></i> جميع الطلبات</div>
-                        <div class="panel-actions">
-                            <button class="btn btn-danger" onclick="clearAllOrders()">
-                                <i class="fas fa-trash"></i> حذف الكل
-                            </button>
-                        </div>
-                    </div>
-                    <div class="orders-list" id="allOrders">
-                        <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <h3>لا توجد طلبات</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notifications Section -->
-            <div class="dashboard-section" id="section-notifications">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-bell"></i> الإشعارات</div>
-                        <button class="btn btn-outline" onclick="clearNotifications()">
-                            <i class="fas fa-check"></i> تحديد الكل كمقروء
-                        </button>
-                    </div>
-                    <div id="notificationsList">
-                        <div class="empty-state">
-                            <i class="fas fa-bell-slash"></i>
-                            <h3>لا توجد إشعارات</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Site Status Section -->
-            <div class="dashboard-section" id="section-site-status">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-signal"></i> حالة الموقع</div>
-                    </div>
-                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
-                        اختر حالة الورشة الحالية - ستظهر للزوار في الصفحة الرئيسية
-                    </p>
-                    
-                    <div class="status-selector">
-                        <div class="status-option active" data-status="active" onclick="selectStatus('active')">
-                            <i class="fas fa-check-circle"></i>
-                            <div>نشط الآن</div>
-                        </div>
-                        <div class="status-option inactive" data-status="inactive" onclick="selectStatus('inactive')">
-                            <i class="fas fa-times-circle"></i>
-                            <div>غير نشط</div>
-                        </div>
-                        <div class="status-option break" data-status="break" onclick="selectStatus('break')">
-                            <i class="fas fa-coffee"></i>
-                            <div>استراحة</div>
-                        </div>
-                        <div class="status-option busy" data-status="busy" onclick="selectStatus('busy')">
-                            <i class="fas fa-user-clock"></i>
-                            <div>مشغول</div>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-primary" onclick="saveSiteStatus()">
-                        <i class="fas fa-save"></i> حفظ الحالة
-                    </button>
-                </div>
-            </div>
-
-            <!-- Sections Control -->
-            <div class="dashboard-section" id="section-sections-control">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-th-large"></i> التحكم بالأقسام</div>
-                    </div>
-                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
-                        قم بتفعيل أو تعطيل أي قسم من أقسام الموقع
-                    </p>
-                    
-                    <div class="section-toggles" id="sectionToggles"></div>
-
-                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="saveSectionsState()">
-                        <i class="fas fa-save"></i> حفظ التغييرات
-                    </button>
-                </div>
-            </div>
-
-            <!-- Lock Site -->
-            <div class="dashboard-section" id="section-lock-site">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-lock"></i> قفل الموقع</div>
-                    </div>
-                    
-                    <div style="text-align: center; padding: 20px;">
-                        <i class="fas fa-shield-alt" style="font-size: 4em; color: var(--accent); margin-bottom: 20px;"></i>
-                        <h3 style="margin-bottom: 15px;">قفل الموقع بالكامل</h3>
-                        <p style="color: rgba(255,255,255,0.7); margin-bottom: 25px;">
-                            عند قفل الموقع، سيظهر للزوار رسالة الصيانة فقط
-                        </p>
-
-                        <div class="form-group">
-                            <label>رسالة القفل</label>
-                            <textarea class="form-control" id="lockMessage" placeholder="الموقع مغلق للصيانة، سنعود قريباً..."></textarea>
-                        </div>
-
-                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                            <button class="btn btn-danger" onclick="lockSite()">
-                                <i class="fas fa-lock"></i> قفل الموقع
-                            </button>
-                            <button class="btn btn-success" onclick="unlockSite()">
-                                <i class="fas fa-unlock"></i> فتح الموقع
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Images Management -->
-            <div class="dashboard-section" id="section-images">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-images"></i> إدارة الصور</div>
-                    </div>
-
-                    <h3 style="color: var(--gold); margin-bottom: 15px;">
-                        <i class="fas fa-photo-video"></i> صور الألبوم (S1 - S18)
-                    </h3>
-                    <div class="image-grid" id="sliderImagesGrid"></div>
-
-                    <h3 style="color: var(--gold); margin: 30px 0 15px;">
-                        <i class="fas fa-th"></i> صور المعرض (1 - 9)
-                    </h3>
-                    <div class="image-grid" id="galleryImagesGrid"></div>
-
-                    <h3 style="color: var(--gold); margin: 30px 0 15px;">
-                        <i class="fas fa-users"></i> صور المنصبين (A1 - A3)
-                    </h3>
-                    <div class="image-grid" id="techniciansImagesGrid"></div>
-
-                    <h3 style="color: var(--gold); margin: 30px 0 15px;">
-                        <i class="fas fa-crown"></i> شعار الموقع
-                    </h3>
-                    <div class="image-grid" id="logoImageGrid"></div>
-                </div>
-            </div>
-
-            <!-- Ticker Management -->
-            <div class="dashboard-section" id="section-ticker">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-bullhorn"></i> شريط الإعلانات</div>
-                    </div>
-                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
-                        أضف أو عدّل عناصر شريط الإعلانات المتحرك
-                    </p>
-                    
-                    <div id="tickerItems"></div>
-
-                    <button class="btn btn-primary" onclick="addTickerItem()">
-                        <i class="fas fa-plus"></i> إضافة عنصر جديد
-                    </button>
-
-                    <button class="btn btn-success" style="margin-top: 15px;" onclick="saveTicker()">
-                        <i class="fas fa-save"></i> حفظ التغييرات
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tips Management -->
-            <div class="dashboard-section" id="section-tips">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-lightbulb"></i> إدارة النصائح</div>
-                    </div>
-                    
-                    <div id="tipsList"></div>
-
-                    <button class="btn btn-primary" onclick="addTip()">
-                        <i class="fas fa-plus"></i> إضافة نصيحة جديدة
-                    </button>
-
-                    <button class="btn btn-success" style="margin-top: 15px;" onclick="saveTips()">
-                        <i class="fas fa-save"></i> حفظ التغييرات
-                    </button>
-                </div>
-            </div>
-
-            <!-- Warnings Management -->
-            <div class="dashboard-section" id="section-warnings">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-exclamation-triangle"></i> إدارة التحذيرات</div>
-                    </div>
-                    
-                    <div id="warningsList"></div>
-
-                    <button class="btn btn-primary" onclick="addWarning()">
-                        <i class="fas fa-plus"></i> إضافة تحذير جديد
-                    </button>
-
-                    <button class="btn btn-success" style="margin-top: 15px;" onclick="saveWarnings()">
-                        <i class="fas fa-save"></i> حفظ التغييرات
-                    </button>
-                </div>
-            </div>
-
-            <!-- Welcome Message -->
-            <div class="dashboard-section" id="section-welcome">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-hand-sparkles"></i> رسالة الترحيب</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>العنوان الرئيسي</label>
-                        <input type="text" class="form-control" id="welcomeTitle" placeholder="أهلاً بك في ورشة المنتظر">
-                    </div>
-
-                    <div class="form-group">
-                        <label>العنوان الفرعي</label>
-                        <input type="text" class="form-control" id="welcomeSubtitle" placeholder="لتنصيب وصيانة السبلت">
-                    </div>
-
-                    <div class="form-group">
-                        <label>نص الترحيب</label>
-                        <textarea class="form-control" id="welcomeText" placeholder="مرحباً بك..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>عنوان التعليمات</label>
-                        <input type="text" class="form-control" id="instructionsTitle" placeholder="قبل البدء يرجى قراءة التعليمات">
-                    </div>
-
-                    <div class="form-group">
-                        <label>التعليمات (كل سطر تعليمات)</label>
-                        <textarea class="form-control" id="instructionsList" placeholder="اختر الخدمة المناسبة&#10;أدخل معلومات صحيحة"></textarea>
-                    </div>
-
-                    <button class="btn btn-primary" onclick="saveWelcome()">
-                        <i class="fas fa-save"></i> حفظ التغييرات
-                    </button>
-                </div>
-            </div>
-
-            <!-- Phones Management -->
-            <div class="dashboard-section" id="section-phones">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-phone"></i> أرقام الهواتف</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-user-tie"></i> المنصب الأول</label>
-                        <input type="tel" class="form-control" id="phone1" placeholder="07726283627">
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-user-cog"></i> المنصب الثاني</label>
-                        <input type="tel" class="form-control" id="phone2" placeholder="07726392793">
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-user-hard-hat"></i> المنصب الثالث</label>
-                        <input type="tel" class="form-control" id="phone3" placeholder="07728483629">
-                    </div>
-
-                    <button class="btn btn-primary" onclick="savePhones()">
-                        <i class="fas fa-save"></i> حفظ الأرقام
-                    </button>
-                </div>
-            </div>
-
-            <!-- Ban Management -->
-            <div class="dashboard-section" id="section-ban">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title"><i class="fas fa-ban"></i> إدارة الحظر</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>حظر مستخدم برقم الهاتف</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="tel" class="form-control" id="banPhone" placeholder="07xxxxxxxxx" style="flex: 1;">
-                            <button class="btn btn-danger" onclick="banUser()">
-                                <i class="fas fa-ban"></i> حظر
-                            </button>
-                        </div>
-                    </div>
-
-                    <h3 style="color: var(--gold); margin: 20px 0 15px;">المستخدمين المحظورين</h3>
-                    <div id="bannedList">
-                        <div class="empty-state">
-                            <i class="fas fa-check-circle"></i>
-                            <h3>لا يوجد مستخدمين محظورين</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">تم الحفظ بنجاح!</span>
-    </div>
-
-    <!-- Hidden file input -->
-    <input type="file" id="imageUploader" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
-
-    <script>
-        // ===== Configuration =====
-        // ===== Configuration =====
-let CORRECT_PIN = null;
-
-// ===== التحقق من كلمة المرور من قاعدة البيانات =====
-async function loadAdminCredentials() {
-    try {
-        const { data, error } = await supabase
-            .from('admins')
-            .select('password')
-            .eq('username', 'admin')
-            .eq('is_active', true)
-            .single();
-        
-        if (error) throw error;
-        
-        if (data) {
-            CORRECT_PIN = data.password;
-            console.log('✅ تم تحميل بيانات المسؤول');
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            console.log('✅ تم تهيئة Supabase بنجاح');
+            return true;
+        } catch (error) {
+            console.error('❌ خطأ في تهيئة Supabase:', error);
+            updateConnectionStatus('disconnected', 'خطأ في التهيئة');
+            return false;
         }
-    } catch (error) {
-        console.error('❌ خطأ في تحميل بيانات المسؤول:', error);
-        // في حالة الخطأ، استخدم القيمة الافتراضية
-        CORRECT_PIN = 'ONX44';
     }
-}
-        
-        // ⚠️ ضع هنا بيانات Supabase الخاصة بك
-        const SUPABASE_URL = 'https://jnedawtieiqtmagjbhld.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuZWRhd3RpZWlxdG1hZ2piaGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTI1MDcsImV4cCI6MjA5ODkyODUwN30.6AXVBT1l37mOP6ykJDRuFRSN_mrMr_EmlRoVKSxVQJU';
-        
-        // Initialize Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        let currentUploadTarget = null;
-        let currentStatus = 'active';
 
-        // ===== Connection Status =====
-        function updateConnectionStatus(status, text) {
-            const el = document.getElementById('connectionStatus');
-            const textEl = document.getElementById('connectionText');
+    // ===== Connection Status =====
+    function updateConnectionStatus(status, text) {
+        const el = document.getElementById('connectionStatus');
+        const textEl = document.getElementById('connectionText');
+        if (el && textEl) {
             el.className = 'connection-status ' + status;
             textEl.textContent = text;
         }
+    }
 
-        // Test connection
-        async function testConnection() {
-            try {
-                const { data, error } = await supabase.from('settings').select('key').limit(1);
-                if (error) throw error;
-                updateConnectionStatus('connected', 'متصل بـ Supabase');
-                return true;
-            } catch (error) {
-                console.error('Connection error:', error);
-                updateConnectionStatus('disconnected', 'غير متصل');
+    // ===== Test Connection =====
+    async function testConnection() {
+        if (!supabaseClient) {
+            console.error('❌ Supabase client غير موجود');
+            updateConnectionStatus('disconnected', 'غير متصل');
+            return false;
+        }
+        
+        try {
+            console.log('🔄 اختبار الاتصال...');
+            const { data, error } = await supabaseClient
+                .from('settings')
+                .select('key')
+                .limit(1);
+            
+            if (error) {
+                console.error('❌ خطأ في الاتصال:', error);
+                updateConnectionStatus('disconnected', 'خطأ في الاتصال');
                 return false;
             }
+            
+            console.log('✅ الاتصال ناجح');
+            updateConnectionStatus('connected', 'متصل بـ Supabase');
+            return true;
+        } catch (error) {
+            console.error('❌ استثناء في الاتصال:', error);
+            updateConnectionStatus('disconnected', 'غير متصل');
+            return false;
         }
+    }
 
-        // ===== Realtime Subscriptions =====
-        function setupRealtime() {
-            // Listen for orders changes
-            supabase
+    // ===== تحميل بيانات المسؤول =====
+    async function loadAdminCredentials() {
+        console.log('🔄 تحميل بيانات المسؤول...');
+        
+        if (!supabaseClient) {
+            console.error('❌ Supabase client غير موجود');
+            CORRECT_PIN = 'ONX44';
+            return;
+        }
+        
+        try {
+            const { data, error } = await supabaseClient
+                .from('admins')
+                .select('password')
+                .eq('username', 'admin')
+                .eq('is_active', true)
+                .single();
+            
+            if (error) {
+                console.error('❌ خطأ في تحميل البيانات:', error);
+                console.log('⚠️ استخدام القيمة الافتراضية: ONX44');
+                CORRECT_PIN = 'ONX44';
+                return;
+            }
+            
+            if (data && data.password) {
+                CORRECT_PIN = data.password;
+                console.log('✅ تم تحميل كلمة المرور بنجاح');
+            } else {
+                console.log('⚠️ لا توجد بيانات، استخدام الافتراضي');
+                CORRECT_PIN = 'ONX44';
+            }
+        } catch (error) {
+            console.error('❌ استثناء في تحميل البيانات:', error);
+            CORRECT_PIN = 'ONX44';
+        }
+    }
+
+    // ===== Realtime Subscriptions =====
+    function setupRealtime() {
+        if (!supabaseClient) return;
+        
+        try {
+            // Orders changes
+            supabaseClient
                 .channel('orders-changes')
                 .on('postgres_changes', 
                     { event: '*', schema: 'public', table: 'orders' },
@@ -1616,8 +133,8 @@ async function loadAdminCredentials() {
                 )
                 .subscribe();
 
-            // Listen for settings changes
-            supabase
+            // Settings changes
+            supabaseClient
                 .channel('settings-changes')
                 .on('postgres_changes',
                     { event: 'UPDATE', schema: 'public', table: 'settings' },
@@ -1628,195 +145,248 @@ async function loadAdminCredentials() {
                 )
                 .subscribe();
 
-            // Listen for banned changes
-            supabase
+            // Banned changes
+            supabaseClient
                 .channel('banned-changes')
                 .on('postgres_changes',
                     { event: '*', schema: 'public', table: 'banned' },
-                    (payload) => {
+                    () => {
                         loadBannedList();
                     }
                 )
                 .subscribe();
+                
+            console.log('✅ تم إعداد Realtime');
+        } catch (error) {
+            console.error('❌ خطأ في Realtime:', error);
         }
+    }
 
-        // ===== Login System =====
-        const pinInputs = document.querySelectorAll('.pin-digit');
-        
-        pinInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                const value = e.target.value;
-                if (value) {
-                    e.target.classList.add('filled');
-                    if (index < pinInputs.length - 1) {
-                        pinInputs[index + 1].focus();
-                    }
-                } else {
-                    e.target.classList.remove('filled');
+    // ===== Login System =====
+    const pinInputs = document.querySelectorAll('.pin-digit');
+    
+    pinInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value) {
+                e.target.classList.add('filled');
+                if (index < pinInputs.length - 1) {
+                    pinInputs[index + 1].focus();
                 }
-                checkPinComplete();
-            });
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                    pinInputs[index - 1].focus();
-                }
-                if (e.key === 'Enter') {
-                    attemptLogin();
-                }
-            });
+            } else {
+                e.target.classList.remove('filled');
+            }
+            checkPinComplete();
         });
 
-        function checkPinComplete() {
-            const pin = Array.from(pinInputs).map(i => i.value).join('');
-            if (pin.length === 5) {
-                setTimeout(attemptLogin, 200);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                pinInputs[index - 1].focus();
             }
-        }
-
-        async function attemptLogin() {
-    const pin = Array.from(pinInputs).map(i => i.value).join('');
-    const errorEl = document.getElementById('loginError');
-    
-    // تحميل بيانات المسؤول إذا لم تكن محملة
-    if (!CORRECT_PIN) {
-        await loadAdminCredentials();
-    }
-    
-    if (pin === CORRECT_PIN) {
-        errorEl.textContent = '';
-        
-        // تحديث last_login
-        await supabase
-            .from('admins')
-            .update({ last_login: new Date().toISOString() })
-            .eq('username', 'admin');
-        
-        document.getElementById('loginScreen').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('adminContainer').classList.add('active');
-            initializeDashboard();
-        }, 500);
-    } else {
-        errorEl.textContent = '❌ رمز الدخول غير صحيح';
-        pinInputs.forEach(i => {
-            i.value = '';
-            i.classList.remove('filled');
+            if (e.key === 'Enter') {
+                attemptLogin();
+            }
         });
-        pinInputs[0].focus();
-        
-        const box = document.querySelector('.login-box');
-        box.style.animation = 'none';
-        setTimeout(() => {
-            box.style.animation = 'shake 0.5s';
-        }, 10);
+    });
+
+    function checkPinComplete() {
+        const pin = Array.from(pinInputs).map(i => i.value).join('');
+        if (pin.length === 5) {
+            setTimeout(attemptLogin, 300);
+        }
     }
-}
 
-        function logout() {
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                document.getElementById('adminContainer').classList.remove('active');
-                document.getElementById('loginScreen').style.display = 'flex';
-                document.getElementById('loginScreen').style.opacity = '1';
-                pinInputs.forEach(i => {
-                    i.value = '';
-                    i.classList.remove('filled');
-                });
+    async function attemptLogin() {
+        console.log('🔄 محاولة تسجيل الدخول...');
+        
+        const pin = Array.from(pinInputs).map(i => i.value).join('');
+        const errorEl = document.getElementById('loginError');
+        
+        if (!pin || pin.length < 5) {
+            console.log('⚠️ كلمة المرور غير مكتملة');
+            return;
+        }
+        
+        // تحميل بيانات المسؤول إذا لم تكن محملة
+        if (!CORRECT_PIN) {
+            console.log('🔄 تحميل بيانات المسؤول أولاً...');
+            await loadAdminCredentials();
+        }
+        
+        console.log('🔍 مقارنة كلمة المرور...');
+        console.log('المُدخلة:', pin);
+        console.log('المخزنة:', CORRECT_PIN);
+        
+        if (pin === CORRECT_PIN) {
+            console.log('✅ كلمة المرور صحيحة!');
+            errorEl.textContent = '';
+            
+            // تحديث last_login
+            if (supabaseClient) {
+                try {
+                    await supabaseClient
+                        .from('admins')
+                        .update({ last_login: new Date().toISOString() })
+                        .eq('username', 'admin');
+                } catch (e) {
+                    console.error('خطأ في تحديث last_login:', e);
+                }
             }
-        }
-
-        // ===== Navigation =====
-        function showSection(sectionId, element) {
-            document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
             
-            document.getElementById('section-' + sectionId).classList.add('active');
-            if (element) element.classList.add('active');
+            document.getElementById('loginScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminContainer').classList.add('active');
+                initializeDashboard();
+            }, 500);
+        } else {
+            console.log('❌ كلمة المرور خاطئة');
+            errorEl.textContent = '❌ رمز الدخول غير صحيح';
+            pinInputs.forEach(i => {
+                i.value = '';
+                i.classList.remove('filled');
+            });
+            pinInputs[0].focus();
             
-            const titles = {
-                'dashboard': 'الرئيسية',
-                'orders': 'الطلبات',
-                'notifications': 'الإشعارات',
-                'site-status': 'حالة الموقع',
-                'sections-control': 'التحكم بالأقسام',
-                'lock-site': 'قفل الموقع',
-                'images': 'إدارة الصور',
-                'ticker': 'شريط الإعلانات',
-                'tips': 'النصائح',
-                'warnings': 'التحذيرات',
-                'welcome': 'رسالة الترحيب',
-                'phones': 'أرقام الهواتف',
-                'ban': 'الحظر'
-            };
-            document.getElementById('pageTitle').textContent = titles[sectionId] || '';
-            
-            document.getElementById('sidebar').classList.remove('open');
-            loadSectionData(sectionId);
+            const box = document.querySelector('.login-box');
+            box.style.animation = 'none';
+            setTimeout(() => {
+                box.style.animation = 'shake 0.5s';
+            }, 10);
         }
+    }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
+    function logout() {
+        if (confirm('هل تريد تسجيل الخروج؟')) {
+            document.getElementById('adminContainer').classList.remove('active');
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('loginScreen').style.opacity = '1';
+            pinInputs.forEach(i => {
+                i.value = '';
+                i.classList.remove('filled');
+            });
         }
+    }
 
-        // ===== Initialize Dashboard =====
-        async function initializeDashboard() {
-            updateConnectionStatus('syncing', 'جاري التحميل...');
-            await testConnection();
-            setupRealtime();
-            await updateStats();
-            await loadRecentOrders();
-            await updateSiteStatusBadge();
-        }
+    // ===== Navigation =====
+    function showSection(sectionId, element) {
+        document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+        
+        document.getElementById('section-' + sectionId).classList.add('active');
+        if (element) element.classList.add('active');
+        
+        const titles = {
+            'dashboard': 'الرئيسية',
+            'orders': 'الطلبات',
+            'notifications': 'الإشعارات',
+            'site-status': 'حالة الموقع',
+            'sections-control': 'التحكم بالأقسام',
+            'lock-site': 'قفل الموقع',
+            'images': 'إدارة الصور',
+            'ticker': 'شريط الإعلانات',
+            'tips': 'النصائح',
+            'warnings': 'التحذيرات',
+            'welcome': 'رسالة الترحيب',
+            'phones': 'أرقام الهواتف',
+            'ban': 'الحظر'
+        };
+        document.getElementById('pageTitle').textContent = titles[sectionId] || '';
+        
+        document.getElementById('sidebar').classList.remove('open');
+        loadSectionData(sectionId);
+    }
 
-        // ===== Settings Helpers =====
-        async function getSetting(key) {
-            const { data, error } = await supabase
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // ===== Initialize Dashboard =====
+    async function initializeDashboard() {
+        console.log('🚀 تهيئة لوحة التحكم...');
+        updateConnectionStatus('syncing', 'جاري التحميل...');
+        
+        await testConnection();
+        setupRealtime();
+        await updateStats();
+        await loadRecentOrders();
+        await updateSiteStatusBadge();
+    }
+
+    // ===== Settings Helpers =====
+    async function getSetting(key) {
+        if (!supabaseClient) return null;
+        
+        try {
+            const { data, error } = await supabaseClient
                 .from('settings')
                 .select('value')
                 .eq('key', key)
                 .single();
             
-            if (error) return null;
-            return data.value;
+            if (error) {
+                console.error(`Error getting ${key}:`, error);
+                return null;
+            }
+            return data ? data.value : null;
+        } catch (error) {
+            console.error(`Exception getting ${key}:`, error);
+            return null;
         }
+    }
 
-        async function setSetting(key, value) {
-            const { error } = await supabase
+    async function setSetting(key, value) {
+        if (!supabaseClient) return false;
+        
+        try {
+            const { error } = await supabaseClient
                 .from('settings')
-                .upsert({ key, value, updated_at: new Date().toISOString() });
+                .upsert({ 
+                    key: key, 
+                    value: value, 
+                    updated_at: new Date().toISOString() 
+                });
             
             if (error) {
                 console.error('Error saving setting:', error);
                 return false;
             }
             return true;
+        } catch (error) {
+            console.error('Exception saving setting:', error);
+            return false;
         }
+    }
 
-        // ===== Statistics =====
-        async function updateStats() {
-            try {
-                const { data: orders } = await supabase.from('orders').select('*');
-                const { data: banned } = await supabase.from('banned').select('*');
-                
-                const ordersList = orders || [];
-                const bannedList = banned || [];
-                const today = new Date().toDateString();
-                
-                document.getElementById('stat-orders').textContent = ordersList.length;
-                document.getElementById('stat-bookings').textContent = 
-                    ordersList.filter(o => o.type === 'booking' && new Date(o.created_at).toDateString() === today).length;
-                document.getElementById('stat-market').textContent = 
-                    ordersList.filter(o => o.type === 'sell' || o.type === 'buy').length;
-                document.getElementById('stat-banned').textContent = bannedList.length;
-            } catch (error) {
-                console.error('Error updating stats:', error);
-            }
+    // ===== Statistics =====
+    async function updateStats() {
+        if (!supabaseClient) return;
+        
+        try {
+            const { data: orders } = await supabaseClient.from('orders').select('*');
+            const { data: banned } = await supabaseClient.from('banned').select('*');
+            
+            const ordersList = orders || [];
+            const bannedList = banned || [];
+            const today = new Date().toDateString();
+            
+            document.getElementById('stat-orders').textContent = ordersList.length;
+            document.getElementById('stat-bookings').textContent = 
+                ordersList.filter(o => o.type === 'booking' && new Date(o.created_at).toDateString() === today).length;
+            document.getElementById('stat-market').textContent = 
+                ordersList.filter(o => o.type === 'sell' || o.type === 'buy').length;
+            document.getElementById('stat-banned').textContent = bannedList.length;
+        } catch (error) {
+            console.error('Error updating stats:', error);
         }
+    }
 
-        // ===== Orders =====
-        async function loadRecentOrders() {
-            const { data: orders, error } = await supabase
+    // ===== Orders =====
+    async function loadRecentOrders() {
+        if (!supabaseClient) return;
+        
+        try {
+            const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select('*')
                 .order('created_at', { ascending: false })
@@ -1835,10 +405,16 @@ async function loadAdminCredentials() {
             }
             
             container.innerHTML = orders.map(renderOrderCard).join('');
+        } catch (error) {
+            console.error('Error loading orders:', error);
         }
+    }
 
-        async function loadAllOrders() {
-            const { data: orders, error } = await supabase
+    async function loadAllOrders() {
+        if (!supabaseClient) return;
+        
+        try {
+            const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -1856,68 +432,73 @@ async function loadAdminCredentials() {
             }
             
             container.innerHTML = orders.map(renderOrderCard).join('');
+        } catch (error) {
+            console.error('Error loading all orders:', error);
         }
+    }
 
-        function renderOrderCard(order) {
-            const typeLabels = {
-                'booking': { label: 'حجز', color: 'var(--primary)', icon: 'fa-calendar-check' },
-                'sell': { label: 'بيع', color: 'var(--gold)', icon: 'fa-tag' },
-                'buy': { label: 'شراء', color: 'var(--active-color)', icon: 'fa-shopping-cart' },
-                'message': { label: 'رسالة', color: 'var(--accent)', icon: 'fa-envelope' }
-            };
-            
-            const type = typeLabels[order.type] || typeLabels.booking;
-            const location = (order.location_lat && order.location_lon) 
-                ? `https://www.google.com/maps?q=${order.location_lat},${order.location_lon}` 
-                : '';
-            
-            return `
-                <div class="order-card">
-                    <div class="order-header">
-                        <div class="order-id">
-                            <i class="fas ${type.icon}" style="color: ${type.color};"></i>
-                            ${order.request_id || order.id}
-                            <span style="background: ${type.color}; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 0.8em; margin-right: 10px;">${type.label}</span>
-                        </div>
-                        <div class="order-time">
-                            <i class="fas fa-clock"></i> ${new Date(order.created_at).toLocaleString('ar-IQ')}
-                        </div>
+    function renderOrderCard(order) {
+        const typeLabels = {
+            'booking': { label: 'حجز', color: 'var(--primary)', icon: 'fa-calendar-check' },
+            'sell': { label: 'بيع', color: 'var(--gold)', icon: 'fa-tag' },
+            'buy': { label: 'شراء', color: 'var(--active-color)', icon: 'fa-shopping-cart' },
+            'message': { label: 'رسالة', color: 'var(--accent)', icon: 'fa-envelope' }
+        };
+        
+        const type = typeLabels[order.type] || typeLabels.booking;
+        const location = (order.location_lat && order.location_lon) 
+            ? `https://www.google.com/maps?q=${order.location_lat},${order.location_lon}` 
+            : '';
+        
+        return `
+            <div class="order-card">
+                <div class="order-header">
+                    <div class="order-id">
+                        <i class="fas ${type.icon}" style="color: ${type.color};"></i>
+                        ${order.request_id || order.id}
+                        <span style="background: ${type.color}; color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 0.8em; margin-right: 10px;">${type.label}</span>
                     </div>
-                    <div class="order-info">
-                        <div class="order-info-item">
-                            <i class="fas fa-user"></i>
-                            <span>${order.name || 'غير محدد'}</span>
-                        </div>
-                        <div class="order-info-item">
-                            <i class="fas fa-phone"></i>
-                            <span>${order.phone || 'غير محدد'}</span>
-                        </div>
-                        <div class="order-info-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>${order.area || 'غير محدد'}</span>
-                        </div>
-                        ${order.service_type ? `<div class="order-info-item"><i class="fas fa-concierge-bell"></i><span>${order.service_type}</span></div>` : ''}
-                    </div>
-                    <div class="order-actions">
-                        <a href="tel:${order.phone}" class="btn btn-success">
-                            <i class="fas fa-phone"></i> اتصال
-                        </a>
-                        ${location ? `<a href="${location}" target="_blank" class="btn btn-warning"><i class="fas fa-map"></i> الموقع</a>` : ''}
-                        <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">
-                            <i class="fas fa-trash"></i> حذف
-                        </button>
-                        <button class="btn btn-outline" onclick="banUserByPhone('${order.phone}')">
-                            <i class="fas fa-ban"></i> حظر
-                        </button>
+                    <div class="order-time">
+                        <i class="fas fa-clock"></i> ${new Date(order.created_at).toLocaleString('ar-IQ')}
                     </div>
                 </div>
-            `;
-        }
+                <div class="order-info">
+                    <div class="order-info-item">
+                        <i class="fas fa-user"></i>
+                        <span>${order.name || 'غير محدد'}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${order.phone || 'غير محدد'}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${order.area || 'غير محدد'}</span>
+                    </div>
+                    ${order.service_type ? `<div class="order-info-item"><i class="fas fa-concierge-bell"></i><span>${order.service_type}</span></div>` : ''}
+                </div>
+                <div class="order-actions">
+                    <a href="tel:${order.phone}" class="btn btn-success">
+                        <i class="fas fa-phone"></i> اتصال
+                    </a>
+                    ${location ? `<a href="${location}" target="_blank" class="btn btn-warning"><i class="fas fa-map"></i> الموقع</a>` : ''}
+                    <button class="btn btn-danger" onclick="deleteOrder('${order.id}')">
+                        <i class="fas fa-trash"></i> حذف
+                    </button>
+                    <button class="btn btn-outline" onclick="banUserByPhone('${order.phone}')">
+                        <i class="fas fa-ban"></i> حظر
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 
-        async function deleteOrder(orderId) {
-            if (!confirm('هل تريد حذف هذا الطلب؟')) return;
-            
-            const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    async function deleteOrder(orderId) {
+        if (!confirm('هل تريد حذف هذا الطلب؟')) return;
+        if (!supabaseClient) return;
+        
+        try {
+            const { error } = await supabaseClient.from('orders').delete().eq('id', orderId);
             
             if (error) {
                 showToast('❌ حدث خطأ في الحذف', 'error');
@@ -1928,17 +509,24 @@ async function loadAdminCredentials() {
             updateStats();
             loadRecentOrders();
             loadAllOrders();
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        async function searchOrders() {
-            const query = document.getElementById('orderSearch').value.toLowerCase();
-            
-            if (!query) {
-                loadAllOrders();
-                return;
-            }
-            
-            const { data: orders } = await supabase
+    async function searchOrders() {
+        if (!supabaseClient) return;
+        
+        const query = document.getElementById('orderSearch').value.toLowerCase();
+        
+        if (!query) {
+            loadAllOrders();
+            return;
+        }
+        
+        try {
+            const { data: orders } = await supabaseClient
                 .from('orders')
                 .select('*')
                 .or(`id.ilike.%${query}%,name.ilike.%${query}%,phone.ilike.%${query}%`)
@@ -1957,13 +545,18 @@ async function loadAdminCredentials() {
             }
             
             container.innerHTML = orders.map(renderOrderCard).join('');
+        } catch (error) {
+            console.error('Error searching orders:', error);
         }
+    }
 
-        async function clearAllOrders() {
-            if (!confirm('⚠️ هل أنت متأكد من حذف جميع الطلبات؟')) return;
-            if (!confirm('⚠️ تأكيد نهائي!')) return;
-            
-            const { error } = await supabase.from('orders').delete().neq('id', '');
+    async function clearAllOrders() {
+        if (!confirm('⚠️ هل أنت متأكد من حذف جميع الطلبات؟')) return;
+        if (!confirm('⚠️ تأكيد نهائي!')) return;
+        if (!supabaseClient) return;
+        
+        try {
+            const { error } = await supabaseClient.from('orders').delete().neq('id', '');
             
             if (error) {
                 showToast('❌ حدث خطأ', 'error');
@@ -1974,233 +567,235 @@ async function loadAdminCredentials() {
             updateStats();
             loadRecentOrders();
             loadAllOrders();
+        } catch (error) {
+            console.error('Error clearing orders:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        // ===== Site Status =====
-        function selectStatus(status) {
-            document.querySelectorAll('.status-option').forEach(el => {
-                el.classList.remove('selected');
-            });
-            document.querySelector(`.status-option[data-status="${status}"]`).classList.add('selected');
-            currentStatus = status;
+    // ===== Site Status =====
+    function selectStatus(status) {
+        document.querySelectorAll('.status-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+        document.querySelector(`.status-option[data-status="${status}"]`).classList.add('selected');
+        currentStatus = status;
+    }
+
+    async function saveSiteStatus() {
+        const success = await setSetting('siteStatus', currentStatus);
+        
+        if (success) {
+            showToast('✅ تم حفظ الحالة');
+            updateSiteStatusBadge();
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        async function saveSiteStatus() {
-            const success = await setSetting('siteStatus', currentStatus);
-            
-            if (success) {
-                showToast('✅ تم حفظ الحالة');
-                updateSiteStatusBadge();
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
-        }
+    async function updateSiteStatusBadge() {
+        const status = await getSetting('siteStatus') || 'active';
+        const badge = document.getElementById('siteStatusBadge');
+        const text = document.getElementById('siteStatusText');
+        
+        const statusMap = {
+            'active': { text: 'نشط', class: 'active' },
+            'inactive': { text: 'غير نشط', class: 'locked' },
+            'break': { text: 'استراحة', class: 'locked' },
+            'busy': { text: 'مشغول', class: 'locked' }
+        };
+        
+        const info = statusMap[status] || statusMap.active;
+        badge.className = 'site-status-badge ' + info.class;
+        text.textContent = info.text;
+        
+        document.querySelectorAll('.status-option').forEach(el => {
+            el.classList.toggle('selected', el.dataset.status === status);
+        });
+    }
 
-        async function updateSiteStatusBadge() {
-            const status = await getSetting('siteStatus') || 'active';
-            const badge = document.getElementById('siteStatusBadge');
-            const text = document.getElementById('siteStatusText');
-            
-            const statusMap = {
-                'active': { text: 'نشط', class: 'active' },
-                'inactive': { text: 'غير نشط', class: 'locked' },
-                'break': { text: 'استراحة', class: 'locked' },
-                'busy': { text: 'مشغول', class: 'locked' }
-            };
-            
-            const info = statusMap[status] || statusMap.active;
-            badge.className = 'site-status-badge ' + info.class;
-            text.textContent = info.text;
-            
-            // Update status selector
-            document.querySelectorAll('.status-option').forEach(el => {
-                el.classList.toggle('selected', el.dataset.status === status);
-            });
-        }
-
-        // ===== Sections Control =====
-        async function loadSectionsControl() {
-            const sections = await getSetting('sections') || {
-                home: true, gallery: true, services: true,
-                marketplace: true, booking: true, contact: true
-            };
-            
-            const sectionsList = [
-                { id: 'home', name: 'الرئيسية', icon: 'fa-home' },
-                { id: 'gallery', name: 'المعرض', icon: 'fa-images' },
-                { id: 'services', name: 'الخدمات', icon: 'fa-tools' },
-                { id: 'marketplace', name: 'بيع وشراء', icon: 'fa-store' },
-                { id: 'booking', name: 'الحجز', icon: 'fa-calendar-check' },
-                { id: 'contact', name: 'التواصل', icon: 'fa-phone' }
-            ];
-            
-            const container = document.getElementById('sectionToggles');
-            container.innerHTML = sectionsList.map(section => `
-                <div class="section-toggle ${sections[section.id] !== false ? 'enabled' : 'disabled'}" data-section="${section.id}">
-                    <div class="section-toggle-info">
-                        <i class="fas ${section.icon}"></i>
-                        <div>
-                            <div style="font-weight: 600;">${section.name}</div>
-                            <div style="font-size: 0.85em; color: rgba(255,255,255,0.5);">
-                                ${sections[section.id] !== false ? 'مفعّل' : 'معطّل'}
-                            </div>
+    // ===== Sections Control =====
+    async function loadSectionsControl() {
+        const sections = await getSetting('sections') || {
+            home: true, gallery: true, services: true,
+            marketplace: true, booking: true, contact: true
+        };
+        
+        const sectionsList = [
+            { id: 'home', name: 'الرئيسية', icon: 'fa-home' },
+            { id: 'gallery', name: 'المعرض', icon: 'fa-images' },
+            { id: 'services', name: 'الخدمات', icon: 'fa-tools' },
+            { id: 'marketplace', name: 'بيع وشراء', icon: 'fa-store' },
+            { id: 'booking', name: 'الحجز', icon: 'fa-calendar-check' },
+            { id: 'contact', name: 'التواصل', icon: 'fa-phone' }
+        ];
+        
+        const container = document.getElementById('sectionToggles');
+        container.innerHTML = sectionsList.map(section => `
+            <div class="section-toggle ${sections[section.id] !== false ? 'enabled' : 'disabled'}" data-section="${section.id}">
+                <div class="section-toggle-info">
+                    <i class="fas ${section.icon}"></i>
+                    <div>
+                        <div style="font-weight: 600;">${section.name}</div>
+                        <div style="font-size: 0.85em; color: rgba(255,255,255,0.5);">
+                            ${sections[section.id] !== false ? 'مفعّل' : 'معطّل'}
                         </div>
                     </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" ${sections[section.id] !== false ? 'checked' : ''} onchange="toggleSection('${section.id}', this)">
-                        <span class="toggle-slider"></span>
-                    </label>
                 </div>
-            `).join('');
+                <label class="toggle-switch">
+                    <input type="checkbox" ${sections[section.id] !== false ? 'checked' : ''} onchange="toggleSection('${section.id}', this)">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        `).join('');
+    }
+
+    let tempSections = {};
+
+    function toggleSection(sectionId, checkbox) {
+        tempSections[sectionId] = checkbox.checked;
+        const toggle = checkbox.closest('.section-toggle');
+        toggle.className = 'section-toggle ' + (checkbox.checked ? 'enabled' : 'disabled');
+    }
+
+    async function saveSectionsState() {
+        const currentSections = await getSetting('sections') || {};
+        const newSections = { ...currentSections, ...tempSections };
+        
+        const success = await setSetting('sections', newSections);
+        
+        if (success) {
+            showToast('✅ تم حفظ حالة الأقسام');
+            tempSections = {};
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        let tempSections = {};
+    // ===== Lock Site =====
+    async function lockSite() {
+        const message = document.getElementById('lockMessage').value || 'الموقع مغلق للصيانة، سنعود قريباً...';
+        if (!confirm('هل تريد قفل الموقع؟')) return;
+        
+        await setSetting('siteLocked', true);
+        await setSetting('lockMessage', message);
+        showToast('🔒 تم قفل الموقع');
+    }
 
-        function toggleSection(sectionId, checkbox) {
-            tempSections[sectionId] = checkbox.checked;
-            const toggle = checkbox.closest('.section-toggle');
-            toggle.className = 'section-toggle ' + (checkbox.checked ? 'enabled' : 'disabled');
-        }
+    async function unlockSite() {
+        if (!confirm('هل تريد فتح الموقع؟')) return;
+        await setSetting('siteLocked', false);
+        showToast('🔓 تم فتح الموقع');
+    }
 
-        async function saveSectionsState() {
-            const currentSections = await getSetting('sections') || {};
-            const newSections = { ...currentSections, ...tempSections };
-            
-            const success = await setSetting('sections', newSections);
-            
-            if (success) {
-                showToast('✅ تم حفظ حالة الأقسام');
-                tempSections = {};
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
-        }
-
-        // ===== Lock Site =====
-        async function lockSite() {
-            const message = document.getElementById('lockMessage').value || 'الموقع مغلق للصيانة، سنعود قريباً...';
-            if (!confirm('هل تريد قفل الموقع؟')) return;
-            
-            await setSetting('siteLocked', true);
-            await setSetting('lockMessage', message);
-            showToast('🔒 تم قفل الموقع');
-        }
-
-        async function unlockSite() {
-            if (!confirm('هل تريد فتح الموقع؟')) return;
-            await setSetting('siteLocked', false);
-            showToast('🔓 تم فتح الموقع');
-        }
-
-        // ===== Images Management =====
-        async function loadImagesManagement() {
-            // Load all images from database
-            const { data: images } = await supabase.from('images').select('*');
+    // ===== Images Management =====
+    async function loadImagesManagement() {
+        if (!supabaseClient) return;
+        
+        try {
+            const { data: images } = await supabaseClient.from('images').select('*');
             const imagesMap = {};
             (images || []).forEach(img => {
                 imagesMap[img.key] = img.url;
             });
             
-            // Slider images
             const sliderGrid = document.getElementById('sliderImagesGrid');
             sliderGrid.innerHTML = '';
             for (let i = 1; i <= 18; i++) {
                 sliderGrid.appendChild(createImageItem(`S${i}`, imagesMap[`S${i}`] || `S${i}.jpg`));
             }
             
-            // Gallery images
             const galleryGrid = document.getElementById('galleryImagesGrid');
             galleryGrid.innerHTML = '';
             for (let i = 1; i <= 9; i++) {
                 galleryGrid.appendChild(createImageItem(`${i}`, imagesMap[`${i}`] || `${i}.jpg`));
             }
             
-            // Technicians
             const techGrid = document.getElementById('techniciansImagesGrid');
             techGrid.innerHTML = '';
             for (let i = 1; i <= 3; i++) {
                 techGrid.appendChild(createImageItem(`A${i}`, imagesMap[`A${i}`] || `A${i}.jpg`));
             }
             
-            // Logo
             const logoGrid = document.getElementById('logoImageGrid');
             logoGrid.innerHTML = '';
             logoGrid.appendChild(createImageItem('logo', imagesMap['logo'] || 'G.jpg'));
+        } catch (error) {
+            console.error('Error loading images:', error);
         }
+    }
 
-        function createImageItem(key, url) {
-            const div = document.createElement('div');
-            div.className = 'image-item';
-            div.innerHTML = `
-                <img src="${url}" alt="${key}" onerror="this.src='https://via.placeholder.com/150/00d4ff/ffffff?text=${key}'">
-                <div class="image-label">${key}</div>
-                <div class="image-actions">
-                    <button class="image-action-btn edit" onclick="event.stopPropagation(); uploadImage('${key}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="image-action-btn delete" onclick="event.stopPropagation(); deleteImage('${key}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            div.onclick = () => uploadImage(key);
-            return div;
+    function createImageItem(key, url) {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+        div.innerHTML = `
+            <img src="${url}" alt="${key}" onerror="this.src='https://via.placeholder.com/150/00d4ff/ffffff?text=${key}'">
+            <div class="image-label">${key}</div>
+            <div class="image-actions">
+                <button class="image-action-btn edit" onclick="event.stopPropagation(); uploadImage('${key}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="image-action-btn delete" onclick="event.stopPropagation(); deleteImage('${key}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        div.onclick = () => uploadImage(key);
+        return div;
+    }
+
+    function uploadImage(key) {
+        currentUploadTarget = key;
+        document.getElementById('imageUploader').click();
+    }
+
+    async function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file || !currentUploadTarget || !supabaseClient) return;
+        
+        showToast('⏳ جاري رفع الصورة...');
+        
+        try {
+            const fileName = `${currentUploadTarget}_${Date.now()}.${file.name.split('.').pop()}`;
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                .from('workshop-images')
+                .upload(fileName, file, { upsert: true });
+            
+            if (uploadError) throw uploadError;
+            
+            const { data: urlData } = supabaseClient.storage
+                .from('workshop-images')
+                .getPublicUrl(fileName);
+            
+            const publicUrl = urlData.publicUrl;
+            
+            const { error: dbError } = await supabaseClient
+                .from('images')
+                .upsert({
+                    key: currentUploadTarget,
+                    url: publicUrl,
+                    file_id: fileName,
+                    updated_at: new Date().toISOString()
+                });
+            
+            if (dbError) throw dbError;
+            
+            showToast('✅ تم رفع الصورة بنجاح');
+            loadImagesManagement();
+        } catch (error) {
+            console.error('Upload error:', error);
+            showToast('❌ فشل رفع الصورة', 'error');
         }
+        
+        event.target.value = '';
+    }
 
-        function uploadImage(key) {
-            currentUploadTarget = key;
-            document.getElementById('imageUploader').click();
-        }
-
-        async function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file || !currentUploadTarget) return;
-            
-            showToast('⏳ جاري رفع الصورة...');
-            
-            try {
-                // Upload to Supabase Storage
-                const fileName = `${currentUploadTarget}_${Date.now()}.${file.name.split('.').pop()}`;
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('workshop-images')
-                    .upload(fileName, file, { upsert: true });
-                
-                if (uploadError) throw uploadError;
-                
-                // Get public URL
-                const { data: urlData } = supabase.storage
-                    .from('workshop-images')
-                    .getPublicUrl(fileName);
-                
-                const publicUrl = urlData.publicUrl;
-                
-                // Save to images table
-                const { error: dbError } = await supabase
-                    .from('images')
-                    .upsert({
-                        key: currentUploadTarget,
-                        url: publicUrl,
-                        file_id: fileName,
-                        updated_at: new Date().toISOString()
-                    });
-                
-                if (dbError) throw dbError;
-                
-                showToast('✅ تم رفع الصورة بنجاح');
-                loadImagesManagement();
-                
-            } catch (error) {
-                console.error('Upload error:', error);
-                showToast('❌ فشل رفع الصورة', 'error');
-            }
-            
-            event.target.value = '';
-        }
-
-        async function deleteImage(key) {
-            if (!confirm('هل تريد حذف هذه الصورة؟')) return;
-            
-            const { error } = await supabase.from('images').delete().eq('key', key);
+    async function deleteImage(key) {
+        if (!confirm('هل تريد حذف هذه الصورة؟')) return;
+        if (!supabaseClient) return;
+        
+        try {
+            const { error } = await supabaseClient.from('images').delete().eq('key', key);
             
             if (error) {
                 showToast('❌ حدث خطأ', 'error');
@@ -2209,233 +804,240 @@ async function loadAdminCredentials() {
             
             showToast('✅ تم حذف الصورة');
             loadImagesManagement();
+        } catch (error) {
+            console.error('Error deleting image:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        // ===== Ticker Management =====
-        async function loadTicker() {
-            const ticker = await getSetting('ticker') || [];
-            
-            const container = document.getElementById('tickerItems');
-            container.innerHTML = ticker.map((item, index) => `
-                <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
-                    <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="${item.icon}" placeholder="fa-icon" id="ticker-icon-${index}">
-                    <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="${item.text}" placeholder="نص الإعلان" id="ticker-text-${index}">
-                    <button class="btn btn-danger" onclick="removeTickerItem(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function addTickerItem() {
-            const container = document.getElementById('tickerItems');
-            const index = container.children.length;
-            const div = document.createElement('div');
-            div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;';
-            div.innerHTML = `
-                <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="fa-star" placeholder="fa-icon" id="ticker-icon-${index}">
-                <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="إعلان جديد" placeholder="نص الإعلان" id="ticker-text-${index}">
-                <button class="btn btn-danger" onclick="this.parentElement.remove()">
+    // ===== Ticker Management =====
+    async function loadTicker() {
+        const ticker = await getSetting('ticker') || [];
+        
+        const container = document.getElementById('tickerItems');
+        container.innerHTML = ticker.map((item, index) => `
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
+                <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="${item.icon}" placeholder="fa-icon" id="ticker-icon-${index}">
+                <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="${item.text}" placeholder="نص الإعلان" id="ticker-text-${index}">
+                <button class="btn btn-danger" onclick="removeTickerItem(${index})">
                     <i class="fas fa-trash"></i>
                 </button>
-            `;
-            container.appendChild(div);
-        }
+            </div>
+        `).join('');
+    }
 
-        function removeTickerItem(index) {
-            document.getElementById(`ticker-icon-${index}`).parentElement.remove();
-        }
+    function addTickerItem() {
+        const container = document.getElementById('tickerItems');
+        const index = container.children.length;
+        const div = document.createElement('div');
+        div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;';
+        div.innerHTML = `
+            <input type="text" class="form-control" style="flex: 1; min-width: 150px;" value="fa-star" placeholder="fa-icon" id="ticker-icon-${index}">
+            <input type="text" class="form-control" style="flex: 3; min-width: 200px;" value="إعلان جديد" placeholder="نص الإعلان" id="ticker-text-${index}">
+            <button class="btn btn-danger" onclick="this.parentElement.remove()">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        container.appendChild(div);
+    }
 
-        async function saveTicker() {
-            const items = [];
-            const container = document.getElementById('tickerItems');
-            Array.from(container.children).forEach((child, index) => {
-                const icon = child.querySelector(`#ticker-icon-${index}`)?.value || 'fa-star';
-                const text = child.querySelector(`#ticker-text-${index}`)?.value || '';
-                if (text) items.push({ icon, text });
-            });
-            
-            const success = await setSetting('ticker', items);
-            
-            if (success) {
-                showToast('✅ تم حفظ شريط الإعلانات');
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
-        }
+    function removeTickerItem(index) {
+        document.getElementById(`ticker-icon-${index}`).parentElement.remove();
+    }
 
-        // ===== Tips Management =====
-        async function loadTips() {
-            const tips = await getSetting('tips') || [];
-            
-            const container = document.getElementById('tipsList');
-            container.innerHTML = tips.map((tip, index) => `
-                <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <input type="text" class="form-control" style="width: 150px;" value="${tip.icon}" placeholder="fa-icon" id="tip-icon-${index}">
-                        <input type="text" class="form-control" style="flex: 1;" value="${tip.title}" placeholder="العنوان" id="tip-title-${index}">
-                        <button class="btn btn-danger" onclick="removeTip(${index})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <textarea class="form-control" id="tip-text-${index}" placeholder="النص">${tip.text}</textarea>
-                </div>
-            `).join('');
+    async function saveTicker() {
+        const items = [];
+        const container = document.getElementById('tickerItems');
+        Array.from(container.children).forEach((child, index) => {
+            const icon = child.querySelector(`#ticker-icon-${index}`)?.value || 'fa-star';
+            const text = child.querySelector(`#ticker-text-${index}`)?.value || '';
+            if (text) items.push({ icon, text });
+        });
+        
+        const success = await setSetting('ticker', items);
+        
+        if (success) {
+            showToast('✅ تم حفظ شريط الإعلانات');
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        function addTip() {
-            const container = document.getElementById('tipsList');
-            const index = container.children.length;
-            const div = document.createElement('div');
-            div.style.cssText = 'background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
-            div.innerHTML = `
+    // ===== Tips Management =====
+    async function loadTips() {
+        const tips = await getSetting('tips') || [];
+        
+        const container = document.getElementById('tipsList');
+        container.innerHTML = tips.map((tip, index) => `
+            <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
                 <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                    <input type="text" class="form-control" style="width: 150px;" value="fa-lightbulb" placeholder="fa-icon" id="tip-icon-${index}">
-                    <input type="text" class="form-control" style="flex: 1;" value="نصيحة جديدة" placeholder="العنوان" id="tip-title-${index}">
-                    <button class="btn btn-danger" onclick="this.closest('div[style]').remove()">
+                    <input type="text" class="form-control" style="width: 150px;" value="${tip.icon}" placeholder="fa-icon" id="tip-icon-${index}">
+                    <input type="text" class="form-control" style="flex: 1;" value="${tip.title}" placeholder="العنوان" id="tip-title-${index}">
+                    <button class="btn btn-danger" onclick="removeTip(${index})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <textarea class="form-control" id="tip-text-${index}" placeholder="النص">النص هنا...</textarea>
-            `;
-            container.appendChild(div);
-        }
+                <textarea class="form-control" id="tip-text-${index}" placeholder="النص">${tip.text}</textarea>
+            </div>
+        `).join('');
+    }
 
-        function removeTip(index) {
-            document.getElementById(`tip-icon-${index}`).closest('div[style]').remove();
-        }
+    function addTip() {
+        const container = document.getElementById('tipsList');
+        const index = container.children.length;
+        const div = document.createElement('div');
+        div.style.cssText = 'background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
+        div.innerHTML = `
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <input type="text" class="form-control" style="width: 150px;" value="fa-lightbulb" placeholder="fa-icon" id="tip-icon-${index}">
+                <input type="text" class="form-control" style="flex: 1;" value="نصيحة جديدة" placeholder="العنوان" id="tip-title-${index}">
+                <button class="btn btn-danger" onclick="this.closest('div[style]').remove()">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <textarea class="form-control" id="tip-text-${index}" placeholder="النص">النص هنا...</textarea>
+        `;
+        container.appendChild(div);
+    }
 
-        async function saveTips() {
-            const tips = [];
-            const container = document.getElementById('tipsList');
-            Array.from(container.children).forEach((child, index) => {
-                const icon = child.querySelector(`#tip-icon-${index}`)?.value || 'fa-lightbulb';
-                const title = child.querySelector(`#tip-title-${index}`)?.value || '';
-                const text = child.querySelector(`#tip-text-${index}`)?.value || '';
-                if (title && text) tips.push({ icon, title, text });
-            });
-            
-            const success = await setSetting('tips', tips);
-            
-            if (success) {
-                showToast('✅ تم حفظ النصائح');
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
-        }
+    function removeTip(index) {
+        document.getElementById(`tip-icon-${index}`).closest('div[style]').remove();
+    }
 
-        // ===== Warnings Management =====
-        async function loadWarnings() {
-            const warnings = await getSetting('warnings') || [];
-            
-            const container = document.getElementById('warningsList');
-            container.innerHTML = warnings.map((warn, index) => `
-                <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <input type="text" class="form-control" style="width: 150px;" value="${warn.icon}" placeholder="fa-icon" id="warn-icon-${index}">
-                        <button class="btn btn-danger" onclick="removeWarning(${index})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <textarea class="form-control" id="warn-text-${index}" placeholder="النص">${warn.text}</textarea>
-                </div>
-            `).join('');
+    async function saveTips() {
+        const tips = [];
+        const container = document.getElementById('tipsList');
+        Array.from(container.children).forEach((child, index) => {
+            const icon = child.querySelector(`#tip-icon-${index}`)?.value || 'fa-lightbulb';
+            const title = child.querySelector(`#tip-title-${index}`)?.value || '';
+            const text = child.querySelector(`#tip-text-${index}`)?.value || '';
+            if (title && text) tips.push({ icon, title, text });
+        });
+        
+        const success = await setSetting('tips', tips);
+        
+        if (success) {
+            showToast('✅ تم حفظ النصائح');
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        function addWarning() {
-            const container = document.getElementById('warningsList');
-            const index = container.children.length;
-            const div = document.createElement('div');
-            div.style.cssText = 'background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
-            div.innerHTML = `
+    // ===== Warnings Management =====
+    async function loadWarnings() {
+        const warnings = await getSetting('warnings') || [];
+        
+        const container = document.getElementById('warningsList');
+        container.innerHTML = warnings.map((warn, index) => `
+            <div style="background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
                 <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                    <input type="text" class="form-control" style="width: 150px;" value="fa-exclamation-circle" placeholder="fa-icon" id="warn-icon-${index}">
-                    <button class="btn btn-danger" onclick="this.closest('div[style]').remove()">
+                    <input type="text" class="form-control" style="width: 150px;" value="${warn.icon}" placeholder="fa-icon" id="warn-icon-${index}">
+                    <button class="btn btn-danger" onclick="removeWarning(${index})">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <textarea class="form-control" id="warn-text-${index}" placeholder="النص">تحذير جديد</textarea>
-            `;
-            container.appendChild(div);
-        }
+                <textarea class="form-control" id="warn-text-${index}" placeholder="النص">${warn.text}</textarea>
+            </div>
+        `).join('');
+    }
 
-        function removeWarning(index) {
-            document.getElementById(`warn-icon-${index}`).closest('div[style]').remove();
-        }
+    function addWarning() {
+        const container = document.getElementById('warningsList');
+        const index = container.children.length;
+        const div = document.createElement('div');
+        div.style.cssText = 'background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 20px; margin-bottom: 15px;';
+        div.innerHTML = `
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <input type="text" class="form-control" style="width: 150px;" value="fa-exclamation-circle" placeholder="fa-icon" id="warn-icon-${index}">
+                <button class="btn btn-danger" onclick="this.closest('div[style]').remove()">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <textarea class="form-control" id="warn-text-${index}" placeholder="النص">تحذير جديد</textarea>
+        `;
+        container.appendChild(div);
+    }
 
-        async function saveWarnings() {
-            const warnings = [];
-            const container = document.getElementById('warningsList');
-            Array.from(container.children).forEach((child, index) => {
-                const icon = child.querySelector(`#warn-icon-${index}`)?.value || 'fa-exclamation-circle';
-                const text = child.querySelector(`#warn-text-${index}`)?.value || '';
-                if (text) warnings.push({ icon, text });
-            });
-            
-            const success = await setSetting('warnings', warnings);
-            
-            if (success) {
-                showToast('✅ تم حفظ التحذيرات');
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
-        }
+    function removeWarning(index) {
+        document.getElementById(`warn-icon-${index}`).closest('div[style]').remove();
+    }
 
-        // ===== Welcome Message =====
-        async function loadWelcome() {
-            const welcome = await getSetting('welcome') || {};
-            document.getElementById('welcomeTitle').value = welcome.title || '';
-            document.getElementById('welcomeSubtitle').value = welcome.subtitle || '';
-            document.getElementById('welcomeText').value = welcome.text || '';
-            document.getElementById('instructionsTitle').value = welcome.instructionsTitle || '';
-            document.getElementById('instructionsList').value = (welcome.instructions || []).join('\n');
+    async function saveWarnings() {
+        const warnings = [];
+        const container = document.getElementById('warningsList');
+        Array.from(container.children).forEach((child, index) => {
+            const icon = child.querySelector(`#warn-icon-${index}`)?.value || 'fa-exclamation-circle';
+            const text = child.querySelector(`#warn-text-${index}`)?.value || '';
+            if (text) warnings.push({ icon, text });
+        });
+        
+        const success = await setSetting('warnings', warnings);
+        
+        if (success) {
+            showToast('✅ تم حفظ التحذيرات');
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        async function saveWelcome() {
-            const welcome = {
-                title: document.getElementById('welcomeTitle').value,
-                subtitle: document.getElementById('welcomeSubtitle').value,
-                text: document.getElementById('welcomeText').value,
-                instructionsTitle: document.getElementById('instructionsTitle').value,
-                instructions: document.getElementById('instructionsList').value.split('\n').filter(i => i.trim())
-            };
-            
-            const success = await setSetting('welcome', welcome);
-            
-            if (success) {
-                showToast('✅ تم حفظ رسالة الترحيب');
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
+    // ===== Welcome Message =====
+    async function loadWelcome() {
+        const welcome = await getSetting('welcome') || {};
+        document.getElementById('welcomeTitle').value = welcome.title || '';
+        document.getElementById('welcomeSubtitle').value = welcome.subtitle || '';
+        document.getElementById('welcomeText').value = welcome.text || '';
+        document.getElementById('instructionsTitle').value = welcome.instructionsTitle || '';
+        document.getElementById('instructionsList').value = (welcome.instructions || []).join('\n');
+    }
+
+    async function saveWelcome() {
+        const welcome = {
+            title: document.getElementById('welcomeTitle').value,
+            subtitle: document.getElementById('welcomeSubtitle').value,
+            text: document.getElementById('welcomeText').value,
+            instructionsTitle: document.getElementById('instructionsTitle').value,
+            instructions: document.getElementById('instructionsList').value.split('\n').filter(i => i.trim())
+        };
+        
+        const success = await setSetting('welcome', welcome);
+        
+        if (success) {
+            showToast('✅ تم حفظ رسالة الترحيب');
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        // ===== Phones =====
-        async function loadPhones() {
-            const phones = await getSetting('phones') || {};
-            document.getElementById('phone1').value = phones.phone1 || '';
-            document.getElementById('phone2').value = phones.phone2 || '';
-            document.getElementById('phone3').value = phones.phone3 || '';
+    // ===== Phones =====
+    async function loadPhones() {
+        const phones = await getSetting('phones') || {};
+        document.getElementById('phone1').value = phones.phone1 || '';
+        document.getElementById('phone2').value = phones.phone2 || '';
+        document.getElementById('phone3').value = phones.phone3 || '';
+    }
+
+    async function savePhones() {
+        const phones = {
+            phone1: document.getElementById('phone1').value,
+            phone2: document.getElementById('phone2').value,
+            phone3: document.getElementById('phone3').value
+        };
+        
+        const success = await setSetting('phones', phones);
+        
+        if (success) {
+            showToast('✅ تم حفظ الأرقام');
+        } else {
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        async function savePhones() {
-            const phones = {
-                phone1: document.getElementById('phone1').value,
-                phone2: document.getElementById('phone2').value,
-                phone3: document.getElementById('phone3').value
-            };
-            
-            const success = await setSetting('phones', phones);
-            
-            if (success) {
-                showToast('✅ تم حفظ الأرقام');
-            } else {
-                showToast('❌ حدث خطأ', 'error');
-            }
-        }
-
-        // ===== Ban Management =====
-        async function loadBannedList() {
-            const { data: banned } = await supabase
+    // ===== Ban Management =====
+    async function loadBannedList() {
+        if (!supabaseClient) return;
+        
+        try {
+            const { data: banned } = await supabaseClient
                 .from('banned')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -2464,23 +1066,28 @@ async function loadAdminCredentials() {
                     </button>
                 </div>
             `).join('');
+        } catch (error) {
+            console.error('Error loading banned list:', error);
         }
+    }
 
-        async function banUser() {
-            const phone = document.getElementById('banPhone').value.trim();
-            if (!phone) {
-                showToast('❌ أدخل رقم الهاتف', 'error');
-                return;
-            }
-            
-            await banUserByPhone(phone);
-            document.getElementById('banPhone').value = '';
+    async function banUser() {
+        const phone = document.getElementById('banPhone').value.trim();
+        if (!phone) {
+            showToast('❌ أدخل رقم الهاتف', 'error');
+            return;
         }
+        
+        await banUserByPhone(phone);
+        document.getElementById('banPhone').value = '';
+    }
 
-        async function banUserByPhone(phone) {
-            if (!confirm(`هل تريد حظر ${phone}؟`)) return;
-            
-            const { error } = await supabase.from('banned').upsert({
+    async function banUserByPhone(phone) {
+        if (!supabaseClient) return;
+        if (!confirm(`هل تريد حظر ${phone}؟`)) return;
+        
+        try {
+            const { error } = await supabaseClient.from('banned').upsert({
                 phone,
                 reason: 'محظور من لوحة التحكم',
                 banned_by: 'admin',
@@ -2495,12 +1102,18 @@ async function loadAdminCredentials() {
             showToast(`✅ تم حظر ${phone}`);
             loadBannedList();
             updateStats();
+        } catch (error) {
+            console.error('Error banning user:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        async function unbanUser(phone) {
-            if (!confirm(`هل تريد إلغاء حظر ${phone}؟`)) return;
-            
-            const { error } = await supabase.from('banned').delete().eq('phone', phone);
+    async function unbanUser(phone) {
+        if (!supabaseClient) return;
+        if (!confirm(`هل تريد إلغاء حظر ${phone}؟`)) return;
+        
+        try {
+            const { error } = await supabaseClient.from('banned').delete().eq('phone', phone);
             
             if (error) {
                 showToast('❌ حدث خطأ', 'error');
@@ -2510,21 +1123,34 @@ async function loadAdminCredentials() {
             showToast(`✅ تم إلغاء حظر ${phone}`);
             loadBannedList();
             updateStats();
+        } catch (error) {
+            console.error('Error unbanning user:', error);
+            showToast('❌ حدث خطأ', 'error');
         }
+    }
 
-        // ===== Notifications =====
-        async function addNotification(title, text, type = 'info') {
-            await supabase.from('notifications').insert({
+    // ===== Notifications =====
+    async function addNotification(title, text, type = 'info') {
+        if (!supabaseClient) return;
+        
+        try {
+            await supabaseClient.from('notifications').insert({
                 title,
                 text,
                 type,
                 is_read: false,
                 created_at: new Date().toISOString()
             });
+        } catch (error) {
+            console.error('Error adding notification:', error);
         }
+    }
 
-        async function loadNotifications() {
-            const { data: notifications } = await supabase
+    async function loadNotifications() {
+        if (!supabaseClient) return;
+        
+        try {
+            const { data: notifications } = await supabaseClient
                 .from('notifications')
                 .select('*')
                 .order('created_at', { ascending: false })
@@ -2554,49 +1180,71 @@ async function loadAdminCredentials() {
                     </div>
                 </div>
             `).join('');
+        } catch (error) {
+            console.error('Error loading notifications:', error);
         }
+    }
 
-        async function clearNotifications() {
-            await supabase.from('notifications').update({ is_read: true }).neq('id', 0);
+    async function clearNotifications() {
+        if (!supabaseClient) return;
+        
+        try {
+            await supabaseClient.from('notifications').update({ is_read: true }).neq('id', 0);
             loadNotifications();
             showToast('✅ تم تحديد جميع الإشعارات كمقروءة');
+        } catch (error) {
+            console.error('Error clearing notifications:', error);
         }
+    }
 
-        // ===== Load Section Data =====
-        async function loadSectionData(sectionId) {
-            switch(sectionId) {
-                case 'orders': await loadAllOrders(); break;
-                case 'notifications': await loadNotifications(); break;
-                case 'site-status': await updateSiteStatusBadge(); break;
-                case 'sections-control': await loadSectionsControl(); break;
-                case 'lock-site':
-                    const msg = await getSetting('lockMessage');
-                    document.getElementById('lockMessage').value = msg || 'الموقع مغلق للصيانة، سنعود قريباً...';
-                    break;
-                case 'images': await loadImagesManagement(); break;
-                case 'ticker': await loadTicker(); break;
-                case 'tips': await loadTips(); break;
-                case 'warnings': await loadWarnings(); break;
-                case 'welcome': await loadWelcome(); break;
-                case 'phones': await loadPhones(); break;
-                case 'ban': await loadBannedList(); break;
-            }
+    // ===== Load Section Data =====
+    async function loadSectionData(sectionId) {
+        switch(sectionId) {
+            case 'orders': await loadAllOrders(); break;
+            case 'notifications': await loadNotifications(); break;
+            case 'site-status': await updateSiteStatusBadge(); break;
+            case 'sections-control': await loadSectionsControl(); break;
+            case 'lock-site':
+                const msg = await getSetting('lockMessage');
+                document.getElementById('lockMessage').value = msg || 'الموقع مغلق للصيانة، سنعود قريباً...';
+                break;
+            case 'images': await loadImagesManagement(); break;
+            case 'ticker': await loadTicker(); break;
+            case 'tips': await loadTips(); break;
+            case 'warnings': await loadWarnings(); break;
+            case 'welcome': await loadWelcome(); break;
+            case 'phones': await loadPhones(); break;
+            case 'ban': await loadBannedList(); break;
         }
+    }
 
-        // ===== Toast =====
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            toastMessage.textContent = message;
-            toast.className = 'toast show' + (isError ? ' error' : '');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+    // ===== Toast =====
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        toastMessage.textContent = message;
+        toast.className = 'toast show' + (isError ? ' error' : '');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ===== Initialize =====
+    window.addEventListener('load', async () => {
+        console.log('🚀 تحميل الصفحة...');
+        
+        // تهيئة Supabase أولاً
+        const initialized = initSupabase();
+        
+        if (initialized) {
+            console.log('✅ Supabase جاهز');
+            // اختبار الاتصال
+            await testConnection();
+            // تحميل بيانات المسؤول
+            await loadAdminCredentials();
+        } else {
+            console.error('❌ فشل تهيئة Supabase');
         }
-
-        // ===== Initialize =====
-        window.addEventListener('load', () => {
-            pinInputs[0].focus();
-            testConnection();
-        });
-    </script>
-</body>
-</html>
+        
+        // التركيز على أول حقل
+        pinInputs[0].focus();
+    });
+</script>
